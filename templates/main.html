@@ -1,0 +1,36 @@
+<HTML> 
+  <HEAD> 
+	 <TITLE>IMOK</TITLE>
+   <script src="jquery.js"></script>
+<script src="ui/jquery-ui.js"></script>
+<style>
+ 
+ .show_me {
+  _visibility: visible;
+}
+
+.hide_me {
+ display: none;
+ _visibility: hidden;
+}
+
+</style>
+  </HEAD> 
+  <BODY>
+
+	 <H4 ALIGN="CENTER">IMOK</H4> 
+	
+   <DIV class='<%logged_out%>'><A HREF="login.html">Login</A></DIV>
+   <DIV class='<%logged_out%>' ALIGN="RIGHT"><A HREF="register.html">Register for account</A></DIV>
+	 <DIV class='<%logged_in%>'><A HREF="#">Reset Password</A> </DIV>
+	<DIV class='<%logged_in%>' ALIGN="Center"><A HREF="#">Settings</A> </DIV>
+  <DIV class='<%logged_in%>' ALIGN="RIGHT"><A HREF="./imok.cgi?command=logout">Logout</A> </DIV> 
+	
+   <DIV ALIGN="CENTER" class='<%logged_in%>'> 
+		<FORM ID="form_login" ACTION="./imok.cgi" METHOD="get">
+		  <INPUT NAME="command" TYPE="hidden" VALUE="IMOK" ID="command_login"> 
+		  <P><INPUT TYPE="SUBMIT" VALUE="IMOK"> </P> </FORM></DIV> 
+ <DIV ALIGN="CENTER"><h2><%last_message%></h2></DIV>
+ 
+  </BODY>
+</HTML>
