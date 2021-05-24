@@ -34,11 +34,11 @@ $AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
 $AuthorizeMe_Settings{'smtp_server'} = '';
 $AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
     Click to activate:
-    http://127.0.0.1/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>
+    http://localhost/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>
     );
  $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
-    http://127.0.0.1/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
+    http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
 $AuthorizeMe_Settings{'path_to_users'} = './users/'; 
 $AuthorizeMe_Settings{'path_to_tokens'} = './tokens/'; 
@@ -52,17 +52,17 @@ if ($@) { &cgierr("fatal error: $@"); }     # never produces that nasty 500 serv
 exit;   # There are only two exit calls in the script, here and in in &cgierr.
 
 sub main(){
-#$logged_in = $AuthorizeMeObj->AmILoggedIn(); #moment of truth. was determined in new()
-
 %in = &parse_form();
 my $command = $in{'command'};
 
 my $output = '';
 $output = &get_template_page('main.html');
- 
+
+$logged_in = $AuthorizeMeObj->AmILoggedIn(); 
+
 #if($logged_in == 1) {#we are logged in
     if ( $command eq 'logout' ) { &logout() } #login email , password
-    #if ( $command eq 'reset_password' ) { &reset_password(); } 
+    if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) } 
 #    }
 #else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
@@ -82,11 +82,11 @@ else{
     $output =~  s/<%logged_in%>/hide_me/g; #hide logout, settings, reset pw 
 }
  
- $output =~  s/<%last_message%>/$last_message/g;
- my $set_cookie_string = $AuthorizeMeObj->get_set_cookie_string();
-	print "Content-type: text/html\n";
- print "$set_cookie_string\n\n";
-	print $output;
+$output =~  s/<%last_message%>/$last_message/g;
+my $set_cookie_string = $AuthorizeMeObj->get_set_cookie_string();
+print "Content-type: text/html\n";
+print "$set_cookie_string\n\n";
+print $output;
 } #main done
 
 sub get_template_page(){
@@ -180,10 +180,18 @@ sub set_password(){
  return $result; 
 }
 
-sub reset_password()
-    { #get data
- 
-     }
+sub reset_password(){
+ my $current_password = shift;
+ my $new_password = shift;
+ my $result = $AuthorizeMeObj->reset_password($current_password,$new_password);
+ if($result == 1){
+  $last_message = "Password was reset";
+  }
+ else{
+  $last_message = "Password was not reset";
+  }
+ return $result; 
+ }
 
 sub parse_form
 {

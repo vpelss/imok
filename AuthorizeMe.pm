@@ -146,7 +146,7 @@ sub get_last_message(){
   return $last_message;    
 }
 
-sub AmILoggedIn(){
+sub AmILoggedIn(){#also fills in $user
   my $result = 0;
   
   my $filename = "$path_to_tokens$user_id";
@@ -155,9 +155,7 @@ sub AmILoggedIn(){
     &db_to_hash($tokens , $filename); #we are clobbering $user, but we reset it later. Maybe use another hash ref?
     if( $tokens->{$token} == 1 ){#does the token exist?
      $filename = "$path_to_users$user_id";
-     if(-e $filename){ #also see if user file exists
-      $result = 1;
-     }
+     $result = &db_to_hash($user,$filename); # test -e filee & load user data (for other routines, reset password, etc...)
     }
  return $result; 
  }
@@ -219,7 +217,7 @@ sub register_account()
     $email_message =~ s/<%activate_code%>/$random_number/g;
     
     #send email message
-    sendmail($from_email , $from_email , $email , $SEND_MAIL , 'IMOK account activation email' , '');
+    sendmail($from_email , $from_email , $email , $SEND_MAIL , 'IMOK account activation email' , $email_message);
     
     #return success with message stating auth email must be clicked!
     $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email :  $email_message";
@@ -319,8 +317,22 @@ sub get_set_cookie_string(){
   }
   
 sub reset_password(){
- 
+ shift;
+ my $current_password = shift;
+ my $new_password = shift;
+ #if(&AmILoggedIn() == 0){return 0;}
+ #validate current password
+ my $current_password_encrypted = &encrypt_password($current_password);
+ if($current_password_encrypted ne $user->{'password'}){
+  return 0;
  }
+ #change to new password
+ my $filename = $user->{'user_id'};
+ $filename = "$path_to_users$filename";
+ $user->{'password'} = &encrypt_password($new_password);
+ my $result = &hash_to_db($user,$filename);
+ return $result;
+}
 
 sub forgot_password(){
  my $result = 0;
@@ -352,7 +364,7 @@ sub forgot_password(){
  $email_message =~ s/<%set_password_code%>/$random_number/g;
  $email_message =~ s/<%user_id%>/$user_id/g;
  #send email message
- sendmail($from_email , $from_email , $email , $SEND_MAIL , 'IMOK account activation email' , '');
+ sendmail($from_email , $from_email , $email , $SEND_MAIL , 'IMOK account activation email' , $email_message);
  
  $last_message = "Your password recovery email has been sent to $email : $email_message";
  return 1;
