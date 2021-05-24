@@ -24,20 +24,26 @@ $user{'email_contct_2'} = '';
 $user{'email_contact_3'} = '';
 $user{'email_form'} = '';
 $user{'timeout_ms'} = '';
-my %AuthorizeMe_Setup;
-$AuthorizeMe_Setup{'domain'} = 'localhost'; #will show up in cookie
-$AuthorizeMe_Setup{'Token_Name'} = 'imok_token'; #will show up in cookie
-$AuthorizeMe_Setup{'User_ID_Name'} = 'imok_user_id'; #will show up in cookie
-#$AuthorizeMe_Setup{'Token_Max-Age'} = '3153600000'; #string time in seconds the cookie will live
-$AuthorizeMe_Setup{'From_Email'} = 'imok@emogic.com'; 
-$AuthorizeMe_Setup{'Reply_Email'} = 'imok@emogic.com'; 
-$AuthorizeMe_Setup{'SEND_MAIL'} = '/usr/lib/sendmail -t';
-$AuthorizeMe_Setup{'SMTP_SERVER'} = '';
-$AuthorizeMe_Setup{'path_to_users'} = './users/'; 
-$AuthorizeMe_Setup{'path_to_users'} = './users/'; 
-$AuthorizeMe_Setup{'path_to_tokens'} = './tokens/'; 
-$AuthorizeMe_Setup{'user_file_extension'} = ''; 
-my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Setup ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
+my %AuthorizeMe_Settings;
+$AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
+$AuthorizeMe_Settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
+$AuthorizeMe_Settings{'user_id_name'} = 'imok_user_id'; #will show up in cookie
+$AuthorizeMe_Settings{'from_email'} = 'imok@emogic.com'; 
+$AuthorizeMe_Settings{'reply_email'} = 'imok@emogic.com'; 
+$AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
+$AuthorizeMe_Settings{'smtp_server'} = '';
+$AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
+    Click to activate:
+    http://127.0.0.1/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>
+    );
+ $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
+    Click the link to reset your password to <%set_password_code%>:
+    http://127.0.0.1/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
+    );
+$AuthorizeMe_Settings{'path_to_users'} = './users/'; 
+$AuthorizeMe_Settings{'path_to_tokens'} = './tokens/'; 
+$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/'; 
+my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
 
 my $last_message = '';
 
@@ -62,7 +68,8 @@ $output = &get_template_page('main.html');
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
 				if ( $command eq 'activate' ) { &activate($in{'activate_code'}) } #login email , password		
     if ( $command eq 'login' ) { &login() } #login email , password
-    #if ( $command eq 'forgot_password' ) { &forgot_password(); } #resend_password email
+    if ( $command eq 'forgot_password' ) { &forgot_password($in{'email'}) } 
+    if ( $command eq 'set_password' ) { &set_password($in{'user_id'} , $in{'set_password_code'}); }#from link sent by &forgot_password
 #    }
 
 $logged_in = $AuthorizeMeObj->AmILoggedIn();
@@ -147,21 +154,36 @@ sub logout(){
   }
  }
 
+
+sub forgot_password(){
+ my $email = shift;
+ my $result = $AuthorizeMeObj->forgot_password($email);
+ if($result == 1){
+  $last_message = $AuthorizeMeObj->get_last_message();;
+  }
+ else{
+  $last_message = "$email could not recover password";
+  }
+ return $result;
+}
+
+sub set_password(){
+ my $user_id = shift;
+ my $set_password_code = shift;
+ my $result = $AuthorizeMeObj->set_password($user_id,$set_password_code);
+ if($result == 1){
+  $last_message = "Password was reset";
+  }
+ else{
+  $last_message = "Password was not reset";
+  }
+ return $result; 
+}
+
 sub reset_password()
     { #get data
  
      }
-
-sub forgot_password()
-     { #get data
-
-     }
-
-sub replace_tokens_with{
-	#$_[0] : token <%token%>
-	#$_[1] : "replace text string"
-	#$_[2] : "HTML string"
-};
 
 sub parse_form
 {

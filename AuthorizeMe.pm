@@ -2,11 +2,7 @@ package AuthorizeMe ;
 
 use strict;
 use Socket;
-#use CGI::Cookie;
 use Fcntl;   # For O_RDWR, O_CREAT, etc.
-#use SDBM_File;
-#use GDBM_File;
-#use YAML::old;
 use Data::Dumper;
 use Digest::SHA qw(sha1_base64 sha1_hex sha512_base64);
 #use vars qw($NAME $ABSTRACT $VERSION);
@@ -14,7 +10,7 @@ our ($NAME , $ABSTRACT , $VERSION);
 
 $NAME     = 'AutorizeMe';
 $ABSTRACT = 'AutorizeMe Module for Simple CGI Registration & Authentication in Perl';
-$VERSION  = '0.1'; # Last update: 
+$VERSION  = '0.2'; 
 
 #require Exporter;
 our @ISA = qw(Exporter);
@@ -24,60 +20,52 @@ our @EXPORT = qw(  );
 #manages db read and write, can add fields!!!!!
 #manages mailing
 #DOES NOT manage forms and log in, reset, log out logic
+
+my $user = \{}; #meta ref to db hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
+my $AuthorizeMe_Settings; #ref to hash, sent from calling program
  
-my $cookies; #ref to a anonymous hash
+my $cookies; #will be a ref to a anonymous hash
+my $email;
+my $user_id; #made from $email
 my $token;
-my $user_id;
 my $random_number_size = 1000000000;
+my $set_cookie_string = ""; #calling program can use get_set_cookie_string
+my $last_message = ''; #used for &get_last_message()
 
 #determined by calling program. we are a module and code is inaccessible?
-my $path_to_users; #set from calling program
-my $path_to_tokens; #set from calling program
-my $user_file_extension; #set from calling program
-
-my $logged_in;
+my $path_to_users; 
+my $path_to_tokens;  
+my $from_email; 
+my $SEND_MAIL = '';
+my $SMTP_SERVER = '';
 my $token_name = "AuthorizeMeToken";
 my $user_id_name = "AuthorizeMeUserId";
 my $MaxAge = '3153600000'; #default 100 years, in case not supplied in new()
-#my $token_value; #token file will contain email
-my $set_cookie_string = ""; #calling program can use / print this start with '' then on login: "Set-cookie: $name=$value; date=$cur_date; expires=$expires_date path=$path; domain=$domain"
-my $domain;
-
-my  $last_message = ''; #used for &get_last_message()
-
-my $user = \{}; #meta ref to db hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
-my $from_email; #set in new by calling program 
-my $SEND_MAIL = '';
-my $SMTP_SERVER = '';
 
 sub new() { #init + see if we have a valid auth token and a valid  user file
-  my $class = shift; #check on this!!!!!!!!!!!!   
+  my $class = shift;   
   $user = shift; #hash reference kept as we want two way communication
-  my %AuthorizeMe_Setup = %{shift(@_)}; #one way communication
-  
+  $AuthorizeMe_Settings = shift; 
+ 
   #setup settings from calling program
-  $from_email = $AuthorizeMe_Setup{'From_Email'};
-  $SEND_MAIL = $AuthorizeMe_Setup{'SEND_MAIL'}; 
-  $SMTP_SERVER = $AuthorizeMe_Setup{'SMTP_SERVER'}; 
-  $path_to_users =  $AuthorizeMe_Setup{'path_to_users'}; 
-  $path_to_tokens = $AuthorizeMe_Setup{'path_to_tokens'}; 
-  $user_file_extension = $AuthorizeMe_Setup{'user_file_extension'}; 
-  if($AuthorizeMe_Setup{'Token_Name'}){ $token_name = $AuthorizeMe_Setup{'Token_Name'}; }
-  if($AuthorizeMe_Setup{'User_ID_Name'}) { $user_id_name = $AuthorizeMe_Setup{'User_ID_Name'}; }
-  $domain = $AuthorizeMe_Setup{'domain'};
-  if($AuthorizeMe_Setup{'Token_Max-Age'}) { $MaxAge = $AuthorizeMe_Setup{'Token_Max-Age'}; }
+  $from_email = $AuthorizeMe_Settings->{'from_email'};
+  $SEND_MAIL = $AuthorizeMe_Settings->{'sendmail'}; 
+  $SMTP_SERVER = $AuthorizeMe_Settings->{'smtp_server'}; 
+  $path_to_users =  $AuthorizeMe_Settings->{'path_to_users'}; 
+  $path_to_tokens = $AuthorizeMe_Settings->{'path_to_tokens'}; 
+  #$user_file_extension = $AuthorizeMe_Settings->{'user_file_extension'}; 
+  if($AuthorizeMe_Settings->{'token_name'}){ $token_name = $AuthorizeMe_Settings->{'token_name'}; }
+  if($AuthorizeMe_Settings->{'user_id_name'}) { $user_id_name = $AuthorizeMe_Settings->{'user_id_name'}; }
+  if($AuthorizeMe_Settings->{'token_max-age'}) { $MaxAge = $AuthorizeMe_Settings->{'token_max-age'}; }
   
   $cookies = &get_cookies();
   $token = $cookies->{$token_name}; #does the client think they are logged in?
   $user_id = $cookies->{$user_id_name};
-  
-  $logged_in = AmILoggedIn();
 
   my $self = {
     #logged_in => $logged_in,
     #user_email  => $user_email
     };
-  #build $self from $user (ref to arg %)
  
   bless $self, $class;
   return $self;  
@@ -123,7 +111,6 @@ sub hash_to_db(){#arg: \%hash , $filename
   my $hash_ref = shift;
   my $filename = shift;
    
-  #open(FH, '>', $filename) or die $!;
   open(FH, '>', $filename) or return 0;# $!;
   print FH Data::Dumper->Dump([$hash_ref], [qw(dump_hash_ref)]); # $dump_hash_ref is the variable name in the dump
   close(FH);
@@ -205,7 +192,7 @@ sub register_account()
     my $user_id = &create_user_id($email); #user id is hash of email
     
     #see if  user file exists, fail if it does, pass message?
-     my $filename = "$path_to_users$user_id"; 
+    my $filename = "$path_to_users$user_id"; 
     if(-e $filename){
       $last_message = "This Email Address is already registered : $email";
       return 0;
@@ -228,16 +215,14 @@ sub register_account()
     $filename = "$path_to_users$random_number";
     my $result = &hash_to_db($user , $filename);
     
-    my $email_message = qq(You have registered for an IMOK account.
-    Click to activate:
-    http://127.0.0.1/cgi/imok/imok.cgi?command=activate&activate_code=$random_number
-    );
+    my $email_message = $AuthorizeMe_Settings->{'registration_email_template'};
+    $email_message =~ s/<%activate_code%>/$random_number/g;
     
     #send email message
     sendmail($from_email , $from_email , $email , $SEND_MAIL , 'IMOK account activation email' , '');
     
     #return success with message stating auth email must be clicked!
-    $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email   $email_message";
+    $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email :  $email_message";
       return 1;
           
     }
@@ -267,10 +252,12 @@ sub activate(){
 sub login() {
   #the only time we return is if we logged in and we do it silently as we use this every time script is run
   #return 1 on success and THEN check_login sends a text message on fail
+  #make sure we set a global $email and save $tokens as AmILoggedIn will need this
   shift;
-  my $email = shift;
+  $email = shift;
   my $password = shift;
-  my $user_id = &create_user_id($email); #user id is hash of email
+  $user_id = &create_user_id($email); #user id is hash of email
+  my $logged_in;
   my $result;
   
   my $filename = $user_id;
@@ -291,7 +278,7 @@ sub login() {
       }
       my @the_keys = keys( %$tokens);
       my $len =  @the_keys;
-      if(@the_keys >= 100){#limit # of tokens to 100
+      if(@the_keys >= 10){#limit # of tokens to 10
        delete( $tokens->{$the_keys[0]} ); #remove a token , first key
       }
      $tokens->{$token} = 1; #add token
@@ -323,7 +310,7 @@ sub logout(){
  delete $tokens->{$token};
  $result = &hash_to_db($tokens , $filename);  # get existing tokens (ie: logon's on other devices)
 
- $set_cookie_string = "Set-Cookie: $token_name= ; Max-Age=0 ;\nSet-Cookie: $user_id_name= ; Max-Age=0 ;";
+ $set_cookie_string = "Set-Cookie: $token_name= ; Max-Age=-1 ;\nSet-Cookie: $user_id_name= ; Max-Age=-1 ;";
  return $result;
  }
   
@@ -331,97 +318,83 @@ sub get_set_cookie_string(){
   return $set_cookie_string;
   }
   
-sub reset_password()
-    { #get data
-=pod
-     my $username = $in{'username'};
-     $username =~ s/\s\W//; #no white space, only alpha numeric
-     my $old_password = $in{'oldpassword'};
-     my $new_password = $in{'newpassword'};
-     $new_password =~ s/\s\W//; #no white space, only alpha numeric
-     if ( $username eq '' or $old_password eq '' or $new_password eq '')
-          { #form submit error
-         &send_system_message("Blank fields are not allowed");
-          }
-     if (! -e "$path_to_users/$username$user_file_extension")
-        { #file does not exist
-        &send_system_message( "Username $username does not exists" );
-        }
-     else
-          {
-          my $crypt_old_password = crypt ($old_password , 'yum') ;
-          open (FILE , "<$path_to_users/$username$user_file_extension");
-          my @download = <FILE>;
-          close FILE;
-          chomp @download;
-          my $passwordencrypted = $download[0];
-          my $email = $download[1];
-          if ($crypt_old_password eq $passwordencrypted)
-               {
-               #can change!!!
-               open (FILE , ">$path_to_users/$username$user_file_extension");
-               my $crypt_new_password = crypt ($new_password , 'yum') ;
-               print FILE "$crypt_new_password\n";
-               print FILE "$email\n";
-               close FILE;
-               &send_system_message( "Password changed for <font color=red><b>$username</b></font>." );
-               }
-          else
-               {
-               &send_system_message("Old Password incorrect.");
-               }
-          }
-=cut
-     }
+sub reset_password(){
+ 
+ }
 
-sub forgot_password()
-     { #get data
-=pod
-     my $username = $in{'username'};
-     $username =~ s/\s\W//; #no white space, only alpha numeric
-     if ( $username eq '')
-          { #form submit error
-          $message .= "Blank fields are not allowed";
-          exit;
-          }
-     if (! -e "$path_to_users/$username$user_file_extension")
-          { #file does not exist
-          &send_system_message("Username $username does not exists");
-          }
-     else
-          {
-          my $new_password = rand(999999999);
-          my $new_password_crypt = crypt ( $new_password  , 'yum') ;
-          open (FILE , "<$path_to_users/$username$user_file_extension");
-          my @download = <FILE>;
-          close FILE;
-          chomp @download;
-          my $email = $download[1];
-          open (FILE , ">$path_to_users/$username$user_file_extension");
-          print FILE "$new_password_crypt\n";
-          print FILE "$email\n";
-          close FILE;
-         if ( &valid_email($email) )
-               {
-               my $mail_message = "$username Your new password is $new_password.";
-               my $result = &sendmail($FROM_MAIL, $SEND_MAIL, $email , $SMTP_SERVER, 'Your new Twixt password', $mail_message );
-               if ( $result == 1 )
-                    {
-                    &send_system_message("Password changed for <font color=red><b>$username</b></font> and sent to <font color=red><b>$email</b></font>.");
-                    }
-               else
-                    {
-                     &send_system_message("Email error $result.");
-                    }
-               }
-          else
-               {
-               &send_system_message("Email $email is not valid.");
-               }
-          }
-=cut    
-     }
+sub forgot_password(){
+ my $result = 0;
+ shift;
+ my $email = shift;
+ #check email
+ if(&valid_email($email) != 1){
+  $last_message = "Invalid Email $email";
+  return 0;
+ }
+ #check user_id : exists?
+ my $user_id = &create_user_id($email);
+ my $filename = $user_id;
+ $filename = "$path_to_users$filename";
+ if(! -e $filename){
+  $last_message = "User does not exist for $email";
+  return 0;  
+ }
+ #set auth_file named $user_id: will contain random forgot_password_set_id
+  my $random_number = int(rand($random_number_size)); #acts as both auth code and new password
+  $filename = "$AuthorizeMe_Settings->{'path_to_authorizations'}$user_id";  
+  $result = &hash_to_db({password_code => $random_number} , $filename);
+  if($result != 1){
+    $last_message = "could not save to $filename";
+    return 0;
+  } 
+ #send email with link ?command=forgot_password_set&forgot_password_set_id=????????????
+ my $email_message = $AuthorizeMe_Settings->{'forgot_password_email_template'};
+ $email_message =~ s/<%set_password_code%>/$random_number/g;
+ $email_message =~ s/<%user_id%>/$user_id/g;
+ #send email message
+ sendmail($from_email , $from_email , $email , $SEND_MAIL , 'IMOK account activation email' , '');
+ 
+ $last_message = "Your password recovery email has been sent to $email : $email_message";
+ return 1;
+ }
 
+sub set_password(){
+ #if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
+ shift;
+ my $user_id = shift;
+ my $set_password_code = shift;
+ my $filename = "$AuthorizeMe_Settings->{'path_to_authorizations'}$user_id";
+ my $hash_auth_ref = {};
+ my $result = &db_to_hash($hash_auth_ref , $filename);
+ my $set_password_code_stored = $hash_auth_ref->{'password_code'};
+ if($result != 1){
+    $last_message = "could not open $filename";
+    return 0;
+  }
+ if($set_password_code != $set_password_code_stored){
+  $last_message = "codes do not match";
+  return 0;
+ }
+ $result = 1;
+ #change password and store it
+ my $filename2 = "$path_to_users$user_id";
+ $result = &db_to_hash($user,$filename2);
+ if($result != 1){
+    $last_message = "could not open $filename2";
+    return 0;
+  }
+ my $encrypted_password = &encrypt_password($set_password_code_stored);
+ $user->{'password'} = $encrypted_password;
+ $result = &hash_to_db($user,$filename2);
+ if($result != 1){
+    $last_message = "could not save $filename2";
+    return 0;
+  }
+ #delete code file
+ $result = unlink $filename;
+ return $result;
+}
+ 
 sub parse_form
 {
 # --------------------------------------------------------
