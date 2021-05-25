@@ -1,0 +1,19 @@
+<html>
+<head>
+	<title>IMOK : Not Lost!</title>
+</head>
+
+<h4>Settings</h4>
+
+ <form id='form_login' action='./imok.cgi'  method="get">
+    <input name="command" type="hidden" value="set_settings" id='command_login'>
+    
+    <p><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>'> </p>
+    <p><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
+    <p><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
+    <textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea>
+    <p><input type='text' name="time_out" placeholder="time out" id='tineout' value='<%time_out%>'> : in hours</p>
+    <p><input type='submit' > </p>
+    </form>
+	
+ </html>

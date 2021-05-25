@@ -148,7 +148,6 @@ sub get_last_message(){
 
 sub AmILoggedIn(){#also fills in $user
   my $result = 0;
-  
   my $filename = "$path_to_tokens$user_id";
   if( -e $filename ){ #tokens file exists
     my $tokens = {};
@@ -310,6 +309,14 @@ sub logout(){
 
  $set_cookie_string = "Set-Cookie: $token_name= ; Max-Age=-1 ;\nSet-Cookie: $user_id_name= ; Max-Age=-1 ;";
  return $result;
+ }
+
+ sub logout_all_devices(){
+ my $filename = "$path_to_tokens$user_id";
+ my $result = unlink($filename); 
+
+ $set_cookie_string = "Set-Cookie: $token_name= ; Max-Age=-1 ;\nSet-Cookie: $user_id_name= ; Max-Age=-1 ;";
+ return $result; 
  }
   
 sub get_set_cookie_string(){

@@ -23,7 +23,7 @@ $user{'email_contact_1'} = '';
 $user{'email_contct_2'} = '';
 $user{'email_contact_3'} = '';
 $user{'email_form'} = '';
-$user{'timeout_ms'} = '';
+$user{'time_out'} = '';
 my %AuthorizeMe_Settings;
 $AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
 $AuthorizeMe_Settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
@@ -62,7 +62,9 @@ $logged_in = $AuthorizeMeObj->AmILoggedIn();
 
 #if($logged_in == 1) {#we are logged in
     if ( $command eq 'logout' ) { &logout() } #login email , password
+    if ( $command eq 'logout_all_devices' ) { &logout_all_devices() } 
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) } 
+    if ( $command eq 'get_settings' ) { &get_settings(\$output) } 
 #    }
 #else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
@@ -99,6 +101,20 @@ sub get_template_page(){
   }
   close FH;
   return $output;
+}
+
+sub get_settings(){
+ my $output = shift; #string passed by ref so we can modify it
+ $$output = &get_template_page('settings.html');
+ #get user data
+ $logged_in = $AuthorizeMeObj->AmILoggedIn();
+ if($logged_in == 0){return 0}
+ #replace tokens
+ $$output =~ s/<%email_contact_1%>/$user{'$email_contact_1'}/g; #hide login, register , forgot pw
+ $$output =~ s/<%email_contact_2%>/$user{'$email_contact_2'}/g; #hide login, register , forgot pw
+ $$output =~ s/<%email_contact_3%>/$user{'$email_contact_3'}/g; #hide login, register , forgot pw
+ $$output =~  s/<%email_form%>/$user{'email_form'}/g; #show logout, settings, reset pw  
+ $$output =~  s/<%time_out%>/$user{'time_out'}/g; #show logout, settings, reset pw  
 }
 
 sub send_output
@@ -154,6 +170,15 @@ sub logout(){
   }
  }
 
+sub logout_all_devices(){
+ my $result =  $AuthorizeMeObj->logout_all_devices();
+ if($result == 1){
+  $last_message = "$user{'email'} has logged out of all devices";
+  }
+ else{
+  $last_message = "$user{'email'} could not log out of all devices";
+  }
+}
 
 sub forgot_password(){
  my $email = shift;
