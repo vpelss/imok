@@ -65,6 +65,7 @@ $logged_in = $AuthorizeMeObj->AmILoggedIn();
     if ( $command eq 'logout_all_devices' ) { &logout_all_devices() } 
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) } 
     if ( $command eq 'get_settings' ) { &get_settings(\$output) } 
+    if ( $command eq 'set_settings' ) { &set_settings() } 
 #    }
 #else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
@@ -115,6 +116,23 @@ sub get_settings(){
  $$output =~ s/<%email_contact_3%>/$user{'$email_contact_3'}/g; #hide login, register , forgot pw
  $$output =~  s/<%email_form%>/$user{'email_form'}/g; #show logout, settings, reset pw  
  $$output =~  s/<%time_out%>/$user{'time_out'}/g; #show logout, settings, reset pw  
+}
+
+sub set_settings(){
+ $logged_in = $AuthorizeMeObj->AmILoggedIn();
+ $user{'email_contact_1'} = $in{'email_contact_1'};
+ $user{'email_contct_2'} = $in{'email_contact_2'};
+ $user{'email_contact_3'} = $in{'email_contact_3'};
+ $user{'email_form'} = $in{'email_form'};
+ $user{'time_out'} = $in{'time_out'};
+ my $result = $AuthorizeMeObj->user_to_db();
+ if($result == 1){
+  $last_message = 'Settings changed';
+  }
+ else{
+  $last_message = "Settings not changed";
+  }
+ return $result;
 }
 
 sub send_output

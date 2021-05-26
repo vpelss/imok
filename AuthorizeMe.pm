@@ -14,7 +14,7 @@ $VERSION  = '0.2';
 
 #require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(  );
+our @EXPORT = qw( path_to_users user_id );
 
 #manages token cookie
 #manages db read and write, can add fields!!!!!
@@ -82,7 +82,7 @@ sub get_cookies(){
     }
   return \%local_cookies;
 }
-
+=pod
 sub set_cookies(){ #take a ref to $cookies hash : set_cookies($cookie_name,$cookie_value,$cookie_expire,$cookie_path,$cookie_domain)
  my $cookie_name = shift;
  my $cookie_value = shift;
@@ -104,7 +104,15 @@ sub set_cookies(){ #take a ref to $cookies hash : set_cookies($cookie_name,$cook
 
  #print "Content-type: text/html\n\n";
  return "Set-cookie: $cookie_name=$cookie_value; date=$cur_date; expires=$expires_date path=$cookie_path; domain=$cookie_domain";
- }
+}
+=cut
+
+sub user_to_db(){#mainly for external calls allowing db update
+ my $filename = $user->{'user_id'};
+ $filename = "$path_to_users$filename";
+ my $result = &hash_to_db($user , $filename);
+ return $result;
+}
 
 sub hash_to_db(){#arg: \%hash , $filename
   #iterate through all keys and copy to db_hash
@@ -116,6 +124,13 @@ sub hash_to_db(){#arg: \%hash , $filename
   close(FH);
 
   return 1;
+}
+
+sub db_to_user(){#mainly for external calls allowing db update
+ my $filename = $user->{'user_id'};
+ $filename = "$path_to_users$filename";
+ my $result = &db_to_hash($user , $filename);
+ return $result; 
 }
 
 sub db_to_hash(){#arg \%hash , $filename
