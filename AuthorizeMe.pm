@@ -257,7 +257,8 @@ sub activate(){
   if($result != 1){return 0}
   $new_filename = $user->{'user_id'};
   $new_filename = "$path_to_users$new_filename";
-  $result = rename("$filename" , "$new_filename") ;
+  $result = rename("$filename" , "$new_filename");
+  
   return $result ;
   }
 

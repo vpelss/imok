@@ -66,6 +66,7 @@ $logged_in = $AuthorizeMeObj->AmILoggedIn();
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) } 
     if ( $command eq 'get_settings' ) { &get_settings(\$output) } 
     if ( $command eq 'set_settings' ) { &set_settings() } 
+    if ( $command eq 'imok' ) { &imok() } 
 #    }
 #else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
@@ -92,6 +93,27 @@ print "$set_cookie_string\n\n";
 print $output;
 } #main done
 
+sub imok(){
+my $logged_in = $AuthorizeMeObj->AmILoggedIn(); #get user details
+my $new_time_stamp = time() + (60 * 60 * $user{'time_out'}); #out time is in hours, convert to sec 
+my $filename = "$AuthorizeMe_Settings{'path_to_users'}/$user{'user_id'}";
+my $result = &change_time_stamp($new_time_stamp , $filename);
+if($result == 1){
+ $last_message = "$last_message your next IMOK trigger time is: ";
+}
+else{
+ $last_message = "$last_message IMOK trigger time failed. Please try again."; 
+}
+return $result;
+}
+
+sub change_time_stamp(){
+ my $new_time_stamp = shift; 
+ my $filename = shift;
+ my $result = utime($new_time_stamp , $new_time_stamp , $filename);
+ return $result;
+}
+
 sub get_template_page(){
   #shift;
   my $filename = shift;
@@ -111,9 +133,9 @@ sub get_settings(){
  $logged_in = $AuthorizeMeObj->AmILoggedIn();
  if($logged_in == 0){return 0}
  #replace tokens
- $$output =~ s/<%email_contact_1%>/$user{'$email_contact_1'}/g; #hide login, register , forgot pw
- $$output =~ s/<%email_contact_2%>/$user{'$email_contact_2'}/g; #hide login, register , forgot pw
- $$output =~ s/<%email_contact_3%>/$user{'$email_contact_3'}/g; #hide login, register , forgot pw
+ $$output =~ s/<%email_contact_1%>/$user{'email_contact_1'}/g; #hide login, register , forgot pw
+ $$output =~ s/<%email_contact_2%>/$user{'email_contact_2'}/g; #hide login, register , forgot pw
+ $$output =~ s/<%email_contact_3%>/$user{'email_contact_3'}/g; #hide login, register , forgot pw
  $$output =~  s/<%email_form%>/$user{'email_form'}/g; #show logout, settings, reset pw  
  $$output =~  s/<%time_out%>/$user{'time_out'}/g; #show logout, settings, reset pw  
 }
@@ -121,16 +143,17 @@ sub get_settings(){
 sub set_settings(){
  $logged_in = $AuthorizeMeObj->AmILoggedIn();
  $user{'email_contact_1'} = $in{'email_contact_1'};
- $user{'email_contct_2'} = $in{'email_contact_2'};
+ $user{'email_contact_2'} = $in{'email_contact_2'};
  $user{'email_contact_3'} = $in{'email_contact_3'};
  $user{'email_form'} = $in{'email_form'};
  $user{'time_out'} = $in{'time_out'};
  my $result = $AuthorizeMeObj->user_to_db();
+ $result = imok();
  if($result == 1){
-  $last_message = 'Settings changed';
+  $last_message = '$last_message Settings changed';
   }
  else{
-  $last_message = "Settings not changed";
+  $last_message = "$last_message Settings not changed";
   }
  return $result;
 }
@@ -157,11 +180,12 @@ sub register() {
 sub activate(){
  my $authorize_code = shift;
  my $result =  $AuthorizeMeObj->activate( $authorize_code );
+ $result = imok();
  if($result == 1){
-  $last_message = "Your account $user{'email'} has been authorized";
+  $last_message = "$last_message Your account $user{'email'} has been authorized";
   }
  else{
-  $last_message = "Error: Your account $user{'email'} could not be authorized";
+  $last_message = "$last_message Error: Your account $user{'email'} could not be authorized";
   }
  return $result;
  }
@@ -170,10 +194,10 @@ sub login(){
  #email points to data file
  my $result =  $AuthorizeMeObj->login( $in{'email'} , $in{'password'} );
  if($result == 1){
-  $last_message = "$user{'email'} has logged in";
+  $last_message = "$last_message $user{'email'} has logged in";
   }
  else{
-  $last_message = "$user{'email'} could not log in";
+  $last_message = "$last_message $user{'email'} could not log in";
   }
  return $result;
 }
@@ -181,20 +205,20 @@ sub login(){
 sub logout(){
  my $result =  $AuthorizeMeObj->logout();
  if($result == 1){
-  $last_message = "$user{'email'} has logged out";
+  $last_message = "$last_message $user{'email'} has logged out";
   }
  else{
-  $last_message = "$user{'email'} could not log out";
+  $last_message = "$last_message $user{'email'} could not log out";
   }
  }
 
 sub logout_all_devices(){
  my $result =  $AuthorizeMeObj->logout_all_devices();
  if($result == 1){
-  $last_message = "$user{'email'} has logged out of all devices";
+  $last_message = "$last_message $user{'email'} has logged out of all devices";
   }
  else{
-  $last_message = "$user{'email'} could not log out of all devices";
+  $last_message = "$last_message $user{'email'} could not log out of all devices";
   }
 }
 
@@ -205,7 +229,7 @@ sub forgot_password(){
   $last_message = $AuthorizeMeObj->get_last_message();;
   }
  else{
-  $last_message = "$email could not recover password";
+  $last_message = "$last_message $email could not recover password";
   }
  return $result;
 }
@@ -215,10 +239,10 @@ sub set_password(){
  my $set_password_code = shift;
  my $result = $AuthorizeMeObj->set_password($user_id,$set_password_code);
  if($result == 1){
-  $last_message = "Password was reset";
+  $last_message = "$last_message Password was reset";
   }
  else{
-  $last_message = "Password was not reset";
+  $last_message = "$last_message Password was not reset";
   }
  return $result; 
 }
@@ -228,10 +252,10 @@ sub reset_password(){
  my $new_password = shift;
  my $result = $AuthorizeMeObj->reset_password($current_password,$new_password);
  if($result == 1){
-  $last_message = "Password was reset";
+  $last_message = "$last_message Password was reset";
   }
  else{
-  $last_message = "Password was not reset";
+  $last_message = "$last_message Password was not reset";
   }
  return $result; 
  }
