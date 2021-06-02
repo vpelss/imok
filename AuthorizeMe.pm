@@ -14,14 +14,14 @@ $VERSION  = '0.2';
 
 #require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw( path_to_users user_id );
+our @EXPORT = qw( );
 
 #manages token cookie
 #manages db read and write, can add fields!!!!!
 #manages mailing
 #DOES NOT manage forms and log in, reset, log out logic
 
-my $user = \{}; #meta ref to db hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
+my $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
 my $AuthorizeMe_Settings; #ref to hash, sent from calling program
  
 my $cookies; #will be a ref to a anonymous hash
@@ -35,22 +35,24 @@ my $last_message = ''; #used for &get_last_message()
 #determined by calling program. we are a module and code is inaccessible?
 my $path_to_users; 
 my $path_to_tokens;  
-my $from_email; 
-my $SEND_MAIL = '';
-my $SMTP_SERVER = '';
+#my $from_email; 
+#my $SEND_MAIL = '';
+#my $SMTP_SERVER = '';
 my $token_name = "AuthorizeMeToken";
 my $user_id_name = "AuthorizeMeUserId";
 my $MaxAge = '3153600000'; #default 100 years, in case not supplied in new()
 
+my $class;
+
 sub new() { #init + see if we have a valid auth token and a valid  user file
-  my $class = shift;   
+  $class = shift;   
   $user = shift; #hash reference kept as we want two way communication
   $AuthorizeMe_Settings = shift; 
  
   #setup settings from calling program
-  $from_email = $AuthorizeMe_Settings->{'from_email'};
-  $SEND_MAIL = $AuthorizeMe_Settings->{'sendmail'}; 
-  $SMTP_SERVER = $AuthorizeMe_Settings->{'smtp_server'}; 
+  #$from_email = $AuthorizeMe_Settings->{'from_email'};
+  #$SEND_MAIL = $AuthorizeMe_Settings->{'sendmail'}; 
+  #$SMTP_SERVER = $AuthorizeMe_Settings->{'smtp_server'}; 
   $path_to_users =  $AuthorizeMe_Settings->{'path_to_users'}; 
   $path_to_tokens = $AuthorizeMe_Settings->{'path_to_tokens'}; 
   #$user_file_extension = $AuthorizeMe_Settings->{'user_file_extension'}; 
@@ -82,7 +84,9 @@ sub get_cookies(){
     }
   return \%local_cookies;
 }
+
 =pod
+
 sub set_cookies(){ #take a ref to $cookies hash : set_cookies($cookie_name,$cookie_value,$cookie_expire,$cookie_path,$cookie_domain)
  my $cookie_name = shift;
  my $cookie_value = shift;
@@ -105,6 +109,7 @@ sub set_cookies(){ #take a ref to $cookies hash : set_cookies($cookie_name,$cook
  #print "Content-type: text/html\n\n";
  return "Set-cookie: $cookie_name=$cookie_value; date=$cur_date; expires=$expires_date path=$cookie_path; domain=$cookie_domain";
 }
+
 =cut
 
 sub user_to_db(){#mainly for external calls allowing db update
@@ -163,6 +168,8 @@ sub get_last_message(){
 
 sub AmILoggedIn(){#also fills in $user
   my $result = 0;
+  #my $filename = "$path_to_tokens$user_id";
+  #$path_to_tokens = $AuthorizeMe_Settings->{'path_to_tokens'};
   my $filename = "$path_to_tokens$user_id";
   if( -e $filename ){ #tokens file exists
     my $tokens = {};
@@ -231,7 +238,7 @@ sub register_account()
     $email_message =~ s/<%activate_code%>/$random_number/g;
     
     #send email message
-    sendmail($from_email , $from_email , $email , $SEND_MAIL , 'IMOK account activation email' , $email_message);
+    &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , 'IMOK account activation email' , $email_message ,$AuthorizeMe_Settings->{'smtp_server'});
     
     #return success with message stating auth email must be clicked!
     $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email :  $email_message";
@@ -387,7 +394,7 @@ sub forgot_password(){
  $email_message =~ s/<%set_password_code%>/$random_number/g;
  $email_message =~ s/<%user_id%>/$user_id/g;
  #send email message
- sendmail($from_email , $from_email , $email , $SEND_MAIL , 'IMOK account activation email' , $email_message);
+ &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , 'IMOK account activation email' , $email_message , $AuthorizeMe_Settings->{'smtp_server'});
  
  $last_message = "Your password recovery email has been sent to $email : $email_message";
  return 1;
@@ -473,7 +480,7 @@ sub valid_email{
   my $domain   = qr/[a-z0-9.-]+/;
   #my $regex = $email =~ /^$username\@$domain$/;
 
-  my $testmail = $_[0];
+  my $testmail = shift @_;
   if ($testmail =~/ /){ return 0; }
   #if ( $testmail =~ /(@.*@)|(\.\.)|(@\.)|(\.@)|(^\.)/ ||
   #$testmail !~ /^.+\@(\[?)[a-zA-Z0-9\-\.]+\.([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/ )
@@ -495,12 +502,12 @@ sub sendmail()
 #
 #  Sample call:
 #
-# &sendmail($from, $reply, $to, $smtp, $subject, $message );
+# &sendmail($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER);
 #
 #  Note that there are several commands for cleaning up possible bad inputs - if you
 #  are hard coding things from a library file, so of those are unnecesssary
 #
-    my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message) = @_;
+    my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
 
     $to =~ s/[ \t]+/, /g; # pack spaces and add comma
     $fromaddr =~ s/.*<([^\s]*?)>/$1/; # get from email address
@@ -590,9 +597,9 @@ sub sendmail()
 
    }
 
-  if ($SEND_MAIL ne "")
+  if ($smtp ne "")
    {
-     open (MAIL,"| $SEND_MAIL");
+     open (MAIL,"| $smtp");
    }
 
     print MAIL "To: $to\n";
@@ -630,3 +637,83 @@ sub sendmail()
 }
 
 1; #module returns a win!
+
+__END__
+
+=head2 NAME
+
+AuthorizeMe - A simple PERL module for registering, authorizing, visitors to your website.
+   
+=head2 SYNOPSIS
+
+my %user; #db structure for AutorizeMe : we can easily add db fields here, but username email and password are a MUST for the AuthorizeMe.pm
+$user{'name'} = ''; #meant to be first and last name
+$user{'user_id'} = '';
+$user{'email'} = '';
+$user{'password'} = '';
+$user{'email_contact_1'} = '';
+$user{'email_contct_2'} = '';
+$user{'email_contact_3'} = '';
+$user{'email_form'} = '';
+$user{'time_out'} = '';
+my %AuthorizeMe_Settings;
+$AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
+$AuthorizeMe_Settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
+$AuthorizeMe_Settings{'user_id_name'} = 'imok_user_id'; #will show up in cookie
+$AuthorizeMe_Settings{'from_email'} = 'imok@emogic.com'; 
+$AuthorizeMe_Settings{'reply_email'} = 'imok@emogic.com'; 
+$AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
+$AuthorizeMe_Settings{'smtp_server'} = '';
+$AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
+    Click to activate:
+    http://localhost/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>
+    );
+ $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
+    Click the link to reset your password to <%set_password_code%>:
+    http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
+    );
+$AuthorizeMe_Settings{'path_to_users'} = './users/'; 
+$AuthorizeMe_Settings{'path_to_tokens'} = './tokens/'; 
+$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/'; 
+my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
+
+
+   
+=head2 DESCRIPTION
+
+This module allows programs to display error messages 
+   in cowboy-speak, as well as plain ol' English.
+   
+
+=begin html
+
+<pre>
+ $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
+    Click the link to reset your password to <%set_password_code%>:
+    http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
+    );
+$AuthorizeMe_Settings{'path_to_users'} = './users/'; 
+$AuthorizeMe_Settings{'path_to_tokens'} = './tokens/'; 
+$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/'; 
+my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
+
+</pre>
+
+
+=end html
+
+=head3 DESCRIPTION
+
+If you want to know what to say when tipping your 10-gallon hat, 
+   you can use this module.
+
+=head2 $a 
+
+     The C<$a> variable contains 1.
+     
+=pod
+
+   ghfgfgddghghdgh hfgfdbghgfghf
+   
+=cut
+

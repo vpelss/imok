@@ -1,6 +1,9 @@
 <html>
 <head>
 	<title>IMOK : Not Lost!</title>
+	<meta http-equiv="Cache-Control" content="no-store">
+	<meta http-equiv="Cache-Control: max-age=0">
+	
 </head>
 
 <h4>Settings</h4>
@@ -8,13 +11,42 @@
  <form id='form_login' action='./imok.cgi'  method="get">
     <input name="command" type="hidden" value="set_settings" id='command_login'>
     
+				Email Contact 1:<br>
     <p><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>'> </p>
+								Email Contact 2:<br>
     <p><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
-    <p><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
-    <textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea>
-    <p><input type='text' name="time_out" placeholder="check in every X hours" id='timeout' value='<%time_out%>'></p>
-    <p><input type='text' name="offset" placeholder="" id='offset by Y hours from now' value='<%time_out%>'></p>
-    <p><input type='submit' > </p>
-    </form>
+ 				Email Contact 3:<br>
+	   <p><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
+   <p><textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
+	
+		
+<label for="time_out">Countdown time:</label>
+<select name="time_out" id="time_out" value="<%time_out%>">
+  <option value=".5">.5</option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+</select>	days. Now set to <%time_out%>
+				 
+					<p></p>
+					
+	<label for="start_hour">Time to start the clock.</label>
+<select name="start_hour" id="start_hour"  value="<%start_hour%>">
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="23">23</option>
+</select>:
+<select name="start_minute" id="start_minute"  value="<%start_minute%>">
+  <option value="0">0</option>
+  <option value="15">15</option>
+  <option value="30">30</option>
+  <option value="45">45</option>
+</select>	 Now <%check_interval%>:<%start_minute%>
+
+	   <p><input type='submit' > </p>
+    
+	
+	</form>
 	
  </html>

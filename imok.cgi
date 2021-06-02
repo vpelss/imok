@@ -23,7 +23,10 @@ $user{'email_contact_1'} = '';
 $user{'email_contct_2'} = '';
 $user{'email_contact_3'} = '';
 $user{'email_form'} = '';
-$user{'time_out'} = '';
+$user{'time_out'} = '86400'; #24 hours
+$user{'start_hour'} = '12';
+$user{'start_minute'} = '00';
+
 my %AuthorizeMe_Settings;
 $AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
 $AuthorizeMe_Settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
@@ -42,7 +45,12 @@ $AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered fo
     );
 $AuthorizeMe_Settings{'path_to_users'} = './users/'; 
 $AuthorizeMe_Settings{'path_to_tokens'} = './tokens/'; 
-$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/'; 
+$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/';
+
+#$AuthorizeMe::user = \%user; #no object option? Can the variables be set?
+#$AuthorizeMe::AuthorizeMe_Settings = \%AuthorizeMe_Settings; #no object option? Can the variables be set?
+#$logged_in = &AuthorizeMe::AmILoggedIn();
+
 my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
 
 my $last_message = '';
@@ -58,7 +66,7 @@ my $command = $in{'command'};
 my $output = '';
 $output = &get_template_page('main.html');
 
-$logged_in = $AuthorizeMeObj->AmILoggedIn(); 
+$logged_in = &AuthorizeMe::AmILoggedIn();
 
 #if($logged_in == 1) {#we are logged in
     if ( $command eq 'logout' ) { &logout() } #login email , password
@@ -89,6 +97,8 @@ else{
 $output =~  s/<%last_message%>/$last_message/g;
 my $set_cookie_string = $AuthorizeMeObj->get_set_cookie_string();
 print "Content-type: text/html\n";
+print "Cache-Control: max-age=0\n";
+print "Cache-Control: no-store\n";
 print "$set_cookie_string\n\n";
 print $output;
 } #main done
@@ -142,15 +152,37 @@ sub get_settings(){
 
 sub set_settings(){
  $logged_in = $AuthorizeMeObj->AmILoggedIn();
- $user{'email_contact_1'} = $in{'email_contact_1'};
- $user{'email_contact_2'} = $in{'email_contact_2'};
- $user{'email_contact_3'} = $in{'email_contact_3'};
+ my $email = $in{'email_contact_1'};
+ if(($email eq '') || (AuthorizeMe::valid_email($email))){
+  $user{'email_contact_1'} = $email; 
+ }
+ else{
+  $last_message = "$last_message : $email is not a valid email address";
+  return 0;
+ }
+ $email = $in{'email_contact_2'};
+ if(($email eq '') || (AuthorizeMe::valid_email($email))){
+  $user{'email_contact_2'} = $email; 
+ }
+ else{
+  $last_message = "$last_message : $email is not a valid email address";
+  return 0;
+ }
+ $email = $in{'email_contact_3'};
+ if(($email eq '') || (AuthorizeMe::valid_email($email))){
+  $user{'email_contact_3'} = $email; 
+ }
+ else{
+  $last_message = "$last_message : $email is not a valid email address";
+  return 0;
+ }
+
  $user{'email_form'} = $in{'email_form'};
  $user{'time_out'} = $in{'time_out'};
  my $result = $AuthorizeMeObj->user_to_db();
  $result = imok();
  if($result == 1){
-  $last_message = '$last_message Settings changed';
+  $last_message = "$last_message Settings changed";
   }
  else{
   $last_message = "$last_message Settings not changed";

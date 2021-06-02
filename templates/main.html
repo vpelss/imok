@@ -23,10 +23,11 @@
 	<div align="center" class='<%logged_in%>'>
 		<form id="form_login" action="./imok.cgi" method="get" name="form_login">
 			<input name="command" type="hidden" value="imok" id="command_login">
-
-			<p><input type="submit" value="IMOK"></p>
+			<p><input type="submit" value="IMOK" title="You are ok for theis interval. This will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm)."></p>
 		</form>
 	</div>
+	
+	<div align="center" class='<%logged_in%>'>00:00:00</div>
 
 	<div align="center">
 		<h2><%last_message%></h2>
@@ -64,5 +65,19 @@
 		<a href="#">About</a>
 	</div>
  
+		<div align="center" class='<%logged_in%>'>
+		<form id="form_login2" action="./imok.cgi" method="get" name="form_login2">
+			<input name="command" type="hidden" value="imnotok" id="command_login2">
+			<p><input type="submit" value="IM NOT OK" title="You are NOT ok for theis interval. This will immediately send the alert email to your alert list."></p>
+		</form>
+	</div>
+		
+				<div align="center" class='<%logged_in%>'>
+		<form id="form_login3" action="./imok.cgi" method="get" name="form_login3">
+			<input name="command" type="hidden" value="testimok" id="command_login3">
+			<p><input type="submit" value="Send a Test Email." title="Send a test email to your alert list."></p>
+		</form>
+	</div>
+				
 </body>
 </html>
