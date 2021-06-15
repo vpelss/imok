@@ -13,6 +13,9 @@ my %in;
 my $path_to_templates = './templates';
 my $logged_in;
 
+$AuthorizeMe::email = "hhhhhhhhh";
+AuthorizeMe::test;
+
 #initialize and create AutorizeMe
 my %user; # db structure for AutorizeMe : we can easily add db fields here, but username email and password are a MUST for the AuthorizeMe.pm
 $user{'name'} = ''; #meant to be first and last name
@@ -124,6 +127,21 @@ sub change_time_stamp(){
  return $result;
 }
 
+sub get_time_stamp(){ 
+ my $filename = shift;
+ open(FH, '<', $filename) or return 0;# $!;
+ my $epoch_timestamp = (stat(FH))[9];
+ close FH;
+ return $epoch_timestamp;
+}
+
+sub time_zone(){
+my @lt = localtime(12*60*60);
+my @gt = gmtime(12*60*60);
+my $tz = $lt[2] - $gt[2];
+return $tz;
+}
+
 sub get_template_page(){
   #shift;
   my $filename = shift;
@@ -138,7 +156,7 @@ sub get_template_page(){
 
 sub get_settings(){
  my $output = shift; #string passed by ref so we can modify it
- $$output = &get_template_page('settings.html');
+ $$output = &get_template_page('settings.html'); #string passed by ref so we can modify it
  #get user data
  $logged_in = $AuthorizeMeObj->AmILoggedIn();
  if($logged_in == 0){return 0}
@@ -179,14 +197,47 @@ sub set_settings(){
 
  $user{'email_form'} = $in{'email_form'};
  $user{'time_out'} = $in{'time_out'};
+ 
+ $user{'start_hour'} = $in{'start_hour'};
+ $user{'start_minute'} = $in{'start_minute'};
+
  my $result = $AuthorizeMeObj->user_to_db();
- $result = imok();
+ #$result = imok(); 
  if($result == 1){
   $last_message = "$last_message Settings changed";
   }
  else{
   $last_message = "$last_message Settings not changed";
   }
+ 
+ my $hour_seconds = 60 * 60;
+ my $day_seconds = 24 * $hour_seconds;
+ #what is today's time at 00:00
+ my $right_now = time();
+ my $days = $right_now / $day_seconds;
+ my $years = $right_now / ($day_seconds * 365);
+ my $days_rounded = sprintf("%d", $days);
+ my $today_seconds_at_midnight = $days_rounded  * $day_seconds;
+ #calc time zone offset
+ my @lt = localtime($today_seconds_at_midnight); #must use zeroed $today_seconds or we will get odd values over midnight
+ my $tz = $lt[2] - 24; #calc timezome difference, includes DST
+ #now calculate file time stamp
+ my $timestamp = $today_seconds_at_midnight; #start of today n seconds
+ if($user{'start_hour'} < $lt[2]){#already past trigger, add a day
+  #$timestamp = $timestamp + $day_seconds;
+ }
+ $timestamp = $timestamp - (($tz)  * $hour_seconds); #adjust for local time zone and dst
+ $timestamp = $timestamp + ($user{'start_hour'} * $hour_seconds); #add out hour start time
+ $timestamp = $timestamp + ($user{'start_minute'} * 60);#add our user minutes
+ 
+ $result = &change_time_stamp($timestamp , "$AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}");
+ #my $test = &get_time_stamp("$AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}");
+ if($result == 0){
+  $last_message = "$last_message Could not set timestamp on $AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}";
+  }
+ #($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =  localtime($timestamp);
+ my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
+ $last_message = "$last_message $str_time";
  return $result;
 }
 

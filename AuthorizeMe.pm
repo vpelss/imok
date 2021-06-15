@@ -14,7 +14,7 @@ $VERSION  = '0.2';
 
 #require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw( );
+our @EXPORT = qw( $email );
 
 #manages token cookie
 #manages db read and write, can add fields!!!!!
@@ -25,7 +25,7 @@ my $user ; #ref to hash of user structure provided by calling program at new(\%u
 my $AuthorizeMe_Settings; #ref to hash, sent from calling program
  
 my $cookies; #will be a ref to a anonymous hash
-my $email;
+our $email;
 my $user_id; #made from $email
 my $token;
 my $random_number_size = 1000000000;
@@ -43,6 +43,10 @@ my $user_id_name = "AuthorizeMeUserId";
 my $MaxAge = '3153600000'; #default 100 years, in case not supplied in new()
 
 my $class;
+
+sub test(){
+ my $ttt = $email; 
+}
 
 sub new() { #init + see if we have a valid auth token and a valid  user file
   $class = shift;   
