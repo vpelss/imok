@@ -136,10 +136,18 @@ sub get_time_stamp(){
 }
 
 sub time_zone(){
-my @lt = localtime(12*60*60);
-my @gt = gmtime(12*60*60);
-my $tz = $lt[2] - $gt[2];
-return $tz;
+ my $hour_seconds = 60 * 60;
+ my $day_seconds = 24 * $hour_seconds;
+ #what is today's time at 12:00
+ my $right_now = time();
+ my $days = $right_now / $day_seconds;
+ my $years = $right_now / ($day_seconds * 365);
+ my $days_rounded = sprintf("%d", $days);
+ my $today_seconds_at_00 = $days_rounded  * $day_seconds;
+ #calc time zone offset
+ my @lt = localtime($today_seconds_at_00 + ($day_seconds/2)); #must use noon or we will get odd values 
+ my $tz = $lt[2] - 12; #calc timezome difference, includes DST
+ return $tz;
 }
 
 sub get_template_page(){
@@ -166,6 +174,8 @@ sub get_settings(){
  $$output =~ s/<%email_contact_3%>/$user{'email_contact_3'}/g; #hide login, register , forgot pw
  $$output =~  s/<%email_form%>/$user{'email_form'}/g; #show logout, settings, reset pw  
  $$output =~  s/<%time_out%>/$user{'time_out'}/g; #show logout, settings, reset pw  
+ $$output =~  s/<%start_date%>/$user{'start_date'}/g; #show logout, settings, reset pw  
+ $$output =~  s/<%start_time%>/$user{'start_time'}/g; #show logout, settings, reset pw  
 }
 
 sub set_settings(){
@@ -198,9 +208,13 @@ sub set_settings(){
  $user{'email_form'} = $in{'email_form'};
  $user{'time_out'} = $in{'time_out'};
  
+ $user{'start_date'} = $in{'start_date'};
+ $user{'start_time'} = $in{'start_time'};
+
  $user{'start_hour'} = $in{'start_hour'};
  $user{'start_minute'} = $in{'start_minute'};
-
+ $user{'tz_offset_minutes'} = $in{'tz_offset_minutes'};
+ 
  my $result = $AuthorizeMeObj->user_to_db();
  #$result = imok(); 
  if($result == 1){
@@ -214,30 +228,29 @@ sub set_settings(){
  my $day_seconds = 24 * $hour_seconds;
  #what is today's time at 00:00
  my $right_now = time();
+ #$right_now = $day_seconds;
  my $days = $right_now / $day_seconds;
  my $years = $right_now / ($day_seconds * 365);
  my $days_rounded = sprintf("%d", $days);
- my $today_seconds_at_midnight = $days_rounded  * $day_seconds;
+ my $today_seconds_at_00 = $days_rounded  * $day_seconds;
  #calc time zone offset
- my @lt = localtime($today_seconds_at_midnight); #must use zeroed $today_seconds or we will get odd values over midnight
- my $tz = $lt[2] - 24; #calc timezome difference, includes DST
+ my $tz = $user{'tz_offset_minutes'} / 60; #tz of user pc compared to UTC. convert to hours
  #now calculate file time stamp
- my $timestamp = $today_seconds_at_midnight; #start of today n seconds
- if($user{'start_hour'} < $lt[2]){#already past trigger, add a day
-  #$timestamp = $timestamp + $day_seconds;
- }
- $timestamp = $timestamp - (($tz)  * $hour_seconds); #adjust for local time zone and dst
+ my $timestamp = $today_seconds_at_00; #start of today n seconds
+ $timestamp = $timestamp + (($tz)  * $hour_seconds); #adjust for local time zone and dst
  $timestamp = $timestamp + ($user{'start_hour'} * $hour_seconds); #add out hour start time
  $timestamp = $timestamp + ($user{'start_minute'} * 60);#add our user minutes
- 
+ my @lt = localtime($timestamp);
+  if($user{'start_hour'} < $lt[2]){#already past trigger, add a day
+  #$timestamp = $timestamp + $day_seconds;
+ }
+ @lt = localtime($timestamp);
  $result = &change_time_stamp($timestamp , "$AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}");
- #my $test = &get_time_stamp("$AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}");
  if($result == 0){
   $last_message = "$last_message Could not set timestamp on $AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}";
   }
- #($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =  localtime($timestamp);
  my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
- $last_message = "$last_message $str_time";
+ $last_message = "$last_message $str_time $timestamp";
  return $result;
 }
 
