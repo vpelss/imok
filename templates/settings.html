@@ -9,7 +9,7 @@
 
  <form id='form_login' action='./imok.cgi'  method="get">
     <input name="command" type="hidden" value="set_settings" id='command_login'>
-				<input name="tz_offset_minutes" type="hidden" value="" id='tz_offset_minutes'>
+				<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
  			<input name="timestamp" type="hidden" value="" id='timestamp'>
     
 				Email Contact 1:<br>
@@ -20,7 +20,7 @@
 	   <p><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
    <p><textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
 	
-
+<!--
 <p>					
 	<label for="start_hour">Time to start the clock.</label>
 <select name="start_hour" id="start_hour"  value="<%start_hour%>">
@@ -36,9 +36,10 @@
   <option value="45">45</option>
 </select>	 Now <%check_interval%>:<%start_minute%>
 </p>
+-->
 
-<p><input type="date"  name='start_date' id='start_date' value='<%start_date%>' onchange='calc_date();'></p>
-<p><input type="time" id="start_time" name="start_time" value="<%start_time%>" onchange='calc_date();'></p>
+<p><label for="start_date">Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>' onchange='calc_date();'></p>
+<p><label for="start_time">Start Time</label> <input type="time" id="start_time" name="start_time" value="<%start_time%>" onchange='calc_date();'></p>
 
 <p>		
 <label for="time_out">Countdown time every </label>
@@ -50,30 +51,41 @@
 </select>	days.
 				 </p>
 
-
-	   <p><input type='submit'> </p>
+	<p><input type='submit'> </p>
     
-	
 	</form>
 	<script>
 	
 	function calc_date(){
 	const date1 = new Date();
-	var tz_offset_minutes = date1.getTimezoneOffset();
-	document.getElementById("tz_offset_minutes").value = -tz_offset_minutes;
+	var tz_offset_hours = date1.getTimezoneOffset() / 60 ;
+	document.getElementById("tz_offset_hours").value = -tz_offset_hours;
 
 	var start_date = document.getElementById("start_date").value;
-	var dateuse = start_date.split('-');
-	var year = dateuse[0];
-	var month = dateuse[1];
-	var day = dateuse[2];
+	var date_ip = start_date.split('-');
+	var year = date_ip[0];
+	var month = parseInt(date_ip[1]) - 1; //months start at 0 in Date.UTC
+	var day = date_ip[2];
 	var start_time = document.getElementById("start_time").value;
-	var timeuse = start_time.split(':');
-	var hour = timeuse[0];
-	var minute = timeuse[1];
-//send this to imok with tz to set tiestamp
-	var start_UTC = Date.UTC(year, month, day , hour , minute);
-	start_UTC = Math.floor(start_UTC/1000);
+	var time_ip = start_time.split(':');
+	var hour = time_ip[0];
+	var minute = time_ip[1];
+	
+	//var start_UTC = Date.UTC(year, month , day , hour , minute);
+	//start_UTC = Math.floor(start_UTC/1000);
+	//start_UTC = start_UTC + (tz_offset_hours * 60 * 60); //add timezone shift so we are sending server the trigger date and time at UTC.
+	//NOTE: Date.UTC sees the date we feed it as UTC and converts it to out local time.
+	//Odd. I was hoping it would covert the input time to UTC. Nope.
+	//eg: we are in EST
+	//when we feed Date.UTC a trigger time of 1pm UTC, it gives us local epoch time for 9am EST (-4 EST depending on DST)
+	//so we need to convert it back to 1pm UTC by adding back our timezone offset hours (4 or 5 hours depending on DST)
+	//we feed the final trigger time to server as 1pm UTC,
+	//the server (in another timezone) will convert the UTC time of 1pm to it's local time courtesy of utime 
+	
+	//alternate method, but why create an object?
+	var date_trigger = new Date(year, month , day , hour , minute);
+	var start_UTC = Math.floor( date_trigger.getTime() / 1000 ); 
+
 	document.getElementById("timestamp").value = start_UTC;
 	}
 	

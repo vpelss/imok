@@ -211,46 +211,30 @@ sub set_settings(){
  $user{'start_date'} = $in{'start_date'};
  $user{'start_time'} = $in{'start_time'};
 
- $user{'start_hour'} = $in{'start_hour'};
- $user{'start_minute'} = $in{'start_minute'};
- $user{'tz_offset_minutes'} = $in{'tz_offset_minutes'};
+ $user{'tz_offset_hours'} = $in{'tz_offset_hours'};
+ $user{'timestamp'} = $in{'timestamp'};
  
  my $result = $AuthorizeMeObj->user_to_db();
  #$result = imok(); 
  if($result == 1){
-  $last_message = "$last_message Settings changed";
+  $last_message = "$last_message Settings changed.";
   }
  else{
-  $last_message = "$last_message Settings not changed";
+  $last_message = "$last_message Settings not changed.";
   }
  
  my $hour_seconds = 60 * 60;
  my $day_seconds = 24 * $hour_seconds;
- #what is today's time at 00:00
- my $right_now = time();
- #$right_now = $day_seconds;
- my $days = $right_now / $day_seconds;
- my $years = $right_now / ($day_seconds * 365);
- my $days_rounded = sprintf("%d", $days);
- my $today_seconds_at_00 = $days_rounded  * $day_seconds;
- #calc time zone offset
- my $tz = $user{'tz_offset_minutes'} / 60; #tz of user pc compared to UTC. convert to hours
- #now calculate file time stamp
- my $timestamp = $today_seconds_at_00; #start of today n seconds
- $timestamp = $timestamp + (($tz)  * $hour_seconds); #adjust for local time zone and dst
- $timestamp = $timestamp + ($user{'start_hour'} * $hour_seconds); #add out hour start time
- $timestamp = $timestamp + ($user{'start_minute'} * 60);#add our user minutes
- my @lt = localtime($timestamp);
-  if($user{'start_hour'} < $lt[2]){#already past trigger, add a day
-  #$timestamp = $timestamp + $day_seconds;
- }
- @lt = localtime($timestamp);
+ my $timestamp = $user{'timestamp'}; #trigger timestamp based on PC's local time
  $result = &change_time_stamp($timestamp , "$AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}");
  if($result == 0){
   $last_message = "$last_message Could not set timestamp on $AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}";
   }
+ my @lt = localtime($timestamp);
  my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
- $last_message = "$last_message $str_time $timestamp";
+ my $year = 1900 + $lt[5];
+ my $month = $lt[4] + 1;
+ $last_message = "$last_message Trigger time is $year-$month-$lt[3] $str_time on the server but $in{'start_date'} $in{'start_time'} local time on your pc";
  return $result;
 }
 
