@@ -108,11 +108,31 @@ print $output;
 
 sub imok(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn(); #get user details
-my $new_time_stamp = time() + (60 * 60 * $user{'time_out'}); #out time is in hours, convert to sec 
 my $filename = "$AuthorizeMe_Settings{'path_to_users'}/$user{'user_id'}";
+my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$current_time_stamp,$ctime,$blksize,$blocks) = stat($filename);
+my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + time_out
+
+if( $current_time_stamp <= time){#alarm was/is triggered
+ $new_time_stamp = $current_time_stamp + $user{'timeout_ms'};
+ $last_message = "$last_message Alarm was likely triggered. Please email your contacts and tell them you are OK.";
+ #send out IMOK email. Member has checked in...
+}
+elsif( ($current_time_stamp - $user{'timeout_ms'}) <= time ){ #we are clicking before alarm is triggered
+ $new_time_stamp = $current_time_stamp + $user{'timeout_ms'}; 
+}
+elsif( ($current_time_stamp - $user{'timeout_ms'}) > time  ){# we are a full timeout before the time stamp. do nothing
+ #do nothing
+}
+
+my $new_time_stamp_user_tz = $new_time_stamp + ($user{'tz_offset_hours' } * 60 * 60);
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($new_time_stamp_user_tz);
+$mon = $mon + 1;
+$year = 1900 + $year;
+my $trigger_time_string = sprintf("%d-%.2d-%.2d  %d:%.2d", $year , $mon , $mday , $hour , $min);
+
 my $result = &change_time_stamp($new_time_stamp , $filename);
 if($result == 1){
- $last_message = "$last_message your next IMOK trigger time is: ";
+ $last_message = "$last_message your next IMOK trigger time is: $trigger_time_string";
 }
 else{
  $last_message = "$last_message IMOK trigger time failed. Please try again."; 
@@ -207,6 +227,7 @@ sub set_settings(){
 
  $user{'email_form'} = $in{'email_form'};
  $user{'time_out'} = $in{'time_out'};
+ $user{'timeout_ms'} = 24 * 60 * 60 * $in{'time_out'};
  
  $user{'start_date'} = $in{'start_date'};
  $user{'start_time'} = $in{'start_time'};

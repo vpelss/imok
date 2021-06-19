@@ -7,55 +7,39 @@
 
 <h4>Settings</h4>
 
- <form id='form_login' action='./imok.cgi'  method="get">
-    <input name="command" type="hidden" value="set_settings" id='command_login'>
-				<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
- 			<input name="timestamp" type="hidden" value="" id='timestamp'>
-    
-				Email Contact 1:<br>
-    <p><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>'> </p>
-								Email Contact 2:<br>
-    <p><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
- 				Email Contact 3:<br>
-	   <p><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
-   <p><textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
-	
-<!--
-<p>					
-	<label for="start_hour">Time to start the clock.</label>
-<select name="start_hour" id="start_hour"  value="<%start_hour%>">
-  <option value="1">1</option>
-  <option value="2">2</option>
-  <option value="3">3</option>
-  <option value="23">23</option>
-</select>:
-<select name="start_minute" id="start_minute"  value="<%start_minute%>">
-  <option value="0">0</option>
-  <option value="15">15</option>
-  <option value="30">30</option>
-  <option value="45">45</option>
-</select>	 Now <%check_interval%>:<%start_minute%>
-</p>
--->
+<form id='form_login' action='./imok.cgi'  method="get">
+	<input name="command" type="hidden" value="set_settings" id='command_login'>
+	<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
+	<input name="timestamp" type="hidden" value="" id='timestamp'>
+					
+	<p>Email Contact 1:<br><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>'> </p>				
+	<p>Email Contact 2:<br><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
+	<p>Email Contact 3:<br><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
+			
+	<p>Alert Mail Message:</br><textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
+		
+	<p><label for="start_date">Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>' onchange='calc_date();'></p>
+	<p><label for="start_time">Start Time</label> <input type="time" id="start_time" name="start_time" value="<%start_time%>" onchange='calc_date();'></p>
 
-<p><label for="start_date">Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>' onchange='calc_date();'></p>
-<p><label for="start_time">Start Time</label> <input type="time" id="start_time" name="start_time" value="<%start_time%>" onchange='calc_date();'></p>
-
-<p>		
+	<p>		
 <label for="time_out">Countdown time every </label>
 <select name="time_out" id="time_out" value="<%time_out%>">
   <option value=".5">.5</option>
-  <option value="1">1</option>
+  <option value="1" selected>1</option>
   <option value="2">2</option>
   <option value="3">3</option>
-</select>	days.
+  <option value="3">4</option>
+  <option value="3">5</option>
+  <option value="3">6</option>
+  <option value="3">7</option>
+</select>	days. It is currently set to <b><%time_out%></b> days. It defaults to 1 day. Change drop down if required!
 				 </p>
 
-	<p><input type='submit'> </p>
+<p><input type='submit' onclick="calc_date();"> </p>
     
 	</form>
-	<script>
 	
+	<script>
 	function calc_date(){
 	const date1 = new Date();
 	var tz_offset_hours = date1.getTimezoneOffset() / 60 ;
@@ -85,10 +69,21 @@
 	//alternate method, but why create an object?
 	var date_trigger = new Date(year, month , day , hour , minute);
 	var start_UTC = Math.floor( date_trigger.getTime() / 1000 ); 
-
-	document.getElementById("timestamp").value = start_UTC;
+	var a1 = date_trigger.getTime()
+	var a2 = date1.getTime();
+	if(date_trigger.getTime() < date1.getTime()){//do not allow trigger time in the past
+		alert("Trying to set a trigger time in the past. Please choose a time in the future.");
+		return 0;
 	}
 	
-calc_date(); //in case we don't change date / time
+	document.getElementById("timestamp").value = start_UTC; //set timestamp value to send to server
+	return 1;
+	}
+	
+//calc_date(); //in case we don't change date / time
+
+//document.getElementById("myForm").submit();
+
 </script>
+	
  </html>
