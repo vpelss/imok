@@ -72,8 +72,8 @@
 	var a1 = date_trigger.getTime()
 	var a2 = date1.getTime();
 	if(date_trigger.getTime() < date1.getTime()){//do not allow trigger time in the past
-		alert("Trying to set a trigger time in the past. Please choose a time in the future.");
-		return 0;
+		//alert("Trying to set a trigger time in the past. Please choose a time in the future.");
+		//return 0;
 	}
 	
 	document.getElementById("timestamp").value = start_UTC; //set timestamp value to send to server

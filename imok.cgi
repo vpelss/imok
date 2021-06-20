@@ -111,16 +111,23 @@ my $logged_in = $AuthorizeMeObj->AmILoggedIn(); #get user details
 my $filename = "$AuthorizeMe_Settings{'path_to_users'}/$user{'user_id'}";
 my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$current_time_stamp,$ctime,$blksize,$blocks) = stat($filename);
 my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + time_out
+my $now = time();
 
-if( $current_time_stamp <= time){#alarm was/is triggered
- $new_time_stamp = $current_time_stamp + $user{'timeout_ms'};
+if( $current_time_stamp <= $now ){#alarm was/is triggered
+  until( $new_time_stamp  > $now ){
+   $new_time_stamp = $new_time_stamp + $user{'timeout_ms'}; 
+  }
+ #$new_time_stamp = $new_time_stamp + $user{'timeout_ms'};
  $last_message = "$last_message Alarm was likely triggered. Please email your contacts and tell them you are OK.";
  #send out IMOK email. Member has checked in...
 }
-elsif( ($current_time_stamp - $user{'timeout_ms'}) <= time ){ #we are clicking before alarm is triggered
+elsif( ($current_time_stamp - $user{'timeout_ms'}) <= $now ){ #we are clicking just before alarm is triggered
  $new_time_stamp = $current_time_stamp + $user{'timeout_ms'}; 
 }
-elsif( ($current_time_stamp - $user{'timeout_ms'}) > time  ){# we are a full timeout before the time stamp. do nothing
+elsif( ($current_time_stamp - $user{'timeout_ms'}) > $now  ){# we are a full timeout before the time stamp. do nothing
+ #do nothing
+}
+elsif( ($current_time_stamp - (2 * $user{'timeout_ms'}) ) > $now ){#time stamp is greater than 2 or more full timeouts, this should never happen, but if it does, imok moves us
  #do nothing
 }
 
