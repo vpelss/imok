@@ -78,6 +78,7 @@ $logged_in = &AuthorizeMe::AmILoggedIn();
     if ( $command eq 'get_settings' ) { &get_settings(\$output) } 
     if ( $command eq 'set_settings' ) { &set_settings() } 
     if ( $command eq 'imok' ) { &imok() } 
+    if ( $command eq 'cron' ) { &cron() } 
 #    }
 #else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
@@ -145,6 +146,32 @@ else{
  $last_message = "$last_message IMOK trigger time failed. Please try again."; 
 }
 return $result;
+}
+
+sub cron(){
+ #get list of files in a directory
+ my @filenames = glob("$AuthorizeMe_Settings{'path_to_users'}*");
+ foreach my $filename (@filenames){
+  #$filename = "$AuthorizeMe_Settings{'path_to_users'}$filename";
+  my $timestamp = &get_time_stamp($filename);
+  if($timestamp > time()){#we are not alarming
+   next;
+  }
+  &AuthorizeMe::db_to_user($filename); #open file get details
+  #send alert emails
+
+ 
+  #set time stamp ahead one hour
+ 
+  #increase email file count
+ 
+  #save file
+ 
+  #update time stamp
+  
+ }
+ 
+  
 }
 
 sub change_time_stamp(){
