@@ -29,6 +29,7 @@ $user{'email_form'} = '';
 $user{'time_out'} = '86400'; #24 hours
 $user{'start_hour'} = '12';
 $user{'start_minute'} = '00';
+$user{'alerts_sent'} = 0;
 
 my %AuthorizeMe_Settings;
 $AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
@@ -40,7 +41,7 @@ $AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
 $AuthorizeMe_Settings{'smtp_server'} = '';
 $AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
     Click to activate:
-    http://localhost/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>
+    https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>
     );
  $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
@@ -78,7 +79,6 @@ $logged_in = &AuthorizeMe::AmILoggedIn();
     if ( $command eq 'get_settings' ) { &get_settings(\$output) } 
     if ( $command eq 'set_settings' ) { &set_settings() } 
     if ( $command eq 'imok' ) { &imok() } 
-    if ( $command eq 'cron' ) { &cron() } 
 #    }
 #else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
@@ -87,6 +87,9 @@ $logged_in = &AuthorizeMe::AmILoggedIn();
     if ( $command eq 'forgot_password' ) { &forgot_password($in{'email'}) } 
     if ( $command eq 'set_password' ) { &set_password($in{'user_id'} , $in{'set_password_code'}); }#from link sent by &forgot_password
 #    }
+
+if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
+if ( $ARGV[0] eq 'cron' ) { &cron() } #from cron
 
 $logged_in = $AuthorizeMeObj->AmILoggedIn();
 if($logged_in == 1) {#we are logged in
@@ -106,6 +109,30 @@ print "Cache-Control: no-store\n";
 print "$set_cookie_string\n\n";
 print $output;
 } #main done
+
+sub write_to_log(){
+ my $text = shift;
+ my $filename = 'log.txt';
+ my $MAXSIZE = 2**15; 
+ 
+ if(-s $filename > $MAXSIZE){
+  open(FH, '<', $filename);
+  my @lines = <FH>;
+  close FH;
+  my $number_of_lines = scalar @lines;
+  for(my $i = 0 ; $i < ($number_of_lines/2) ; $i++){
+   shift @lines;   
+  }
+  open(FH, '>', $filename) or return 0;
+  print FH @lines;
+  close FH; 
+ }
+ 
+ open(FH, '>>', $filename) or return 0;# $!;
+ print FH "$text\n\n";
+ close(FH);
+ return 1; 
+}
 
 sub imok(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn(); #get user details
@@ -145,6 +172,7 @@ if($result == 1){
 else{
  $last_message = "$last_message IMOK trigger time failed. Please try again."; 
 }
+ &write_to_log("user{'email'} ckecked in.");
 return $result;
 }
 
@@ -159,19 +187,21 @@ sub cron(){
   }
   &AuthorizeMe::db_to_user($filename); #open file get details
   #send alert emails
-
- 
+  #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
+  my $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
+  $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_2'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
+  $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_3'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
   #set time stamp ahead one hour
- 
+  $user{'timestamp'} = (60 * 60) + $user{'timestamp'};
   #increase email file count
- 
+  $user{'alerts_sent'} = 1 + $user{'alerts_sent'};
   #save file
- 
+  &AuthorizeMe::user_to_db($filename);
   #update time stamp
-  
+  &change_time_stamp($timestamp , $filename);
+  &write_to_log("Alert to $user{'email_contact_1'}");
  }
  
-  
 }
 
 sub change_time_stamp(){

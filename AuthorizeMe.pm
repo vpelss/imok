@@ -242,12 +242,11 @@ sub register_account()
     $email_message =~ s/<%activate_code%>/$random_number/g;
     
     #send email message
-    &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , 'IMOK account activation email' , $email_message ,$AuthorizeMe_Settings->{'smtp_server'});
+    $result = &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , 'IMOK account activation email' , $email_message ,$AuthorizeMe_Settings->{'smtp_server'});
     
     #return success with message stating auth email must be clicked!
-    $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email :  $email_message";
-      return 1;
-          
+    $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email :  $email_message   Ressult: $result";
+    return 1;         
     }
 
 sub encrypt_password(){
