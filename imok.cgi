@@ -1,17 +1,15 @@
-#!C:/Perl64/bin/perl.exe -w -d
-
-#!/usr/bin/perl
-
-# Lock files in use
+#!/usr/bin/perl -d
 
 use strict;
 use Socket;
+use lib '.'; #nuts, PERL has changed. add local path to @INC
 use AuthorizeMe;
 
 my %in;
 
 my $path_to_templates = './templates';
 my $logged_in;
+my $trigger_time = 0;
 
 $AuthorizeMe::email = "hhhhhhhhh";
 AuthorizeMe::test;
@@ -39,9 +37,10 @@ $AuthorizeMe_Settings{'from_email'} = 'imok@emogic.com';
 $AuthorizeMe_Settings{'reply_email'} = 'imok@emogic.com'; 
 $AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
 $AuthorizeMe_Settings{'smtp_server'} = '';
+$AuthorizeMe_Settings{'Activation_Email_Subject'} = 'IMOK account activation email';
 $AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
     Click to activate:
-    https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>
+    https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>
     );
  $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
@@ -64,42 +63,44 @@ if ($@) { &cgierr("fatal error: $@"); }     # never produces that nasty 500 serv
 exit;   # There are only two exit calls in the script, here and in in &cgierr.
 
 sub main(){
+if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit. 
 %in = &parse_form();
 my $command = $in{'command'};
 
 my $output = '';
 $output = &get_template_page('main.html');
 
-$logged_in = &AuthorizeMe::AmILoggedIn();
+#$logged_in = &AuthorizeMe::AmILoggedIn();
+$logged_in = $AuthorizeMeObj->AmILoggedIn();
 
-#if($logged_in == 1) {#we are logged in
+if($logged_in == 1) {#we are logged in
     if ( $command eq 'logout' ) { &logout() } #login email , password
     if ( $command eq 'logout_all_devices' ) { &logout_all_devices() } 
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) } 
     if ( $command eq 'get_settings' ) { &get_settings(\$output) } 
     if ( $command eq 'set_settings' ) { &set_settings() } 
     if ( $command eq 'imok' ) { &imok() } 
-#    }
-#else{#we are not logged in
+    }
+else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
-				if ( $command eq 'activate' ) { &activate($in{'activate_code'}) } #login email , password		
+				if ( $command eq 'activate' ) { &activate($in{'activate_code'} , $in{'user_id'}) } #login email , password		
     if ( $command eq 'login' ) { &login() } #login email , password
     if ( $command eq 'forgot_password' ) { &forgot_password($in{'email'}) } 
     if ( $command eq 'set_password' ) { &set_password($in{'user_id'} , $in{'set_password_code'}); }#from link sent by &forgot_password
-#    }
+    }
 
 if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
-if ( $ARGV[0] eq 'cron' ) { &cron() } #from cron
 
 $logged_in = $AuthorizeMeObj->AmILoggedIn();
 if($logged_in == 1) {#we are logged in
     $output =~ s/<%logged_out%>/hide_me/g; #hide login, register , forgot pw
-    $output =~  s/<%logged_in%>/show_me/g; #show logout, settings, reset pw 
- }
+    $output =~  s/<%logged_in%>/show_me/g; #show logout, settings, reset pw
+    if($trigger_time != 0) {$output =~  s/<%trigger_time%>/$trigger_time/g;} #for main page  != 0
+    }
 else{
     $output =~ s/<%logged_out%>/show_me/g; #show login, register , forgot pw
-    $output =~  s/<%logged_in%>/hide_me/g; #hide logout, settings, reset pw 
-}
+    $output =~  s/<%logged_in%>/hide_me/g; #hide logout, settings, reset pw
+    }
  
 $output =~  s/<%last_message%>/$last_message/g;
 my $set_cookie_string = $AuthorizeMeObj->get_set_cookie_string();
@@ -136,6 +137,7 @@ sub write_to_log(){
 
 sub imok(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn(); #get user details
+if($logged_in == 0){return 0;}
 my $filename = "$AuthorizeMe_Settings{'path_to_users'}/$user{'user_id'}";
 my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$current_time_stamp,$ctime,$blksize,$blocks) = stat($filename);
 my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + time_out
@@ -159,11 +161,13 @@ elsif( ($current_time_stamp - (2 * $user{'timeout_ms'}) ) > $now ){#time stamp i
  #do nothing
 }
 
+#trigger time on users comp?
 my $new_time_stamp_user_tz = $new_time_stamp + ($user{'tz_offset_hours' } * 60 * 60);
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($new_time_stamp_user_tz);
 $mon = $mon + 1;
 $year = 1900 + $year;
 my $trigger_time_string = sprintf("%d-%.2d-%.2d  %d:%.2d", $year , $mon , $mday , $hour , $min);
+
 
 my $result = &change_time_stamp($new_time_stamp , $filename);
 if($result == 1){
@@ -191,15 +195,16 @@ sub cron(){
   my $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
   $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_2'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
   $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_3'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
-  #set time stamp ahead one hour
-  $user{'timestamp'} = (60 * 60) + $user{'timestamp'};
+  #set time stamp ahead one hour. So we do not send an email for another hour
+  $user{'timestamp'} = (60 * 60) + $timestamp;
   #increase email file count
   $user{'alerts_sent'} = 1 + $user{'alerts_sent'};
   #save file
   &AuthorizeMe::user_to_db($filename);
   #update time stamp
-  &change_time_stamp($timestamp , $filename);
-  &write_to_log("Alert to $user{'email_contact_1'}");
+  &change_time_stamp($user{'timestamp'} , $filename);
+  &write_to_log("Alert to $user{'email_contact_1'} at $user{'timestamp'}");
+  $last_message = "$last_message email alert sent $user{'timestamp'}";
  }
  
 }
@@ -319,7 +324,7 @@ sub set_settings(){
  my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
  my $year = 1900 + $lt[5];
  my $month = $lt[4] + 1;
- $last_message = "$last_message Trigger time is $year-$month-$lt[3] $str_time on the server but $in{'start_date'} $in{'start_time'} local time on your pc";
+ $last_message = "$last_message Trigger time is $year-$month-$lt[3] $str_time on the server and $in{'start_date'} $in{'start_time'} local time on your pc";
  return $result;
 }
 
@@ -344,10 +349,22 @@ sub register() {
 
 sub activate(){
  my $authorize_code = shift;
- my $result =  $AuthorizeMeObj->activate( $authorize_code );
- $result = imok();
+ my $user_id = shift;
+ 
+ my $result =  $AuthorizeMeObj->activate( $authorize_code , $user_id );
+ if($result == 0) {$last_message = "$last_message Your activation failed."; return 0};
+ $user{'email_contact_1'} = '';
+ $user{'email_contct_2'} = '';
+ $user{'email_contact_3'} = '';
+ $user{'email_form'} = 'Member has not reported in to IMOK in a specified amount of time. You may want to check on them.';
+ $user{'timeout_ms'} = '86400000'; #24hours
+ my $filename = "$AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}";
+ $result =  $AuthorizeMeObj->user_to_db();
+ if($result == 0) {$last_message = "$last_message Your activation failed. DB write error."; return 0};
+
+ #$result = imok();
  if($result == 1){
-  $last_message = "$last_message Your account $user{'email'} has been authorized";
+  $last_message = "$last_message Your account $user{'email'} has been authorized. Please log in and go to setup.";
   }
  else{
   $last_message = "$last_message Error: Your account $user{'email'} could not be authorized";
@@ -469,9 +486,9 @@ sub cgierr
 # Displays any errors and prints out FORM and ENVIRONMENT
 # information. Useful for debugging.
 
-if (my $debug == 0) {
-     print "Epic fail....";
-     }
+#if (my $debug == 0) {
+ #    print "Epic fail....";
+  #   }
 print "Content-Type: text/html\n\n";
 print "<PRE>\n\nCGI ERROR\n==========================================\n";
 $_[0]      and print "Error Message       : $_[0]\n";

@@ -1,4 +1,4 @@
-package AuthorizeMe ; 
+package AuthorizeMe; 
 
 use strict;
 use Socket;
@@ -34,7 +34,8 @@ my $last_message = ''; #used for &get_last_message()
 
 #determined by calling program. we are a module and code is inaccessible?
 my $path_to_users; 
-my $path_to_tokens;  
+my $path_to_tokens;
+my $path_to_authorizations;
 #my $from_email; 
 #my $SEND_MAIL = '';
 #my $SMTP_SERVER = '';
@@ -58,7 +59,8 @@ sub new() { #init + see if we have a valid auth token and a valid  user file
   #$SEND_MAIL = $AuthorizeMe_Settings->{'sendmail'}; 
   #$SMTP_SERVER = $AuthorizeMe_Settings->{'smtp_server'}; 
   $path_to_users =  $AuthorizeMe_Settings->{'path_to_users'}; 
-  $path_to_tokens = $AuthorizeMe_Settings->{'path_to_tokens'}; 
+  $path_to_tokens = $AuthorizeMe_Settings->{'path_to_tokens'};
+  $path_to_authorizations = $AuthorizeMe_Settings->{'path_to_authorizations'};
   #$user_file_extension = $AuthorizeMe_Settings->{'user_file_extension'}; 
   if($AuthorizeMe_Settings->{'token_name'}){ $token_name = $AuthorizeMe_Settings->{'token_name'}; }
   if($AuthorizeMe_Settings->{'user_id_name'}) { $user_id_name = $AuthorizeMe_Settings->{'user_id_name'}; }
@@ -220,6 +222,11 @@ sub register_account()
       $last_message = "This Email Address is already registered : $email";
       return 0;
       }
+     $filename = "$path_to_authorizations$user_id"; 
+    if(-e $filename){
+      $last_message = "This Email Address has already requested an account. You will receive, or should have been sent an activation email to $email";
+      return 0;
+      }
     
     # $user->{'username'} = $username; #simplest case just use email as username also
     $user->{'email'} = $email;
@@ -227,25 +234,23 @@ sub register_account()
     #salt it up!!!!!!!!! with userid?
     my $password_hash = &encrypt_password($password);
     $user->{'password'} = $password_hash;
-    $user->{'email_contact_1'} = '';
-    $user->{'email_contct_2'} = '';
-    $user->{'email_contact_3'} = '';
-    $user->{'email_form'} = 'Member has not reported in to IMOK in a specified amount of time. You may want to check on them.';
-    $user->{'timeout_ms'} = '86400000'; #24hours
     
     #save account data in file $random_number. when we ru
     my $random_number = int(rand($random_number_size));
-    $filename = "$path_to_users$random_number";
+    $user->{'Auth_Code'} = $random_number;
+    #$filename = "$path_to_authorizations$random_number";
     my $result = &hash_to_db($user , $filename);
     
     my $email_message = $AuthorizeMe_Settings->{'registration_email_template'};
     $email_message =~ s/<%activate_code%>/$random_number/g;
+    $email_message =~ s/<%user_id%>/$user_id/g;
     
     #send email message
-    $result = &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , 'IMOK account activation email' , $email_message ,$AuthorizeMe_Settings->{'smtp_server'});
+    $result = &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , $AuthorizeMe_Settings->{'Activation_Email_Subject'} , $email_message ,$AuthorizeMe_Settings->{'smtp_server'});
+    #my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
     
     #return success with message stating auth email must be clicked!
-    $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email :  $email_message   Ressult: $result";
+    $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email. It may take up to an hour to receive. Check your spam folder. : $email_message";
     return 1;         
     }
 
@@ -259,15 +264,22 @@ sub encrypt_password(){
 sub activate(){
   shift;
   my $authorize_code = shift;
+  my $user_id = shift;
   my $new_filename = '';
   
-  #does the file exist, rename to userid
-  my $filename = "$path_to_users$authorize_code";
+  #does the file exist
+  my $filename = "$path_to_authorizations$user_id";
   my $result = &db_to_hash($user , $filename);
   if($result != 1){return 0}
-  $new_filename = $user->{'user_id'};
-  $new_filename = "$path_to_users$new_filename";
-  $result = rename("$filename" , "$new_filename");
+  #is code valid?
+  if($authorize_code != $user->{'Auth_Code'}){return 0}
+  #what will be the username, and create
+  $new_filename = "$path_to_users$user_id";
+  $result = &hash_to_db($user , $new_filename);
+  if($result != 1){return 0}
+  #delete auth file
+  $result = unlink($filename);
+  if($result != 1){return 0}
   
   return $result ;
   }

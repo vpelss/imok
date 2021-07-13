@@ -27,7 +27,7 @@
 		</form>
 	</div>
 	
-	<div align="center" class='<%logged_in%>'>00:00:00</div>
+	<div align="center" class='<%logged_in%>' id='countdown'>00:00:00</div>
 
 	<div align="center">
 		<h2><%last_message%></h2>
@@ -85,6 +85,19 @@
 			<p><input type="submit" value="cron" title="Simulate cron."></p>
 		</form>
 	</div>
+								
+	<script>
+		
+function main(){
+		var trigger_time = "<%trigger_time%>";		
+		if(trigger_time == "<%trigger_time%>") {return 0;}
+		trigger_time = parseInt(trigger_time);
+		}
+		
+	main();	
+		
+		
+	</script>
 								
 </body>
 </html>
