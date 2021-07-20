@@ -2,7 +2,7 @@
 <head>
 	<title>IMOK : Not Lost!</title>
 	<meta http-equiv="Cache-Control" content="no-store">
-	<meta http-equiv="Cache-Control: max-age=0">	
+	<meta http-equiv="Cache-Control: max-age=0">
 </head>
 
 <h4>Settings</h4>
@@ -11,17 +11,17 @@
 	<input name="command" type="hidden" value="set_settings" id='command_login'>
 	<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
 	<input name="timestamp" type="hidden" value="" id='timestamp'>
-					
-	<p>Email Contact 1:<br><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>'> </p>				
+
+	<p>Email Contact 1:<br><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>'> </p>
 	<p>Email Contact 2:<br><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
 	<p>Email Contact 3:<br><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
-			
+
 	<p>Alert Mail Message:</br><textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
-		
+
 	<p><label for="start_date">Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>' onchange='calc_date();'></p>
 	<p><label for="start_time">Start Time</label> <input type="time" id="start_time" name="start_time" value="<%start_time%>" onchange='calc_date();'></p>
 
-	<p>		
+	<p>
 <label for="time_out">Countdown time every </label>
 <select name="time_out" id="time_out" value="<%time_out%>">
   <option value=".5">.5</option>
@@ -36,8 +36,10 @@
 				 </p>
 
 <p><input type='submit' onclick="calc_date();"> </p>
-    
+
 	</form>
+
+	<p><a href='imok.cgi'><input type='button' value='Cancel'></a></p>
 	
 	<script>
 	function calc_date(){
@@ -54,7 +56,7 @@
 	var time_ip = start_time.split(':');
 	var hour = time_ip[0];
 	var minute = time_ip[1];
-	
+
 	//var start_UTC = Date.UTC(year, month , day , hour , minute);
 	//start_UTC = Math.floor(start_UTC/1000);
 	//start_UTC = start_UTC + (tz_offset_hours * 60 * 60); //add timezone shift so we are sending server the trigger date and time at UTC.
@@ -64,26 +66,26 @@
 	//when we feed Date.UTC a trigger time of 1pm UTC, it gives us local epoch time for 9am EST (-4 EST depending on DST)
 	//so we need to convert it back to 1pm UTC by adding back our timezone offset hours (4 or 5 hours depending on DST)
 	//we feed the final trigger time to server as 1pm UTC,
-	//the server (in another timezone) will convert the UTC time of 1pm to it's local time courtesy of utime 
-	
+	//the server (in another timezone) will convert the UTC time of 1pm to it's local time courtesy of utime
+
 	//alternate method, but why create an object?
 	var date_trigger = new Date(year, month , day , hour , minute);
-	var start_UTC = Math.floor( date_trigger.getTime() / 1000 ); 
+	var start_UTC = Math.floor( date_trigger.getTime() / 1000 );
 	var a1 = date_trigger.getTime()
 	var a2 = date1.getTime();
 	if(date_trigger.getTime() < date1.getTime()){//do not allow trigger time in the past
 		//alert("Trying to set a trigger time in the past. Please choose a time in the future.");
 		//return 0;
 	}
-	
+
 	document.getElementById("timestamp").value = start_UTC; //set timestamp value to send to server
 	return 1;
 	}
-	
+
 //calc_date(); //in case we don't change date / time
 
 //document.getElementById("myForm").submit();
 
 </script>
-	
+
  </html>
