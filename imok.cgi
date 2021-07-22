@@ -4,6 +4,8 @@ use strict;
 use Socket;
 use lib '.'; #nuts, PERL has changed. add local path to @INC
 use lib './'; #nuts, PERL has changed. add local path to @INC
+#use lib '/home/cgi/imok/'; #nuts, PERL has changed. add local path to @INC
+#use lib '/home/emogic/public_html/cgi/imok/'; #nuts, PERL has changed. add local path to @INC
 use AuthorizeMe;
 
 my %in;
@@ -17,7 +19,9 @@ $AuthorizeMe::email = "hhhhhhhhh";
 AuthorizeMe::test;
 
 #initialize and create AutorizeMe
-my %user; # db structure for AutorizeMe : we can easily add db fields here, but username email and password are a MUST for the AuthorizeMe.pm
+my $user; # a hash ref as we want to be able to easily get hash from AuthorizeMe
+#db structure for AutorizeMe : we can easily add db fields here, but username email and password are a MUST for the AuthorizeMe.pm
+=pod
 $user{'name'} = ''; #meant to be first and last name
 $user{'user_id'} = '';
 $user{'email'} = '';
@@ -30,6 +34,7 @@ $user{'time_out'} = '86400'; #24 hours
 $user{'start_hour'} = '12';
 $user{'start_minute'} = '00';
 $user{'alerts_sent'} = 0;
+=cut
 
 my %AuthorizeMe_Settings;
 $AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
@@ -56,7 +61,8 @@ $AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/';
 #$AuthorizeMe::AuthorizeMe_Settings = \%AuthorizeMe_Settings; #no object option? Can the variables be set?
 #$logged_in = &AuthorizeMe::AmILoggedIn();
 
-my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
+#my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
+my $AuthorizeMeObj = AuthorizeMe->new( \%AuthorizeMe_Settings );
 
 my $last_message = '';
 
@@ -66,6 +72,7 @@ exit;   # There are only two exit calls in the script, here and in in &cgierr.
 
 sub main(){
 if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit.
+#&cron();
 %in = &parse_form();
 my $command = $in{'command'};
 
@@ -73,9 +80,10 @@ my $output = '';
 $output = &get_template_page('main.html');
 
 #$logged_in = &AuthorizeMe::AmILoggedIn();
-$logged_in = $AuthorizeMeObj->AmILoggedIn();
+$user = $AuthorizeMeObj->AmILoggedIn();
 
-if($logged_in == 1) {#we are logged in
+if ( defined($user) ) {#we are logged in
+#if($logged_in == 1) {#we are logged in
     if ( $command eq 'logout' ) { &logout() } #login email , password
     if ( $command eq 'logout_all_devices' ) { &logout_all_devices() }
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) }
@@ -139,33 +147,33 @@ sub write_to_log(){
 }
 
 sub imok(){
-my $logged_in = $AuthorizeMeObj->AmILoggedIn(); #get user details
-if($logged_in == 0){return 0;}
-my $filename = "$AuthorizeMe_Settings{'path_to_users'}/$user{'user_id'}";
+my $user = $AuthorizeMeObj->AmILoggedIn(); #get user details
+if( !defined($user) ){return 0;}
+my $filename = "$AuthorizeMe_Settings{'path_to_users'}/$user->{'user_id'}";
 my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$current_time_stamp,$ctime,$blksize,$blocks) = stat($filename);
 my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + time_out
 my $now = time();
 
 if( $current_time_stamp <= $now ){#alarm was/is triggered
   until( $new_time_stamp  > $now ){
-   $new_time_stamp = $new_time_stamp + $user{'timeout_ms'};
+   $new_time_stamp = $new_time_stamp + $user->{'timeout_ms'};
   }
  #$new_time_stamp = $new_time_stamp + $user{'timeout_ms'};
  $last_message = "$last_message Alarm was likely triggered. Please email your contacts and tell them you are OK.";
  #send out IMOK email. Member has checked in...
 }
-elsif( ($current_time_stamp - $user{'timeout_ms'}) <= $now ){ #we are clicking just before alarm is triggered
- $new_time_stamp = $current_time_stamp + $user{'timeout_ms'};
+elsif( ($current_time_stamp - $user->{'timeout_ms'}) <= $now ){ #we are clicking just before alarm is triggered
+ $new_time_stamp = $current_time_stamp + $user->{'timeout_ms'};
 }
-elsif( ($current_time_stamp - $user{'timeout_ms'}) > $now  ){# we are a full timeout before the time stamp. do nothing
+elsif( ($current_time_stamp - $user->{'timeout_ms'}) > $now  ){# we are a full timeout before the time stamp. do nothing
  #do nothing
 }
-elsif( ($current_time_stamp - (2 * $user{'timeout_ms'}) ) > $now ){#time stamp is greater than 2 or more full timeouts, this should never happen, but if it does, imok moves us
+elsif( ($current_time_stamp - (2 * $user->{'timeout_ms'}) ) > $now ){#time stamp is greater than 2 or more full timeouts, this should never happen, but if it does, imok moves us
  #do nothing
 }
 
 #trigger time on users comp?
-my $new_time_stamp_user_tz = $new_time_stamp + ($user{'tz_offset_hours' } * 60 * 60);
+my $new_time_stamp_user_tz = $new_time_stamp + ($user->{'tz_offset_hours' } * 60 * 60);
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($new_time_stamp_user_tz);
 $mon = $mon + 1;
 $year = 1900 + $year;
@@ -179,18 +187,19 @@ if($result == 1){
 else{
  $last_message = "$last_message IMOK trigger time failed. Please try again.";
 }
- &write_to_log("$user{'email'} checked in.");
+ &write_to_log("$user->{'email'} checked in.");
 return $result;
 }
 
 sub imnotok(){
- my $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
- &write_to_log("sendmail result : $result : $user{'email_contact_1'} : $user{'email'}");
- $last_message = "sendmail result : $result : $user{'email_contact_1'} : $user{'email'}";
+ my $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+ &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
+ $last_message = "sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}";
 }
 
 sub cron(){
  #get list of files in a directory
+  &write_to_log("start of cron");
  my @filenames = glob("$AuthorizeMe_Settings{'path_to_users'}*");
  foreach my $filename (@filenames){
   #$filename = "$AuthorizeMe_Settings{'path_to_users'}$filename";
@@ -198,24 +207,26 @@ sub cron(){
   if($timestamp > time()){#we are not alarming
    next;
   }
-  &AuthorizeMe::db_to_user($filename); #open file get details
+  $user = &AuthorizeMe::db_to_hash($filename); #open file get details
+ # &write_to_log("Result of user db $result user $user->{'user_id'}");
   #send alert emails
   #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
-  my $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
-   &write_to_log("sendmail result : $result : $user{'email_contact_1'} : $user{'email'}");
- $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_2'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
-  $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user{'email_contact_3'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user{'email_form'} , '');
+  my $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+   &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
+ $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_2'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+  $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_3'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
   #&write_to_log("sendmail result : $result : $user{'email_contact_1'} : $user{'email'}");
   #set time stamp ahead one hour. So we do not send an email for another hour
-  $user{'timestamp'} = (60 * 60) + $timestamp;
+  $user->{'timestamp'} = (60 * 60) + $timestamp;
   #increase email file count
-  $user{'alerts_sent'} = 1 + $user{'alerts_sent'};
+  $user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};
   #save file
-  &AuthorizeMe::user_to_db($filename);
+  &AuthorizeMe::hash_to_db($user , $filename);
+  #&AuthorizeMe::user_to_db(\%user , $filename);
   #update time stamp
-  &change_time_stamp($user{'timestamp'} , $filename);
-  &write_to_log("Alert to $user{'email_contact_1'} at $user{'timestamp'}");
-  $last_message = "$last_message email alert sent $user{'timestamp'}";
+  &change_time_stamp($user->{'timestamp'} , $filename);
+  &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
+  $last_message = "$last_message email alert sent $user->{'timestamp'}";
  }
 
 }
@@ -266,23 +277,24 @@ sub get_settings(){
  my $output = shift; #string passed by ref so we can modify it
  $$output = &get_template_page('settings.html'); #string passed by ref so we can modify it
  #get user data
- $logged_in = $AuthorizeMeObj->AmILoggedIn();
- if($logged_in == 0){return 0}
+ $user = $AuthorizeMeObj->AmILoggedIn();
+ if(!defined($user)){return 0}
  #replace tokens
- $$output =~ s/<%email_contact_1%>/$user{'email_contact_1'}/g; #hide login, register , forgot pw
- $$output =~ s/<%email_contact_2%>/$user{'email_contact_2'}/g; #hide login, register , forgot pw
- $$output =~ s/<%email_contact_3%>/$user{'email_contact_3'}/g; #hide login, register , forgot pw
- $$output =~  s/<%email_form%>/$user{'email_form'}/g; #show logout, settings, reset pw
- $$output =~  s/<%time_out%>/$user{'time_out'}/g; #show logout, settings, reset pw
- $$output =~  s/<%start_date%>/$user{'start_date'}/g; #show logout, settings, reset pw
- $$output =~  s/<%start_time%>/$user{'start_time'}/g; #show logout, settings, reset pw
+ $$output =~ s/<%email_contact_1%>/$user->{'email_contact_1'}/g; #hide login, register , forgot pw
+ $$output =~ s/<%email_contact_2%>/$user->{'email_contact_2'}/g; #hide login, register , forgot pw
+ $$output =~ s/<%email_contact_3%>/$user->{'email_contact_3'}/g; #hide login, register , forgot pw
+ $$output =~  s/<%email_form%>/$user->{'email_form'}/g; #show logout, settings, reset pw
+ $$output =~  s/<%time_out%>/$user->{'time_out'}/g; #show logout, settings, reset pw
+ $$output =~  s/<%start_date%>/$user->{'start_date'}/g; #show logout, settings, reset pw
+ $$output =~  s/<%start_time%>/$user->{'start_time'}/g; #show logout, settings, reset pw
 }
 
 sub set_settings(){
- $logged_in = $AuthorizeMeObj->AmILoggedIn();
+ $user = $AuthorizeMeObj->AmILoggedIn();
+ if(!defined($user)){ return 0; }
  my $email = $in{'email_contact_1'};
  if(($email eq '') || (AuthorizeMe::valid_email($email))){
-  $user{'email_contact_1'} = $email;
+  $user->{'email_contact_1'} = $email;
  }
  else{
   $last_message = "$last_message : $email is not a valid email address";
@@ -290,7 +302,7 @@ sub set_settings(){
  }
  $email = $in{'email_contact_2'};
  if(($email eq '') || (AuthorizeMe::valid_email($email))){
-  $user{'email_contact_2'} = $email;
+  $user->{'email_contact_2'} = $email;
  }
  else{
   $last_message = "$last_message : $email is not a valid email address";
@@ -298,24 +310,27 @@ sub set_settings(){
  }
  $email = $in{'email_contact_3'};
  if(($email eq '') || (AuthorizeMe::valid_email($email))){
-  $user{'email_contact_3'} = $email;
+  $user->{'email_contact_3'} = $email;
  }
  else{
   $last_message = "$last_message : $email is not a valid email address";
   return 0;
  }
 
- $user{'email_form'} = $in{'email_form'};
- $user{'time_out'} = $in{'time_out'};
- $user{'timeout_ms'} = 24 * 60 * 60 * $in{'time_out'};
+ $user->{'email_form'} = $in{'email_form'};
+ $user->{'time_out'} = $in{'time_out'};
+ $user->{'timeout_ms'} = 24 * 60 * 60 * $in{'time_out'};
 
- $user{'start_date'} = $in{'start_date'};
- $user{'start_time'} = $in{'start_time'};
+ $user->{'start_date'} = $in{'start_date'};
+ $user->{'start_time'} = $in{'start_time'};
 
- $user{'tz_offset_hours'} = $in{'tz_offset_hours'};
- $user{'timestamp'} = $in{'timestamp'};
+ $user->{'tz_offset_hours'} = $in{'tz_offset_hours'};
+ $user->{'timestamp'} = $in{'timestamp'};
 
- my $result = $AuthorizeMeObj->user_to_db();
+ #my $result = $AuthorizeMeObj->hash_to_db(\%user , );
+ #get_user_id
+ my $user_id = $AuthorizeMeObj->get_user_id();
+ my $result = $AuthorizeMeObj->user_to_db($user_id);
  #$result = imok();
  if($result == 1){
   $last_message = "$last_message Settings changed.";
@@ -326,10 +341,10 @@ sub set_settings(){
 
  my $hour_seconds = 60 * 60;
  my $day_seconds = 24 * $hour_seconds;
- my $timestamp = $user{'timestamp'}; #trigger timestamp based on PC's local time
- $result = &change_time_stamp($timestamp , "$AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}");
+ my $timestamp = $user->{'timestamp'}; #trigger timestamp based on PC's local time
+ $result = &change_time_stamp($timestamp , "$AuthorizeMe_Settings{'path_to_users'}$user->{'user_id'}");
  if($result == 0){
-  $last_message = "$last_message Could not set timestamp on $AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}";
+  $last_message = "$last_message Could not set timestamp on $AuthorizeMe_Settings{'path_to_users'}$user->{'user_id'}";
   }
  my @lt = localtime($timestamp);
  my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
@@ -362,23 +377,26 @@ sub activate(){
  my $authorize_code = shift;
  my $user_id = shift;
 
- my $result =  $AuthorizeMeObj->activate( $authorize_code , $user_id );
- if($result == 0) {$last_message = "$last_message Your activation failed."; return 0};
- $user{'email_contact_1'} = '';
- $user{'email_contct_2'} = '';
- $user{'email_contact_3'} = '';
- $user{'email_form'} = 'Member has not reported in to IMOK in a specified amount of time. You may want to check on them.';
- $user{'timeout_ms'} = '86400000'; #24hours
- my $filename = "$AuthorizeMe_Settings{'path_to_users'}$user{'user_id'}";
- $result =  $AuthorizeMeObj->user_to_db();
+ $user =  $AuthorizeMeObj->activate( $authorize_code , $user_id );
+ if(!defined($user)) {$last_message = "$last_message Your activation failed."; return 0};
+ $user->{'email_contact_1'} = '';
+ $user->{'email_contct_2'} = '';
+ $user->{'email_contact_3'} = '';
+ $user->{'email_form'} = 'Member has not reported in to IMOK in a specified amount of time. You may want to check on them.';
+ $user->{'timeout_ms'} = '86400000'; #24hours
+ my $filename = "$AuthorizeMe_Settings{'path_to_users'}$user->{'user_id'}";
+
+# my $result =  $AuthorizeMeObj->user_to_db();
+ my $result =  $AuthorizeMeObj->hash_to_db(\$user , $filename);
+ 
  if($result == 0) {$last_message = "$last_message Your activation failed. DB write error."; return 0};
 
  #$result = imok();
  if($result == 1){
-  $last_message = "$last_message Your account $user{'email'} has been authorized. Please log in and go to setup.";
+  $last_message = "$last_message Your account $user->{'email'} has been authorized. Please log in and go to setup.";
   }
  else{
-  $last_message = "$last_message Error: Your account $user{'email'} could not be authorized";
+  $last_message = "$last_message Error: Your account $user->{'email'} could not be authorized";
   }
  return $result;
  }
@@ -387,10 +405,10 @@ sub login(){
  #email points to data file
  my $result =  $AuthorizeMeObj->login( $in{'email'} , $in{'password'} );
  if($result == 1){
-  $last_message = "$last_message $user{'email'} has logged in";
+  $last_message = "$last_message $user->{'email'} has logged in";
   }
  else{
-  $last_message = "$last_message $user{'email'} could not log in";
+  $last_message = "$last_message $user->{'email'} could not log in";
   }
  return $result;
 }
@@ -398,20 +416,20 @@ sub login(){
 sub logout(){
  my $result =  $AuthorizeMeObj->logout();
  if($result == 1){
-  $last_message = "$last_message $user{'email'} has logged out";
+  $last_message = "$last_message $user->{'email'} has logged out";
   }
  else{
-  $last_message = "$last_message $user{'email'} could not log out";
+  $last_message = "$last_message $user->{'email'} could not log out";
   }
  }
 
 sub logout_all_devices(){
  my $result =  $AuthorizeMeObj->logout_all_devices();
  if($result == 1){
-  $last_message = "$last_message $user{'email'} has logged out of all devices";
+  $last_message = "$last_message $user->{'email'} has logged out of all devices";
   }
  else{
-  $last_message = "$last_message $user{'email'} could not log out of all devices";
+  $last_message = "$last_message $user->{'email'} could not log out of all devices";
   }
 }
 
