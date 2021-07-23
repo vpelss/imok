@@ -14,10 +14,6 @@ my $path_to_templates = './templates';
 my $logged_in;
 my $trigger_time = 0;
 
-#test no obj
-$AuthorizeMe::email = "hhhhhhhhh";
-AuthorizeMe::test;
-
 #initialize and create AutorizeMe
 my $user; # a hash ref as we want to be able to easily get hash from AuthorizeMe
 #db structure for AutorizeMe : we can easily add db fields here, but username email and password are a MUST for the AuthorizeMe.pm
@@ -57,11 +53,6 @@ $AuthorizeMe_Settings{'path_to_users'} = './users/';
 $AuthorizeMe_Settings{'path_to_tokens'} = './tokens/';
 $AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/';
 
-#$AuthorizeMe::user = \%user; #no object option? Can the variables be set?
-#$AuthorizeMe::AuthorizeMe_Settings = \%AuthorizeMe_Settings; #no object option? Can the variables be set?
-#$logged_in = &AuthorizeMe::AmILoggedIn();
-
-#my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
 my $AuthorizeMeObj = AuthorizeMe->new( \%AuthorizeMe_Settings );
 
 my $last_message = '';
@@ -79,11 +70,9 @@ my $command = $in{'command'};
 my $output = '';
 $output = &get_template_page('main.html');
 
-#$logged_in = &AuthorizeMe::AmILoggedIn();
 $user = $AuthorizeMeObj->AmILoggedIn();
 
 if ( defined($user) ) {#we are logged in
-#if($logged_in == 1) {#we are logged in
     if ( $command eq 'logout' ) { &logout() } #login email , password
     if ( $command eq 'logout_all_devices' ) { &logout_all_devices() }
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) }
@@ -95,15 +84,15 @@ if ( defined($user) ) {#we are logged in
 else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
 				if ( $command eq 'activate' ) { &activate($in{'activate_code'} , $in{'user_id'}) } #login email , password
-    if ( $command eq 'login' ) { &login() } #login email , password
+    if ( $command eq 'login' ) { $logged_in = &login() } #login email , password
     if ( $command eq 'forgot_password' ) { &forgot_password($in{'email'}) }
     if ( $command eq 'set_password' ) { &set_password($in{'user_id'} , $in{'set_password_code'}); }#from link sent by &forgot_password
     }
 
 if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
 
-$logged_in = $AuthorizeMeObj->AmILoggedIn();
-if($logged_in == 1) {#we are logged in
+$user = $AuthorizeMeObj->AmILoggedIn();
+if ( defined($user) || ($logged_in) ) {#we are logged in from cookie token or login routine
     $output =~ s/<%logged_out%>/hide_me/g; #hide login, register , forgot pw
     $output =~  s/<%logged_in%>/show_me/g; #show logout, settings, reset pw
     if($trigger_time != 0) {$output =~  s/<%trigger_time%>/$trigger_time/g;} #for main page  != 0
@@ -192,7 +181,7 @@ return $result;
 }
 
 sub imnotok(){
- my $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+ my $result = &AuthorizeMeObj->sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
  $last_message = "sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}";
 }
@@ -207,22 +196,21 @@ sub cron(){
   if($timestamp > time()){#we are not alarming
    next;
   }
-  $user = &AuthorizeMe::db_to_hash($filename); #open file get details
+  $user = &AuthorizeMeObj->db_to_hash($filename); #open file get details
  # &write_to_log("Result of user db $result user $user->{'user_id'}");
   #send alert emails
   #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
-  my $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+  my $result = &AuthorizeMeObj->sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
    &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
- $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_2'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
-  $result = &AuthorizeMe::sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_3'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+ $result = &AuthorizeMeObj->sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_2'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+  $result = &AuthorizeMeObj->sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_3'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
   #&write_to_log("sendmail result : $result : $user{'email_contact_1'} : $user{'email'}");
   #set time stamp ahead one hour. So we do not send an email for another hour
   $user->{'timestamp'} = (60 * 60) + $timestamp;
   #increase email file count
   $user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};
   #save file
-  &AuthorizeMe::hash_to_db($user , $filename);
-  #&AuthorizeMe::user_to_db(\%user , $filename);
+  &AuthorizeMeObj->hash_to_db($user , $filename);
   #update time stamp
   &change_time_stamp($user->{'timestamp'} , $filename);
   &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
@@ -293,7 +281,7 @@ sub set_settings(){
  $user = $AuthorizeMeObj->AmILoggedIn();
  if(!defined($user)){ return 0; }
  my $email = $in{'email_contact_1'};
- if(($email eq '') || (AuthorizeMe::valid_email($email))){
+ if(($email eq '') || (&AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_1'} = $email;
  }
  else{
@@ -301,7 +289,7 @@ sub set_settings(){
   return 0;
  }
  $email = $in{'email_contact_2'};
- if(($email eq '') || (AuthorizeMe::valid_email($email))){
+ if(($email eq '') || (&AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_2'} = $email;
  }
  else{
@@ -309,7 +297,7 @@ sub set_settings(){
   return 0;
  }
  $email = $in{'email_contact_3'};
- if(($email eq '') || (AuthorizeMe::valid_email($email))){
+ if(($email eq '') || (&AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_3'} = $email;
  }
  else{
@@ -354,16 +342,6 @@ sub set_settings(){
  return $result;
 }
 
-sub send_output
-{
-my $message = $_[0];
-#print "Status: 401\n";
-#print "WWW-Authenticate: Basic\n";
-print "Content-type: text/html\n\n";
-print $message;
-exit;
-}
-
 sub register() {
 	my $email = $in{'email'};
 	my $password = $in{'password'};
@@ -379,6 +357,7 @@ sub activate(){
 
  $user =  $AuthorizeMeObj->activate( $authorize_code , $user_id );
  if(!defined($user)) {$last_message = "$last_message Your activation failed."; return 0};
+
  $user->{'email_contact_1'} = '';
  $user->{'email_contct_2'} = '';
  $user->{'email_contact_3'} = '';
@@ -386,9 +365,8 @@ sub activate(){
  $user->{'timeout_ms'} = '86400000'; #24hours
  my $filename = "$AuthorizeMe_Settings{'path_to_users'}$user->{'user_id'}";
 
-# my $result =  $AuthorizeMeObj->user_to_db();
- my $result =  $AuthorizeMeObj->hash_to_db(\$user , $filename);
- 
+my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
+
  if($result == 0) {$last_message = "$last_message Your activation failed. DB write error."; return 0};
 
  #$result = imok();

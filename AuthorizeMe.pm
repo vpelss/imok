@@ -135,6 +135,8 @@ sub get_user_id(){
 #any file to a hash
 sub hash_to_db(){#arg: \%hash , $filename
   #iterate through all keys and copy to db_hash
+  if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
+
   my $hash_ref = shift;
   my $filename = shift;
 
@@ -159,34 +161,21 @@ sub db_to_user(){#mainly for external calls allowing db update
 
 #save any %hash to a file
 sub db_to_hash(){#arg  $filename
+ if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
   my $filename = shift;
   #my $hash_ref = shift;
   my $string = '';
   my @string;
  # my $r = $hash_ref->{a};
 
-  open(FH, '<', $filename) or return 0;# $!;
+  open(FH, '<', $filename) or return;# $!;
   while(<FH>){
     $string = "$string$_";
     }
   close(FH);
 
-  #my $dump_hash_ref2 = {}; #$dump_hash_ref is the var name in the Dump
   my $hash_ref = eval $string; #creates a new % ref pointer
-  #eval $string; #creates a new % ref pointer
-  #my $hash_ref = eval $string; #creates a new % ref pointer
-  #$hash_ref = $dump_hash_ref2;
-#$hash_ref{w} = 8;
 
-#$r = $hash_ref->{a};
-
-=pod
-  #copy back to global hash ref
-  foreach my $key (keys %{$dump_hash_ref}) {
-    #$user->{$key} = $dump_hash_ref->{$key}; #$user is a reference, so we deference to copy to it
-    $hash_ref->{$key} = $dump_hash_ref->{$key}; #$user is a reference, so we deference to copy to it
-    }
-=cut
   return $hash_ref;
 }
 
@@ -203,9 +192,14 @@ sub AmILoggedIn(){#also fills in $user
   $token = $cookies->{$token_name}; #does the client think they are logged in?
   $user_id = $cookies->{$user_id_name};
 
-  #my $filename = "$path_to_tokens$user_id";
-  #$path_to_tokens = $AuthorizeMe_Settings->{'path_to_tokens'};
-  my $filename = "$path_to_tokens$user_id";
+  #user file MUST exist
+  my $filename = "$path_to_users$user_id";
+  if( ! -e $filename ){
+   $last_message = "$last_message User file is missing.";
+   return;
+   }
+
+  $filename = "$path_to_tokens$user_id";
   if( -e $filename ){ #tokens file exists
     my $tokens = {};
 
@@ -282,6 +276,10 @@ sub register_account()
     $result = &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , $AuthorizeMe_Settings->{'Activation_Email_Subject'} , $email_message ,$AuthorizeMe_Settings->{'smtp_server'});
     #my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
 
+    #delete any old token files
+    $filename = "$path_to_tokens$user_id";
+    $result = unlink($filename);
+
     #return success with message stating auth email must be clicked!
     $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email. It may take up to an hour to receive. Check your spam folder. : $email_message";
     return 1;
@@ -302,18 +300,20 @@ sub activate(){
 
   #does the file exist
   my $filename = "$path_to_authorizations$user_id";
-  #my $result = &db_to_hash($filename , $user);
   $user = &db_to_hash($filename);
-  #if($result != 1){return 0}
+  if(!defined($user)){return;}
   #is code valid?
-  if($authorize_code != $user->{'Auth_Code'}){return 0}
+  if($authorize_code != $user->{'Auth_Code'}){return;}
   #what will be the username, and create
   $new_filename = "$path_to_users$user_id";
   my $result = &hash_to_db($user , $new_filename);
-  if($result != 1){return undef}
-  #delete auth file
+  if($result != 1){return;}
+  #delete the auth file
   $result = unlink($filename);
-  if($result != 1){return undef}
+  if($result != 1){return;}
+  #delete any old token files
+  $filename = "$path_to_tokens$user_id";
+  $result = unlink($filename);
 
   return $user;
   }
@@ -334,7 +334,7 @@ sub login() {
   if(-e $filename){
     #$result = &db_to_hash($filename , $user); #get user data
     $user = &db_to_hash($filename); #get user data
-    if($result != 1){return 0}
+    if(!defined($user)){return 0}
     my $encrypted_password_stored = $user->{'password'};
     my $encrypted_password = &encrypt_password( $password);
     if($encrypted_password eq $encrypted_password_stored){
@@ -489,6 +489,7 @@ sub set_password(){
 
 sub parse_form
 {
+if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
 # --------------------------------------------------------
 # Parses the form input and returns a hash with all the name
 # value pairs. Removes SSI and any field with "---" as a value
@@ -539,7 +540,9 @@ sub valid_email{
 }
 
 sub sendmail()
-{#error codes below for those who bother to check result codes <gr>
+{
+if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
+#error codes below for those who bother to check result codes <gr>
 # 1 success
 # -1 $smtphost unknown
 # -2 socket() failed
@@ -556,7 +559,7 @@ sub sendmail()
 #
 #  Note that there are several commands for cleaning up possible bad inputs - if you
 #  are hard coding things from a library file, so of those are unnecesssary
-#
+
     my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
 
     $to =~ s/[ \t]+/, /g; # pack spaces and add comma
