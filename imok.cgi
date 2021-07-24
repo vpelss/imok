@@ -281,7 +281,7 @@ sub set_settings(){
  $user = $AuthorizeMeObj->AmILoggedIn();
  if(!defined($user)){ return 0; }
  my $email = $in{'email_contact_1'};
- if(($email eq '') || (&AuthorizeMeObj->valid_email($email))){
+ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_1'} = $email;
  }
  else{
@@ -289,7 +289,7 @@ sub set_settings(){
   return 0;
  }
  $email = $in{'email_contact_2'};
- if(($email eq '') || (&AuthorizeMeObj->valid_email($email))){
+ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_2'} = $email;
  }
  else{
@@ -297,7 +297,7 @@ sub set_settings(){
   return 0;
  }
  $email = $in{'email_contact_3'};
- if(($email eq '') || (&AuthorizeMeObj->valid_email($email))){
+ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_3'} = $email;
  }
  else{
@@ -318,8 +318,14 @@ sub set_settings(){
  #my $result = $AuthorizeMeObj->hash_to_db(\%user , );
  #get_user_id
  my $user_id = $AuthorizeMeObj->get_user_id();
- my $result = $AuthorizeMeObj->user_to_db($user_id);
+
+ my $filename = "$AuthorizeMe_Settings{'path_to_users'}$user_id";
+ ##my $result = $AuthorizeMeObj->user_to_db($user_id);
+ my $result = $AuthorizeMeObj->hash_to_db($user , $filename);
+
  #$result = imok();
+
+
  if($result == 1){
   $last_message = "$last_message Settings changed.";
   }

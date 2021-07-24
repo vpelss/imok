@@ -36,18 +36,11 @@ my $last_message = ''; #used for &get_last_message()
 my $path_to_users;
 my $path_to_tokens;
 my $path_to_authorizations;
-#my $from_email;
-#my $SEND_MAIL = '';
-#my $SMTP_SERVER = '';
 my $token_name = "AuthorizeMeToken";
 my $user_id_name = "AuthorizeMeUserId";
 my $MaxAge = '3153600000'; #default 100 years, in case not supplied in new()
 
 my $class;
-
-sub test(){
- my $ttt = $email;
-}
 
 sub new() { #initialize settings
   $class = shift;
@@ -71,9 +64,11 @@ sub new() { #initialize settings
   #$user_id = $cookies->{$user_id_name};
 
   my $self = {
+  # 'a' , 'b'
     #logged_in => $logged_in,
     #user_email  => $user_email
     };
+$self->{'a'} = 9;
 
   bless $self, $class;
   return $self;
@@ -92,32 +87,6 @@ sub get_cookies(){
 }
 
 =pod
-
-sub set_cookies(){ #take a ref to $cookies hash : set_cookies($cookie_name,$cookie_value,$cookie_expire,$cookie_path,$cookie_domain)
- my $cookie_name = shift;
- my $cookie_value = shift;
- my $cookie_expire = shift; #in seconds
- my $cookie_path = shift;
- my $cookie_domain = shift;
-
- #Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT
-  my @months = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
- my @days = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
- my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
- my $cur_date = "$days[$wday], $mday $mon $year $hour:$min:$sec";
-
- ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time + $cookie_expire);
- my $expires_date = "$days[$wday], $mday $mon $year $hour:$min:$sec";
-
- ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
- print "$mday $months[$mon] $days[$wday]\n";
-
- #print "Content-type: text/html\n\n";
- return "Set-cookie: $cookie_name=$cookie_value; date=$cur_date; expires=$expires_date path=$cookie_path; domain=$cookie_domain";
-}
-
-=cut
-
 #ONLY used by main program. must supply user ID (from get_user_id , or maybe filename)
 sub user_to_db(){#mainly for external calls allowing db update
  shift; #strip away caller
@@ -126,19 +95,22 @@ sub user_to_db(){#mainly for external calls allowing db update
  my $result = &hash_to_db($user , $filename);
  return $result;
 }
+=cut
 
 #set on new and login
-sub get_user_id(){
+sub get_user_id(){#use so external calling routines can find our db file
  return $user_id;
 }
 
 #any file to a hash
 sub hash_to_db(){#arg: \%hash , $filename
+  my ($package, $filename, $line) = caller;
+  if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
   #iterate through all keys and copy to db_hash
-  if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
 
   my $hash_ref = shift;
-  my $filename = shift;
+  $filename = shift;
 
   open(FH, '>', $filename) or return 0;# $!;
   #print FH Data::Dumper->Dump([$hash_ref], [qw(dump_hash_ref)]); # $dump_hash_ref is the variable name in the dump
@@ -161,8 +133,10 @@ sub db_to_user(){#mainly for external calls allowing db update
 
 #save any %hash to a file
 sub db_to_hash(){#arg  $filename
- if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
-  my $filename = shift;
+  my ($package, $filename, $line) = caller;
+  if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
+  $filename = shift;
   #my $hash_ref = shift;
   my $string = '';
   my @string;
@@ -184,6 +158,19 @@ sub get_last_message(){
 }
 
 sub AmILoggedIn(){#also fills in $user
+
+  my $t = __PACKAGE__;
+ my $s = "$_[0]";
+ my $u = $class;
+
+  if("$_[0]" eq __PACKAGE__){
+  #if($_[0] == $NAME){
+  #if( ref($_[0]) == $NAME ){
+   shift;
+   }; #so we can call from inside module or outside
+
+
+
   my $result = 0;
 
   undef $user;
@@ -527,6 +514,9 @@ if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
 }
 
 sub valid_email{
+  my ($package, $filename, $line) = caller;
+  if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
   my $username = qr/[a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?/;
   my $domain   = qr/[a-z0-9.-]+/;
   #my $regex = $email =~ /^$username\@$domain$/;
@@ -541,7 +531,9 @@ sub valid_email{
 
 sub sendmail()
 {
-if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
+  my ($package, $filename, $line) = caller;
+  if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
 #error codes below for those who bother to check result codes <gr>
 # 1 success
 # -1 $smtphost unknown
