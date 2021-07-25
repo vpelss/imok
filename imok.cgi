@@ -32,28 +32,53 @@ $user{'start_minute'} = '00';
 $user{'alerts_sent'} = 0;
 =cut
 
-my %AuthorizeMe_Settings;
-$AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
-$AuthorizeMe_Settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
-$AuthorizeMe_Settings{'user_id_name'} = 'imok_user_id'; #will show up in cookie
-$AuthorizeMe_Settings{'from_email'} = 'imok@emogic.com';
-$AuthorizeMe_Settings{'reply_email'} = 'imok@emogic.com';
-$AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
-$AuthorizeMe_Settings{'smtp_server'} = '';
-$AuthorizeMe_Settings{'Activation_Email_Subject'} = 'IMOK account activation email';
-$AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
+#my $AuthorizeMeObj = AuthorizeMe->new( \%AuthorizeMe_Settings );
+my $AuthorizeMeObj = AuthorizeMe->new();
+
+#$AuthorizeMeObj->{y} = 77;
+
+#my %AuthorizeMe_Settings;
+$AuthorizeMeObj->{'settings'}->{'token_name'} = 'imok_token'; #will show up in cookie
+$AuthorizeMeObj->{'settings'}->{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
+$AuthorizeMeObj->{'settings'}->{'user_id_name'} = 'imok_user_id'; #will show up in cookie
+my $from_email = $AuthorizeMeObj->{'settings'}->{'from_email'} = 'imok@emogic.com';
+my $reply_email = $AuthorizeMeObj->{'settings'}->{'reply_email'} = 'imok@emogic.com';
+my $sendmail = $AuthorizeMeObj->{'settings'}->{'sendmail'} = '/usr/lib/sendmail -t';
+my $smtp_server = $AuthorizeMeObj->{'settings'}->{'smtp_server'} = '';
+$AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
+$AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
     Click to activate:
     https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>
     );
- $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
+$AuthorizeMeObj->{'settings'}->{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
     http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
-$AuthorizeMe_Settings{'path_to_users'} = './users/';
-$AuthorizeMe_Settings{'path_to_tokens'} = './tokens/';
-$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/';
+my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/';
+$AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
+$AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
-my $AuthorizeMeObj = AuthorizeMe->new( \%AuthorizeMe_Settings );
+AuthorizeMe->test();
+
+#$AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
+#$AuthorizeMe_Settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
+#$AuthorizeMe_Settings{'user_id_name'} = 'imok_user_id'; #will show up in cookie
+#$AuthorizeMe_Settings{'from_email'} = 'imok@emogic.com';
+#$AuthorizeMe_Settings{'reply_email'} = 'imok@emogic.com';
+#$AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
+#$AuthorizeMe_Settings{'smtp_server'} = '';
+#$AuthorizeMe_Settings{'Activation_Email_Subject'} = 'IMOK account activation email';
+#$AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
+#    Click to activate:
+#    https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>
+#    );
+# $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
+#    Click the link to reset your password to <%set_password_code%>:
+#    http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
+#    );
+#$AuthorizeMe_Settings{'path_to_users'} = './users/';
+#$AuthorizeMe_Settings{'path_to_tokens'} = './tokens/';
+#$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/';
 
 my $last_message = '';
 
@@ -63,7 +88,7 @@ exit;   # There are only two exit calls in the script, here and in in &cgierr.
 
 sub main(){
 if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit.
-#&cron();
+
 %in = &parse_form();
 my $command = $in{'command'};
 
@@ -138,7 +163,7 @@ sub write_to_log(){
 sub imok(){
 my $user = $AuthorizeMeObj->AmILoggedIn(); #get user details
 if( !defined($user) ){return 0;}
-my $filename = "$AuthorizeMe_Settings{'path_to_users'}/$user->{'user_id'}";
+my $filename = "$AuthorizeMeObj->{'settings'}->{'path_to_users'}$user->{'user_id'}";
 my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$current_time_stamp,$ctime,$blksize,$blocks) = stat($filename);
 my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + time_out
 my $now = time();
@@ -181,7 +206,7 @@ return $result;
 }
 
 sub imnotok(){
- my $result = &AuthorizeMeObj->sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+ my $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
  $last_message = "sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}";
 }
@@ -189,7 +214,7 @@ sub imnotok(){
 sub cron(){
  #get list of files in a directory
   &write_to_log("start of cron");
- my @filenames = glob("$AuthorizeMe_Settings{'path_to_users'}*");
+ my @filenames = glob("$path_to_users*");
  foreach my $filename (@filenames){
   #$filename = "$AuthorizeMe_Settings{'path_to_users'}$filename";
   my $timestamp = &get_time_stamp($filename);
@@ -200,10 +225,10 @@ sub cron(){
  # &write_to_log("Result of user db $result user $user->{'user_id'}");
   #send alert emails
   #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
-  my $result = &AuthorizeMeObj->sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_1'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
-   &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
- $result = &AuthorizeMeObj->sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_2'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
-  $result = &AuthorizeMeObj->sendmail($AuthorizeMe_Settings{'from_email'} , $AuthorizeMe_Settings{'reply_email'} , $user->{'email_contact_3'} , $AuthorizeMe_Settings{'sendmail'} , 'IMOK Alert' , $user->{'email_form'} , '');
+  my $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
+  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
+  $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
+  $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
   #&write_to_log("sendmail result : $result : $user{'email_contact_1'} : $user{'email'}");
   #set time stamp ahead one hour. So we do not send an email for another hour
   $user->{'timestamp'} = (60 * 60) + $timestamp;
@@ -319,12 +344,11 @@ sub set_settings(){
  #get_user_id
  my $user_id = $AuthorizeMeObj->get_user_id();
 
- my $filename = "$AuthorizeMe_Settings{'path_to_users'}$user_id";
+ my $filename = "$path_to_users$user_id";
  ##my $result = $AuthorizeMeObj->user_to_db($user_id);
  my $result = $AuthorizeMeObj->hash_to_db($user , $filename);
 
  #$result = imok();
-
 
  if($result == 1){
   $last_message = "$last_message Settings changed.";
@@ -336,9 +360,9 @@ sub set_settings(){
  my $hour_seconds = 60 * 60;
  my $day_seconds = 24 * $hour_seconds;
  my $timestamp = $user->{'timestamp'}; #trigger timestamp based on PC's local time
- $result = &change_time_stamp($timestamp , "$AuthorizeMe_Settings{'path_to_users'}$user->{'user_id'}");
+ $result = &change_time_stamp($timestamp , "$path_to_users$user->{'user_id'}");
  if($result == 0){
-  $last_message = "$last_message Could not set timestamp on $AuthorizeMe_Settings{'path_to_users'}$user->{'user_id'}";
+  $last_message = "$last_message Could not set timestamp on $path_to_users$user->{'user_id'}";
   }
  my @lt = localtime($timestamp);
  my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
@@ -369,7 +393,7 @@ sub activate(){
  $user->{'email_contact_3'} = '';
  $user->{'email_form'} = 'Member has not reported in to IMOK in a specified amount of time. You may want to check on them.';
  $user->{'timeout_ms'} = '86400000'; #24hours
- my $filename = "$AuthorizeMe_Settings{'path_to_users'}$user->{'user_id'}";
+ my $filename = "$path_to_users$user->{'user_id'}";
 
 my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
 

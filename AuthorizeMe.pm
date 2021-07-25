@@ -13,15 +13,14 @@ $ABSTRACT = 'AutorizeMe Module for Simple CGI Registration & Authentication in P
 $VERSION  = '0.2';
 
 #require Exporter;
-our @ISA = qw(Exporter);
-our @EXPORT = qw( $email );
+#our @ISA = qw(Exporter);
+#our @EXPORT = qw( $email );
 
 #manages token cookie
 #manages db read and write, can add fields!!!!!
 #manages mailing
 #DOES NOT manage forms and log in, reset, log out logic
 
-my $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
 my $AuthorizeMe_Settings; #ref to hash, sent from calling program
 
 my $cookies; #will be a ref to a anonymous hash
@@ -33,44 +32,57 @@ my $set_cookie_string = ""; #calling program can use get_set_cookie_string
 my $last_message = ''; #used for &get_last_message()
 
 #determined by calling program. we are a module and code is inaccessible?
-my $path_to_users;
-my $path_to_tokens;
-my $path_to_authorizations;
-my $token_name = "AuthorizeMeToken";
-my $user_id_name = "AuthorizeMeUserId";
-my $MaxAge = '3153600000'; #default 100 years, in case not supplied in new()
+#my $settings->{'path_to_users'};
+#my $settings->{'path_to_tokens'};
+#my $settings->{'path_to_authorizations'};
+#my $settings->{'token_name'} = "AuthorizeMeToken";
+#my $settings->{'user_id_name'} = "AuthorizeMeUserId";
+#my $settings->{'token_max-age'} = '3153600000'; #default 100 years, in case not supplied in new()
 
-my $class;
+sub test(){
+ my $r = 8;
+ my $t = 6;
+
+}
+
+my $self;
+our $settings;
+my $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
+
 
 sub new() { #initialize settings
-  $class = shift;
+  my $class = shift;
   #$user = shift; #hash reference kept as we want two way communication
-  $AuthorizeMe_Settings = shift;
+  #$AuthorizeMe_Settings = shift;
 
   #setup settings from calling program
   #$from_email = $AuthorizeMe_Settings->{'from_email'};
   #$SEND_MAIL = $AuthorizeMe_Settings->{'sendmail'};
   #$SMTP_SERVER = $AuthorizeMe_Settings->{'smtp_server'};
-  $path_to_users =  $AuthorizeMe_Settings->{'path_to_users'};
-  $path_to_tokens = $AuthorizeMe_Settings->{'path_to_tokens'};
-  $path_to_authorizations = $AuthorizeMe_Settings->{'path_to_authorizations'};
+  #$settings->{'path_to_users'} =  $AuthorizeMe_Settings->{'path_to_users'};
+  #$settings->{'path_to_tokens'} = $AuthorizeMe_Settings->{'path_to_tokens'};
+  #$settings->{'path_to_authorizations'} = $AuthorizeMe_Settings->{'path_to_authorizations'};
   #$user_file_extension = $AuthorizeMe_Settings->{'user_file_extension'};
-  if($AuthorizeMe_Settings->{'token_name'}){ $token_name = $AuthorizeMe_Settings->{'token_name'}; }
-  if($AuthorizeMe_Settings->{'user_id_name'}) { $user_id_name = $AuthorizeMe_Settings->{'user_id_name'}; }
-  if($AuthorizeMe_Settings->{'token_max-age'}) { $MaxAge = $AuthorizeMe_Settings->{'token_max-age'}; }
+  #if($AuthorizeMe_Settings->{'token_name'}){ $settings->{'token_name'} = $AuthorizeMe_Settings->{'token_name'}; }
+  #if($AuthorizeMe_Settings->{'user_id_name'}) { $settings->{'user_id_name'} = $AuthorizeMe_Settings->{'user_id_name'}; }
+  #if($AuthorizeMe_Settings->{'token_max-age'}) { $settings->{'token_max-age'} = $AuthorizeMe_Settings->{'token_max-age'}; }
 
   #$cookies = &get_cookies();
-  #$token = $cookies->{$token_name}; #does the client think they are logged in?
-  #$user_id = $cookies->{$user_id_name};
+  #$token = $cookies->{$settings->{'token_name'}}; #does the client think they are logged in?
+  #$user_id = $cookies->{$settings->{'user_id_name'}};
 
-  my $self = {
-  # 'a' , 'b'
-    #logged_in => $logged_in,
-    #user_email  => $user_email
+ $self = {
     };
-$self->{'a'} = 9;
+$self->{'user'} = {};
+$self->{'settings'} = {};
+$settings = $self->{'settings'}; #better way to locally access stettings
+
+my $self2 = {'v'=>99,
+             t=>89
+             };
 
   bless $self, $class;
+  bless $self2, $class;
   return $self;
 }
 
@@ -91,7 +103,7 @@ sub get_cookies(){
 sub user_to_db(){#mainly for external calls allowing db update
  shift; #strip away caller
  my $filename = shift;
- $filename = "$path_to_users$filename";
+ $filename = "$settings->{'path_to_users'}$filename";
  my $result = &hash_to_db($user , $filename);
  return $result;
 }
@@ -102,21 +114,18 @@ sub get_user_id(){#use so external calling routines can find our db file
  return $user_id;
 }
 
-#any file to a hash
+#copy ANY hash ref to a file
 sub hash_to_db(){#arg: \%hash , $filename
-  my ($package, $filename, $line) = caller;
-  if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+ my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
   #iterate through all keys and copy to db_hash
 
   my $hash_ref = shift;
-  $filename = shift;
+  my $filename = shift;
 
   open(FH, '>', $filename) or return 0;# $!;
-  #print FH Data::Dumper->Dump([$hash_ref], [qw(dump_hash_ref)]); # $dump_hash_ref is the variable name in the dump
   $Data::Dumper::Terse = 1;
   print FH Data::Dumper->Dump([$hash_ref]); # $dump_hash_ref is the variable name in the dump
-  #print FH Data::Dumper->Dump([$hash_ref]); # $dump_hash_ref is the variable name in the dump
   close(FH);
 
   return 1;
@@ -125,22 +134,20 @@ sub hash_to_db(){#arg: \%hash , $filename
 =pod
 sub db_to_user(){#mainly for external calls allowing db update
  my $filename = $user->{'user_id'};
- $filename = "$path_to_users$filename";
+ $filename = "$settings->{'path_to_users'}$filename";
  my $result = &db_to_hash($filename , $user);
  return $result;
 }
 =cut
 
-#save any %hash to a file
+#can be used external to object
+#copy ANY file to a hash ref
 sub db_to_hash(){#arg  $filename
-  my ($package, $filename, $line) = caller;
-  if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
-  $filename = shift;
-  #my $hash_ref = shift;
+  my $filename = shift;
   my $string = '';
   my @string;
- # my $r = $hash_ref->{a};
 
   open(FH, '<', $filename) or return;# $!;
   while(<FH>){
@@ -158,35 +165,24 @@ sub get_last_message(){
 }
 
 sub AmILoggedIn(){#also fills in $user
-
-  my $t = __PACKAGE__;
- my $s = "$_[0]";
- my $u = $class;
-
-  if("$_[0]" eq __PACKAGE__){
-  #if($_[0] == $NAME){
-  #if( ref($_[0]) == $NAME ){
-   shift;
-   }; #so we can call from inside module or outside
-
-
+ my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
   my $result = 0;
 
   undef $user;
 
   $cookies = &get_cookies();
-  $token = $cookies->{$token_name}; #does the client think they are logged in?
-  $user_id = $cookies->{$user_id_name};
+  $token = $cookies->{ $settings->{'token_name'} }; #does the client think they are logged in?
+  $user_id = $cookies->{ $settings->{'user_id_name'} };
 
   #user file MUST exist
-  my $filename = "$path_to_users$user_id";
+  my $filename = "$settings->{'path_to_users'}$user_id";
   if( ! -e $filename ){
    $last_message = "$last_message User file is missing.";
    return;
    }
 
-  $filename = "$path_to_tokens$user_id";
+  $filename = "$settings->{'path_to_tokens'}$user_id";
   if( -e $filename ){ #tokens file exists
     my $tokens = {};
 
@@ -194,7 +190,7 @@ sub AmILoggedIn(){#also fills in $user
     #&db_to_hash($filename , \%tokens);
     if( $tokens->{$token} == 1 ){#does the token exist?
     #if( $tokens{$token} == 1 ){#does the token exist?
-     $filename = "$path_to_users$user_id";
+     $filename = "$settings->{'path_to_users'}$user_id";
      #$result = &db_to_hash($filename , $user); # test -e filee & load user data (for other routines, reset password, etc...)
      $user = &db_to_hash($filename); # test -e file & load user data (for other routines, reset password, etc...)
     }
@@ -212,7 +208,6 @@ sub create_user_id(){
 sub register_account()
     { #get data
     shift; #remove module #
-    #my $username = shift;
     my $email = shift;
     $email =~ s/\A\s\Z//g; #remove white space
 
@@ -231,12 +226,12 @@ sub register_account()
     my $user_id = &create_user_id($email); #user id is hash of email
 
     #see if  user file exists, fail if it does, pass message?
-    my $filename = "$path_to_users$user_id";
+    my $filename = "$settings->{'path_to_users'}$user_id";
     if(-e $filename){
       $last_message = "This Email Address is already registered : $email";
       return 0;
       }
-     $filename = "$path_to_authorizations$user_id";
+     $filename = "$settings->{'path_to_authorizations'}$user_id";
     if(-e $filename){
       $last_message = "This Email Address has already requested an account. You will receive, or should have been sent an activation email to $email";
       return 0;
@@ -252,7 +247,7 @@ sub register_account()
     #save account data in file $random_number. when we ru
     my $random_number = int(rand($random_number_size));
     $user->{'Auth_Code'} = $random_number;
-    #$filename = "$path_to_authorizations$random_number";
+    #$filename = "$settings->{'path_to_authorizations'}$random_number";
     my $result = &hash_to_db($user , $filename);
 
     my $email_message = $AuthorizeMe_Settings->{'registration_email_template'};
@@ -264,7 +259,7 @@ sub register_account()
     #my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
 
     #delete any old token files
-    $filename = "$path_to_tokens$user_id";
+    $filename = "$settings->{'path_to_tokens'}$user_id";
     $result = unlink($filename);
 
     #return success with message stating auth email must be clicked!
@@ -286,20 +281,20 @@ sub activate(){
   my $new_filename = '';
 
   #does the file exist
-  my $filename = "$path_to_authorizations$user_id";
+  my $filename = "$settings->{'path_to_authorizations'}$user_id";
   $user = &db_to_hash($filename);
   if(!defined($user)){return;}
   #is code valid?
   if($authorize_code != $user->{'Auth_Code'}){return;}
   #what will be the username, and create
-  $new_filename = "$path_to_users$user_id";
+  $new_filename = "$settings->{'path_to_users'}$user_id";
   my $result = &hash_to_db($user , $new_filename);
   if($result != 1){return;}
   #delete the auth file
   $result = unlink($filename);
   if($result != 1){return;}
   #delete any old token files
-  $filename = "$path_to_tokens$user_id";
+  $filename = "$settings->{'path_to_tokens'}$user_id";
   $result = unlink($filename);
 
   return $user;
@@ -317,7 +312,7 @@ sub login() {
   my $result;
 
   my $filename = $user_id;
-  $filename = "$path_to_users$filename";
+  $filename = "$settings->{'path_to_users'}$filename";
   if(-e $filename){
     #$result = &db_to_hash($filename , $user); #get user data
     $user = &db_to_hash($filename); #get user data
@@ -328,7 +323,7 @@ sub login() {
      #set token
      $token = int(rand($random_number_size));
      #save token file
-     my $filename = "$path_to_tokens$user_id";
+     my $filename = "$settings->{'path_to_tokens'}$user_id";
      my $tokens = {};
      if(-e $filename){ #does token file exist?
         #$result = &db_to_hash($filename , $tokens);  # get existing tokens (ie: logon's on other devices)
@@ -343,10 +338,10 @@ sub login() {
      $result = &hash_to_db($tokens , $filename); #token file contains tokens of all logins!
 
      #how do we set cookie? just set $set_cookie_string : Set-Cookie: <cookie-name>=<cookie-value>
-     #$set_cookie_string = &set_cookies($token_name , $token_value , &time() + 100000000 , '/' , $domain , '$cookie_time_zone' , '-00000');
-     $set_cookie_string = "Set-Cookie: $token_name=$token; Max-Age=$MaxAge;\nSet-Cookie: $user_id_name=$user_id; Max-Age=$MaxAge;";
-     #$set_cookie_string = "Set-Cookie: $token_name='$token', $user_id_name='$user_id'; Max-Age=$MaxAge ;";
-     #$set_cookie_string = "Set-Cookie: $token_name='$token',$user_id_name='$user_id'; Max-Age=$MaxAge;";
+     #$set_cookie_string = &set_cookies($settings->{'token_name'} , $token_value , &time() + 100000000 , '/' , $domain , '$cookie_time_zone' , '-00000');
+     $set_cookie_string = "Set-Cookie: $settings->{'token_name'}=$token; Max-Age=$settings->{'token_max-age'};\nSet-Cookie: $settings->{'user_id_name'}=$user_id; Max-Age=$settings->{'token_max-age'};";
+     #$set_cookie_string = "Set-Cookie: $settings->{'token_name'}='$token', $settings->{'user_id_name'}='$user_id'; Max-Age=$settings->{'token_max-age'} ;";
+     #$set_cookie_string = "Set-Cookie: $settings->{'token_name'}='$token',$settings->{'user_id_name'}='$user_id'; Max-Age=$settings->{'token_max-age'};";
 
      $last_message = "$user->{'email'} is logged in";
      $logged_in = 1; #let the world know we are logged in
@@ -362,21 +357,21 @@ sub login() {
  }
 
 sub logout(){
- my $filename = "$path_to_tokens$user_id";
+ my $filename = "$settings->{'path_to_tokens'}$user_id";
  my $tokens = {};
 # my $result = &db_to_hash($filename , $tokens);  # get existing tokens (ie: logon's on other devices) $tokens = &db_to_hash($filename);  # get existing tokens (ie: logon's on other devices)
  delete $tokens->{$token};
  my $result = &hash_to_db($tokens , $filename);  # get existing tokens (ie: logon's on other devices)
 
- $set_cookie_string = "Set-Cookie: $token_name= ; Max-Age=-1 ;\nSet-Cookie: $user_id_name= ; Max-Age=-1 ;";
+ $set_cookie_string = "Set-Cookie: $settings->{'token_name'}= ; Max-Age=-1 ;\nSet-Cookie: $settings->{'user_id_name'}= ; Max-Age=-1 ;";
  return $result;
  }
 
  sub logout_all_devices(){
- my $filename = "$path_to_tokens$user_id";
+ my $filename = "$settings->{'path_to_tokens'}$user_id";
  my $result = unlink($filename);
 
- $set_cookie_string = "Set-Cookie: $token_name= ; Max-Age=-1 ;\nSet-Cookie: $user_id_name= ; Max-Age=-1 ;";
+ $set_cookie_string = "Set-Cookie: $settings->{'token_name'}= ; Max-Age=-1 ;\nSet-Cookie: $settings->{'user_id_name'}= ; Max-Age=-1 ;";
  return $result;
  }
 
@@ -396,7 +391,7 @@ sub reset_password(){
  }
  #change to new password
  my $filename = $user->{'user_id'};
- $filename = "$path_to_users$filename";
+ $filename = "$settings->{'path_to_users'}$filename";
  $user->{'password'} = &encrypt_password($new_password);
  my $result = &hash_to_db($user,$filename);
  return $result;
@@ -414,7 +409,7 @@ sub forgot_password(){
  #check user_id : exists?
  my $user_id = &create_user_id($email);
  my $filename = $user_id;
- $filename = "$path_to_users$filename";
+ $filename = "$settings->{'path_to_users'}$filename";
  if(! -e $filename){
   $last_message = "User does not exist for $email";
   return 0;
@@ -455,7 +450,7 @@ sub set_password(){
  }
  my $result = 1;
  #change password and store it
- my $filename2 = "$path_to_users$user_id";
+ my $filename2 = "$settings->{'path_to_users'}$user_id";
  #$result = &db_to_hash($filename2 , $user);
  $user = &db_to_hash($filename2);
  if($result != 1){
@@ -514,8 +509,7 @@ if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
 }
 
 sub valid_email{
-  my ($package, $filename, $line) = caller;
-  if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
   my $username = qr/[a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?/;
   my $domain   = qr/[a-z0-9.-]+/;
@@ -531,8 +525,7 @@ sub valid_email{
 
 sub sendmail()
 {
-  my ($package, $filename, $line) = caller;
-  if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+ my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
 #error codes below for those who bother to check result codes <gr>
 # 1 success
