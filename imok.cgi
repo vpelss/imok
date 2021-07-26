@@ -15,29 +15,8 @@ my $logged_in;
 my $trigger_time = 0;
 
 #initialize and create AutorizeMe
-my $user; # a hash ref as we want to be able to easily get hash from AuthorizeMe
-#db structure for AutorizeMe : we can easily add db fields here, but username email and password are a MUST for the AuthorizeMe.pm
-=pod
-$user{'name'} = ''; #meant to be first and last name
-$user{'user_id'} = '';
-$user{'email'} = '';
-$user{'password'} = '';
-$user{'email_contact_1'} = '';
-$user{'email_contct_2'} = '';
-$user{'email_contact_3'} = '';
-$user{'email_form'} = '';
-$user{'time_out'} = '86400'; #24 hours
-$user{'start_hour'} = '12';
-$user{'start_minute'} = '00';
-$user{'alerts_sent'} = 0;
-=cut
-
-#my $AuthorizeMeObj = AuthorizeMe->new( \%AuthorizeMe_Settings );
 my $AuthorizeMeObj = AuthorizeMe->new();
-
-#$AuthorizeMeObj->{y} = 77;
-
-#my %AuthorizeMe_Settings;
+#set all settings
 $AuthorizeMeObj->{'settings'}->{'token_name'} = 'imok_token'; #will show up in cookie
 $AuthorizeMeObj->{'settings'}->{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
 $AuthorizeMeObj->{'settings'}->{'user_id_name'} = 'imok_user_id'; #will show up in cookie
@@ -58,27 +37,9 @@ my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
-AuthorizeMe->test();
+my $user = $AuthorizeMeObj->{'user'}; #allows shorter local strings like $user->{'user_id'} not $AuthorizeMeObj->{'users'}->{'user_id'}
 
-#$AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
-#$AuthorizeMe_Settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
-#$AuthorizeMe_Settings{'user_id_name'} = 'imok_user_id'; #will show up in cookie
-#$AuthorizeMe_Settings{'from_email'} = 'imok@emogic.com';
-#$AuthorizeMe_Settings{'reply_email'} = 'imok@emogic.com';
-#$AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
-#$AuthorizeMe_Settings{'smtp_server'} = '';
-#$AuthorizeMe_Settings{'Activation_Email_Subject'} = 'IMOK account activation email';
-#$AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
-#    Click to activate:
-#    https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>
-#    );
-# $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
-#    Click the link to reset your password to <%set_password_code%>:
-#    http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
-#    );
-#$AuthorizeMe_Settings{'path_to_users'} = './users/';
-#$AuthorizeMe_Settings{'path_to_tokens'} = './tokens/';
-#$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/';
+AuthorizeMe->test();
 
 my $last_message = '';
 

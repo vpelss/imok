@@ -12,7 +12,7 @@
 	<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
 	<input name="timestamp" type="hidden" value="" id='timestamp'>
 
-	<p>Email Contact 1:<br><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>'> </p>
+	<p>Email Contact 1:<br><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>' autofocus> </p>
 	<p>Email Contact 2:<br><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
 	<p>Email Contact 3:<br><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
 
@@ -40,7 +40,7 @@
 	</form>
 
 	<p><a href='imok.cgi'><input type='button' value='Cancel'></a></p>
-	
+
 	<script>
 	function calc_date(){
 	const date1 = new Date();
@@ -71,8 +71,8 @@
 	//alternate method, but why create an object?
 	var date_trigger = new Date(year, month , day , hour , minute);
 	var start_UTC = Math.floor( date_trigger.getTime() / 1000 );
-	var a1 = date_trigger.getTime()
-	var a2 = date1.getTime();
+	//var a1 = date_trigger.getTime();
+	//var a2 = date1.getTime();
 	if(date_trigger.getTime() < date1.getTime()){//do not allow trigger time in the past
 		//alert("Trying to set a trigger time in the past. Please choose a time in the future.");
 		//return 0;

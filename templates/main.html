@@ -18,7 +18,7 @@
 </head>
 
 <body>
-	<h4 align="center">IMOK</h4>
+	<h4 align="center">IMOK, not Lost</h4>
 
 	<div align="center" class='<%logged_in%>'>
 		<form id="form_login" action="./imok.cgi" method="get" name="form_login">
@@ -26,7 +26,7 @@
 			<p><input type="submit" value="IMOK" title="You are ok for theis interval. This will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm)."></p>
 		</form>
 	</div>
-	
+
 	<div align="center" class='<%logged_in%>' id='countdown'>00:00:00</div>
 
 	<div align="center">
@@ -60,48 +60,48 @@
 	<div class='<%logged_in%>' align="center">
 		<a href="./imok.cgi?command=logout_all_devices">Logout all devices</a>
 	</div>
- 
+
  <div class='' align="center">
 		<a href="#" onclick='about();'>About</a>
 	</div>
- 
+
 		<div align="center" class='<%logged_in%>'>
 		<form id="form_login2" action="./imok.cgi" method="get" name="form_login2">
 			<input name="command" type="hidden" value="imnotok" id="command_login2">
 			<p><input type="submit" value="IM NOT OK" title="You are NOT ok for theis interval. This will immediately send the alert email to your alert list."></p>
 		</form>
 	</div>
-		
+
 				<div align="center" class='<%logged_in%>'>
 		<form id="form_login3" action="./imok.cgi" method="get" name="form_login3">
 			<input name="command" type="hidden" value="testimok" id="command_login3">
 			<p><input type="submit" value="Send a Test Email." title="Send a test email to your alert list."></p>
 		</form>
 	</div>
-				
+
 								<div align="center" class='<%logged_in%>'>
 		<form id="form_login3" action="./imok.cgi" method="get" name="form_login4">
 			<input name="command" type="hidden" value="cron" id="cron">
 			<p><input type="submit" value="cron" title="Simulate cron."></p>
 		</form>
 	</div>
-								
+
 	<script>
-		
+
 function main(){
-		var trigger_time = "<%trigger_time%>";		
+		var trigger_time = "<%trigger_time%>";
 		if(trigger_time == "<%trigger_time%>") {return 0;}
 		trigger_time = parseInt(trigger_time);
 		}
-		
-	main();	
-		
+
+	main();
+
 	function about() {
 		alert(`This program was designed for those who live alone and want a fail safe alarm to alert friends or family if the IMOK button is not pushed before a specific interval.`);
-								
-    }	
-		
+
+    }
+
 	</script>
-								
+
 </body>
 </html>

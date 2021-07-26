@@ -21,7 +21,7 @@ $VERSION  = '0.2';
 #manages mailing
 #DOES NOT manage forms and log in, reset, log out logic
 
-my $AuthorizeMe_Settings; #ref to hash, sent from calling program
+#my $settings; #ref to hash, sent from calling program
 
 my $cookies; #will be a ref to a anonymous hash
 our $email;
@@ -39,51 +39,29 @@ my $last_message = ''; #used for &get_last_message()
 #my $settings->{'user_id_name'} = "AuthorizeMeUserId";
 #my $settings->{'token_max-age'} = '3153600000'; #default 100 years, in case not supplied in new()
 
+my $self;
+our $settings;
+our $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
+
 sub test(){
+my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
  my $r = 8;
  my $t = 6;
 
 }
 
-my $self;
-our $settings;
-my $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
-
-
 sub new() { #initialize settings
-  my $class = shift;
-  #$user = shift; #hash reference kept as we want two way communication
-  #$AuthorizeMe_Settings = shift;
+ my $class = shift;
 
-  #setup settings from calling program
-  #$from_email = $AuthorizeMe_Settings->{'from_email'};
-  #$SEND_MAIL = $AuthorizeMe_Settings->{'sendmail'};
-  #$SMTP_SERVER = $AuthorizeMe_Settings->{'smtp_server'};
-  #$settings->{'path_to_users'} =  $AuthorizeMe_Settings->{'path_to_users'};
-  #$settings->{'path_to_tokens'} = $AuthorizeMe_Settings->{'path_to_tokens'};
-  #$settings->{'path_to_authorizations'} = $AuthorizeMe_Settings->{'path_to_authorizations'};
-  #$user_file_extension = $AuthorizeMe_Settings->{'user_file_extension'};
-  #if($AuthorizeMe_Settings->{'token_name'}){ $settings->{'token_name'} = $AuthorizeMe_Settings->{'token_name'}; }
-  #if($AuthorizeMe_Settings->{'user_id_name'}) { $settings->{'user_id_name'} = $AuthorizeMe_Settings->{'user_id_name'}; }
-  #if($AuthorizeMe_Settings->{'token_max-age'}) { $settings->{'token_max-age'} = $AuthorizeMe_Settings->{'token_max-age'}; }
+ $self = {};
+ $self->{'user'} = {};
+ $self->{'settings'} = {};
+ $user = $self->{'user'}; #better way to locally access user
+ $settings = $self->{'settings'}; #better way to locally access settings
 
-  #$cookies = &get_cookies();
-  #$token = $cookies->{$settings->{'token_name'}}; #does the client think they are logged in?
-  #$user_id = $cookies->{$settings->{'user_id_name'}};
-
- $self = {
-    };
-$self->{'user'} = {};
-$self->{'settings'} = {};
-$settings = $self->{'settings'}; #better way to locally access stettings
-
-my $self2 = {'v'=>99,
-             t=>89
-             };
-
-  bless $self, $class;
-  bless $self2, $class;
-  return $self;
+ bless $self, $class;
+ return $self;
 }
 
 sub get_cookies(){
@@ -97,17 +75,6 @@ sub get_cookies(){
     }
   return \%local_cookies;
 }
-
-=pod
-#ONLY used by main program. must supply user ID (from get_user_id , or maybe filename)
-sub user_to_db(){#mainly for external calls allowing db update
- shift; #strip away caller
- my $filename = shift;
- $filename = "$settings->{'path_to_users'}$filename";
- my $result = &hash_to_db($user , $filename);
- return $result;
-}
-=cut
 
 #set on new and login
 sub get_user_id(){#use so external calling routines can find our db file
@@ -130,15 +97,6 @@ sub hash_to_db(){#arg: \%hash , $filename
 
   return 1;
 }
-
-=pod
-sub db_to_user(){#mainly for external calls allowing db update
- my $filename = $user->{'user_id'};
- $filename = "$settings->{'path_to_users'}$filename";
- my $result = &db_to_hash($filename , $user);
- return $result;
-}
-=cut
 
 #can be used external to object
 #copy ANY file to a hash ref
@@ -250,12 +208,12 @@ sub register_account()
     #$filename = "$settings->{'path_to_authorizations'}$random_number";
     my $result = &hash_to_db($user , $filename);
 
-    my $email_message = $AuthorizeMe_Settings->{'registration_email_template'};
+    my $email_message = $settings->{'registration_email_template'};
     $email_message =~ s/<%activate_code%>/$random_number/g;
     $email_message =~ s/<%user_id%>/$user_id/g;
 
     #send email message
-    $result = &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , $AuthorizeMe_Settings->{'Activation_Email_Subject'} , $email_message ,$AuthorizeMe_Settings->{'smtp_server'});
+    $result = &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , $settings->{'Activation_Email_Subject'} , $email_message ,$settings->{'smtp_server'});
     #my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
 
     #delete any old token files
@@ -338,10 +296,7 @@ sub login() {
      $result = &hash_to_db($tokens , $filename); #token file contains tokens of all logins!
 
      #how do we set cookie? just set $set_cookie_string : Set-Cookie: <cookie-name>=<cookie-value>
-     #$set_cookie_string = &set_cookies($settings->{'token_name'} , $token_value , &time() + 100000000 , '/' , $domain , '$cookie_time_zone' , '-00000');
      $set_cookie_string = "Set-Cookie: $settings->{'token_name'}=$token; Max-Age=$settings->{'token_max-age'};\nSet-Cookie: $settings->{'user_id_name'}=$user_id; Max-Age=$settings->{'token_max-age'};";
-     #$set_cookie_string = "Set-Cookie: $settings->{'token_name'}='$token', $settings->{'user_id_name'}='$user_id'; Max-Age=$settings->{'token_max-age'} ;";
-     #$set_cookie_string = "Set-Cookie: $settings->{'token_name'}='$token',$settings->{'user_id_name'}='$user_id'; Max-Age=$settings->{'token_max-age'};";
 
      $last_message = "$user->{'email'} is logged in";
      $logged_in = 1; #let the world know we are logged in
@@ -416,29 +371,28 @@ sub forgot_password(){
  }
  #set auth_file named $user_id: will contain random forgot_password_set_id
   my $random_number = int(rand($random_number_size)); #acts as both auth code and new password
-  $filename = "$AuthorizeMe_Settings->{'path_to_authorizations'}$user_id";
+  $filename = "$settings->{'path_to_authorizations'}$user_id";
   $result = &hash_to_db({password_code => $random_number} , $filename);
   if($result != 1){
     $last_message = "could not save to $filename";
     return 0;
   }
  #send email with link ?command=forgot_password_set&forgot_password_set_id=????????????
- my $email_message = $AuthorizeMe_Settings->{'forgot_password_email_template'};
+ my $email_message = $settings->{'forgot_password_email_template'};
  $email_message =~ s/<%set_password_code%>/$random_number/g;
  $email_message =~ s/<%user_id%>/$user_id/g;
  #send email message
- &sendmail($AuthorizeMe_Settings->{'from_email'} , $AuthorizeMe_Settings->{'from_email'} , $email , $AuthorizeMe_Settings->{'sendmail'} , 'IMOK account activation email' , $email_message , $AuthorizeMe_Settings->{'smtp_server'});
+ &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , 'IMOK account activation email' , $email_message , $settings->{'smtp_server'});
 
  $last_message = "Your password recovery email has been sent to $email : $email_message";
  return 1;
  }
 
 sub set_password(){
- #if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
  shift;
  my $user_id = shift;
  my $set_password_code = shift;
- my $filename = "$AuthorizeMe_Settings->{'path_to_authorizations'}$user_id";
+ my $filename = "$settings->{'path_to_authorizations'}$user_id";
  my $hash_auth_ref = {};
 # my $result = &db_to_hash($filename , $hash_auth_ref);
  $hash_auth_ref = &db_to_hash($filename);
@@ -471,7 +425,6 @@ sub set_password(){
 
 sub parse_form
 {
-if($_[0] eq $NAME){shift}; #so we can call from inside module or outside
 # --------------------------------------------------------
 # Parses the form input and returns a hash with all the name
 # value pairs. Removes SSI and any field with "---" as a value
@@ -695,24 +648,24 @@ $user{'email_contact_3'} = '';
 $user{'email_form'} = '';
 $user{'time_out'} = '';
 my %AuthorizeMe_Settings;
-$AuthorizeMe_Settings{'token_name'} = 'imok_token'; #will show up in cookie
-$AuthorizeMe_Settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
-$AuthorizeMe_Settings{'user_id_name'} = 'imok_user_id'; #will show up in cookie
-$AuthorizeMe_Settings{'from_email'} = 'imok@emogic.com';
-$AuthorizeMe_Settings{'reply_email'} = 'imok@emogic.com';
-$AuthorizeMe_Settings{'sendmail'} = '/usr/lib/sendmail -t';
-$AuthorizeMe_Settings{'smtp_server'} = '';
-$AuthorizeMe_Settings{'registration_email_template'} = qq(You have registered for an IMOK account.
+$settings{'token_name'} = 'imok_token'; #will show up in cookie
+$settings{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
+$settings{'user_id_name'} = 'imok_user_id'; #will show up in cookie
+$settings{'from_email'} = 'imok@emogic.com';
+$settings{'reply_email'} = 'imok@emogic.com';
+$settings{'sendmail'} = '/usr/lib/sendmail -t';
+$settings{'smtp_server'} = '';
+$settings{'registration_email_template'} = qq(You have registered for an IMOK account.
     Click to activate:
     http://localhost/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>
     );
- $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
+ $settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
     http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
-$AuthorizeMe_Settings{'path_to_users'} = './users/';
-$AuthorizeMe_Settings{'path_to_tokens'} = './tokens/';
-$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/';
+$settings{'path_to_users'} = './users/';
+$settings{'path_to_tokens'} = './tokens/';
+$settings{'path_to_authorizations'} = './authorizations/';
 my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
 
 
@@ -726,13 +679,13 @@ This module allows programs to display error messages
 =begin html
 
 <pre>
- $AuthorizeMe_Settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
+ $settings{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
     http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
-$AuthorizeMe_Settings{'path_to_users'} = './users/';
-$AuthorizeMe_Settings{'path_to_tokens'} = './tokens/';
-$AuthorizeMe_Settings{'path_to_authorizations'} = './authorizations/';
+$settings{'path_to_users'} = './users/';
+$settings{'path_to_tokens'} = './tokens/';
+$settings{'path_to_authorizations'} = './authorizations/';
 my $AuthorizeMeObj = AuthorizeMe->new( \%user , \%AuthorizeMe_Settings ); #pass %user by reference when we create this object so we can update it in main, module can take value, update it, save, and return it to main
 
 </pre>
