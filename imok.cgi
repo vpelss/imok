@@ -37,11 +37,11 @@ my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
-my $user = $AuthorizeMeObj->{'user'}; #allows shorter local strings like $user->{'user_id'} not $AuthorizeMeObj->{'users'}->{'user_id'}
+#my $user = $AuthorizeMeObj->{'user'}; #allows shorter local strings like $user->{'user_id'} not $AuthorizeMeObj->{'users'}->{'user_id'}
 
 AuthorizeMe->test();
 
-my $last_message = '';
+my $message = '';
 
 eval { &main(); };     # Trap any fatal errors so the program hopefully
 if ($@) { &cgierr("fatal error: $@"); }     # never produces that nasty 500 server error page.
@@ -56,7 +56,7 @@ my $command = $in{'command'};
 my $output = '';
 $output = &get_template_page('main.html');
 
-$user = $AuthorizeMeObj->AmILoggedIn();
+my $user = $AuthorizeMeObj->AmILoggedIn();
 
 if ( defined($user) ) {#we are logged in
     if ( $command eq 'logout' ) { &logout() } #login email , password
@@ -88,7 +88,9 @@ else{
     $output =~  s/<%logged_in%>/hide_me/g; #hide logout, settings, reset pw
     }
 
-$output =~  s/<%last_message%>/$last_message/g;
+my $AuthMessage = $AuthorizeMeObj->get_message();
+$message = "$message $AuthMessage";
+$output =~  s/<%last_message%>/$message/g;
 my $set_cookie_string = $AuthorizeMeObj->get_set_cookie_string();
 print "Content-type: text/html\n";
 print "Cache-Control: max-age=0\n";
@@ -134,7 +136,7 @@ if( $current_time_stamp <= $now ){#alarm was/is triggered
    $new_time_stamp = $new_time_stamp + $user->{'timeout_ms'};
   }
  #$new_time_stamp = $new_time_stamp + $user{'timeout_ms'};
- $last_message = "$last_message Alarm was likely triggered. Please email your contacts and tell them you are OK.";
+ $message = "$message Alarm was likely triggered. Please email your contacts and tell them you are OK.";
  #send out IMOK email. Member has checked in...
 }
 elsif( ($current_time_stamp - $user->{'timeout_ms'}) <= $now ){ #we are clicking just before alarm is triggered
@@ -157,19 +159,20 @@ my $trigger_time_string = sprintf("%d-%.2d-%.2d  %d:%.2d", $year , $mon , $mday 
 
 my $result = &change_time_stamp($new_time_stamp , $filename);
 if($result == 1){
- $last_message = "$last_message your next IMOK trigger time is: $trigger_time_string";
+ $message = "$message your next IMOK trigger time is: $trigger_time_string";
 }
 else{
- $last_message = "$last_message IMOK trigger time failed. Please try again.";
+ $message = "$message IMOK trigger time failed. Please try again.";
 }
  &write_to_log("$user->{'email'} checked in.");
 return $result;
 }
 
 sub imnotok(){
+ my $user = $AuthorizeMeObj->AmILoggedIn(); #get user details
  my $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
- $last_message = "sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}";
+ $message = "sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}";
 }
 
 sub cron(){
@@ -182,7 +185,7 @@ sub cron(){
   if($timestamp > time()){#we are not alarming
    next;
   }
-  $user = &AuthorizeMeObj->db_to_hash($filename); #open file get details
+  my $user = &AuthorizeMeObj->db_to_hash($filename); #open file get details
  # &write_to_log("Result of user db $result user $user->{'user_id'}");
   #send alert emails
   #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
@@ -200,7 +203,7 @@ sub cron(){
   #update time stamp
   &change_time_stamp($user->{'timestamp'} , $filename);
   &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
-  $last_message = "$last_message email alert sent $user->{'timestamp'}";
+  $message = "$message email alert sent $user->{'timestamp'}";
  }
 
 }
@@ -251,7 +254,7 @@ sub get_settings(){
  my $output = shift; #string passed by ref so we can modify it
  $$output = &get_template_page('settings.html'); #string passed by ref so we can modify it
  #get user data
- $user = $AuthorizeMeObj->AmILoggedIn();
+ my $user = $AuthorizeMeObj->AmILoggedIn();
  if(!defined($user)){return 0}
  #replace tokens
  $$output =~ s/<%email_contact_1%>/$user->{'email_contact_1'}/g; #hide login, register , forgot pw
@@ -264,14 +267,14 @@ sub get_settings(){
 }
 
 sub set_settings(){
- $user = $AuthorizeMeObj->AmILoggedIn();
+ my $user = $AuthorizeMeObj->AmILoggedIn();
  if(!defined($user)){ return 0; }
  my $email = $in{'email_contact_1'};
  if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_1'} = $email;
  }
  else{
-  $last_message = "$last_message : $email is not a valid email address";
+  $message = "$message : $email is not a valid email address";
   return 0;
  }
  $email = $in{'email_contact_2'};
@@ -279,7 +282,7 @@ sub set_settings(){
   $user->{'email_contact_2'} = $email;
  }
  else{
-  $last_message = "$last_message : $email is not a valid email address";
+  $message = "$message : $email is not a valid email address";
   return 0;
  }
  $email = $in{'email_contact_3'};
@@ -287,7 +290,7 @@ sub set_settings(){
   $user->{'email_contact_3'} = $email;
  }
  else{
-  $last_message = "$last_message : $email is not a valid email address";
+  $message = "$message : $email is not a valid email address";
   return 0;
  }
 
@@ -312,10 +315,10 @@ sub set_settings(){
  #$result = imok();
 
  if($result == 1){
-  $last_message = "$last_message Settings changed.";
+  $message = "$message Settings changed.";
   }
  else{
-  $last_message = "$last_message Settings not changed.";
+  $message = "$message Settings not changed.";
   }
 
  my $hour_seconds = 60 * 60;
@@ -323,13 +326,13 @@ sub set_settings(){
  my $timestamp = $user->{'timestamp'}; #trigger timestamp based on PC's local time
  $result = &change_time_stamp($timestamp , "$path_to_users$user->{'user_id'}");
  if($result == 0){
-  $last_message = "$last_message Could not set timestamp on $path_to_users$user->{'user_id'}";
+  $message = "$message Could not set timestamp on $path_to_users$user->{'user_id'}";
   }
  my @lt = localtime($timestamp);
  my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
  my $year = 1900 + $lt[5];
  my $month = $lt[4] + 1;
- $last_message = "$last_message Trigger time is $year-$month-$lt[3] $str_time on the server and $in{'start_date'} $in{'start_time'} local time on your pc";
+ $message = "$message Trigger time is $year-$month-$lt[3] $str_time on the server and $in{'start_date'} $in{'start_time'} local time on your pc";
  return $result;
 }
 
@@ -338,7 +341,6 @@ sub register() {
 	my $password = $in{'password'};
 	my $result = $AuthorizeMeObj->register_account($email , $password);
 
- $last_message = $AuthorizeMeObj->get_last_message();
  return $result;
  }
 
@@ -346,8 +348,8 @@ sub activate(){
  my $authorize_code = shift;
  my $user_id = shift;
 
- $user =  $AuthorizeMeObj->activate( $authorize_code , $user_id );
- if(!defined($user)) {$last_message = "$last_message Your activation failed."; return 0};
+ my $user =  $AuthorizeMeObj->activate( $authorize_code , $user_id );
+ if(!defined($user)) {$message = "$message Your activation failed."; return 0};
 
  $user->{'email_contact_1'} = '';
  $user->{'email_contct_2'} = '';
@@ -358,14 +360,14 @@ sub activate(){
 
 my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
 
- if($result == 0) {$last_message = "$last_message Your activation failed. DB write error."; return 0};
+ if($result == 0) {$message = "$message Your activation failed. DB write error."; return 0};
 
  #$result = imok();
  if($result == 1){
-  $last_message = "$last_message Your account $user->{'email'} has been authorized. Please log in and go to setup.";
+  $message = "$message Your account $user->{'email'} has been authorized. Please log in and go to setup.";
   }
  else{
-  $last_message = "$last_message Error: Your account $user->{'email'} could not be authorized";
+  $message = "$message Error: Your account $user->{'email'} could not be authorized";
   }
  return $result;
  }
@@ -373,32 +375,35 @@ my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
 sub login(){
  #email points to data file
  my $result =  $AuthorizeMeObj->login( $in{'email'} , $in{'password'} );
+ my $user = $AuthorizeMeObj->{'user'};
  if($result == 1){
-  $last_message = "$last_message $user->{'email'} has logged in";
+  $message = "$message $user->{'email'} has logged in";
   }
  else{
-  $last_message = "$last_message $user->{'email'} could not log in";
+  $message = "$message $user->{'email'} could not log in";
   }
  return $result;
 }
 
 sub logout(){
  my $result =  $AuthorizeMeObj->logout();
+ my $user = $AuthorizeMeObj->{'user'};
  if($result == 1){
-  $last_message = "$last_message $user->{'email'} has logged out";
+  $message = "$message $user->{'email'} has logged out";
   }
  else{
-  $last_message = "$last_message $user->{'email'} could not log out";
+  $message = "$message $user->{'email'} could not log out";
   }
  }
 
 sub logout_all_devices(){
  my $result =  $AuthorizeMeObj->logout_all_devices();
+ my $user = $AuthorizeMeObj->{'user'};
  if($result == 1){
-  $last_message = "$last_message $user->{'email'} has logged out of all devices";
+  $message = "$message $user->{'email'} has logged out of all devices";
   }
  else{
-  $last_message = "$last_message $user->{'email'} could not log out of all devices";
+  $message = "$message $user->{'email'} could not log out of all devices";
   }
 }
 
@@ -406,10 +411,9 @@ sub forgot_password(){
  my $email = shift;
  my $result = $AuthorizeMeObj->forgot_password($email);
  if($result == 1){
-  $last_message = $AuthorizeMeObj->get_last_message();;
   }
  else{
-  $last_message = "$last_message $email could not recover password";
+  $message = "$message $email could not recover password";
   }
  return $result;
 }
@@ -419,10 +423,10 @@ sub set_password(){
  my $set_password_code = shift;
  my $result = $AuthorizeMeObj->set_password($user_id,$set_password_code);
  if($result == 1){
-  $last_message = "$last_message Password was reset";
+  $message = "$message Password was reset";
   }
  else{
-  $last_message = "$last_message Password was not reset";
+  $message = "$message Password was not reset";
   }
  return $result;
 }
@@ -432,10 +436,10 @@ sub reset_password(){
  my $new_password = shift;
  my $result = $AuthorizeMeObj->reset_password($current_password,$new_password);
  if($result == 1){
-  $last_message = "$last_message Password was reset";
+  $message = "$message Password was reset";
   }
  else{
-  $last_message = "$last_message Password was not reset";
+  $message = "$message Password was not reset";
   }
  return $result;
  }

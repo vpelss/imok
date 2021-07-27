@@ -29,7 +29,7 @@ my $user_id; #made from $email, stored in cookie, or passed in argument in a fro
 my $token;
 my $random_number_size = 1000000000;
 my $set_cookie_string = ""; #calling program can use get_set_cookie_string
-my $last_message = ''; #used for &get_last_message()
+my $message = ''; #used for &get_last_message()
 
 #determined by calling program. we are a module and code is inaccessible?
 #my $settings->{'path_to_users'};
@@ -39,9 +39,9 @@ my $last_message = ''; #used for &get_last_message()
 #my $settings->{'user_id_name'} = "AuthorizeMeUserId";
 #my $settings->{'token_max-age'} = '3153600000'; #default 100 years, in case not supplied in new()
 
-my $self;
+my $self; #so our methods can access module object data
 our $settings;
-our $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
+#our $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
 
 sub test(){
 my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
@@ -54,10 +54,10 @@ my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call fro
 sub new() { #initialize settings
  my $class = shift;
 
- $self = {};
+  $self = {};
  $self->{'user'} = {};
  $self->{'settings'} = {};
- $user = $self->{'user'}; #better way to locally access user
+ #$user = $self->{'user'}; #better way to locally access user
  $settings = $self->{'settings'}; #better way to locally access settings
 
  bless $self, $class;
@@ -81,6 +81,14 @@ sub get_user_id(){#use so external calling routines can find our db file
  return $user_id;
 }
 
+sub load_user(){#based on ?
+
+}
+
+sub save_user{#based on ?
+
+}
+
 #copy ANY hash ref to a file
 sub hash_to_db(){#arg: \%hash , $filename
  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
@@ -100,56 +108,52 @@ sub hash_to_db(){#arg: \%hash , $filename
 
 #can be used external to object
 #copy ANY file to a hash ref
-sub db_to_hash(){#arg  $filename
+sub db_to_hash(){#arg  $filename : returns a %ref or undef
   my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
   my $filename = shift;
   my $string = '';
   my @string;
 
-  open(FH, '<', $filename) or return;# $!;
+  my $hash_ref;# undef by default
+
+  open(FH, '<', $filename) or return $hash_ref;# $!;
   while(<FH>){
     $string = "$string$_";
     }
   close(FH);
 
-  my $hash_ref = eval $string; #creates a new % ref pointer
+  $hash_ref = eval $string; #creates a new % ref pointer
 
   return $hash_ref;
 }
 
-sub get_last_message(){
-  return $last_message;
+sub get_message(){
+ if($message ne ""){
+  return "$NAME : $message";
+ }
+ else{
+  return "$message";
+ }
 }
 
-sub AmILoggedIn(){#also fills in $user
+sub AmILoggedIn(){#also fills in and returns $user or undef
  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
-  my $result = 0;
+ #undef $user; #start fresh
+ my $user;
 
-  undef $user;
-
-  $cookies = &get_cookies();
+ $cookies = &get_cookies();
   $token = $cookies->{ $settings->{'token_name'} }; #does the client think they are logged in?
   $user_id = $cookies->{ $settings->{'user_id_name'} };
 
-  #user file MUST exist
-  my $filename = "$settings->{'path_to_users'}$user_id";
-  if( ! -e $filename ){
-   $last_message = "$last_message User file is missing.";
-   return;
-   }
-
-  $filename = "$settings->{'path_to_tokens'}$user_id";
+  my $filename = "$settings->{'path_to_tokens'}$user_id";
   if( -e $filename ){ #tokens file exists
     my $tokens = {};
 
     $tokens = &db_to_hash($filename , $tokens);
-    #&db_to_hash($filename , \%tokens);
-    if( $tokens->{$token} == 1 ){#does the token exist?
-    #if( $tokens{$token} == 1 ){#does the token exist?
+     if( $tokens->{$token} == 1 ){#does the token exist?
      $filename = "$settings->{'path_to_users'}$user_id";
-     #$result = &db_to_hash($filename , $user); # test -e filee & load user data (for other routines, reset password, etc...)
      $user = &db_to_hash($filename); # test -e file & load user data (for other routines, reset password, etc...)
     }
  return $user;
@@ -172,12 +176,12 @@ sub register_account()
     my $password = shift;
     $password =~ s/\s\W//; #no white space, only alpha numeric
     if($password eq ""){
-      $last_message = "Your password cannot be empty";
+      $message = "$message Your password cannot be empty";
       return 0;
     }
 
     if( ! valid_email($email) ){ #check for valid email
-      $last_message = 'Invalid Email Address';
+      $message = "$message Invalid Email Address";
       return 0;
       }
 
@@ -186,16 +190,17 @@ sub register_account()
     #see if  user file exists, fail if it does, pass message?
     my $filename = "$settings->{'path_to_users'}$user_id";
     if(-e $filename){
-      $last_message = "This Email Address is already registered : $email";
+      $message = "$message This Email Address is already registered : $email";
       return 0;
       }
      $filename = "$settings->{'path_to_authorizations'}$user_id";
     if(-e $filename){
-      $last_message = "This Email Address has already requested an account. You will receive, or should have been sent an activation email to $email";
+      $message = "$message This Email Address has already requested an account. You will receive, or should have been sent an activation email to $email";
       return 0;
       }
 
     # $user->{'username'} = $username; #simplest case just use email as username also
+    my $user;
     $user->{'email'} = $email;
     $user->{'user_id'} = $user_id; #also use as activate code
     #salt it up!!!!!!!!! with userid?
@@ -221,7 +226,7 @@ sub register_account()
     $result = unlink($filename);
 
     #return success with message stating auth email must be clicked!
-    $last_message = "You have been registered, but must activate your account by clicking on the link in the email sent to $email. It may take up to an hour to receive. Check your spam folder. : $email_message";
+    $message = "$message You have been registered, but must activate your account by clicking on the link in the email sent to $email. It may take up to an hour to receive. Check your spam folder. : $email_message";
     return 1;
     }
 
@@ -240,6 +245,7 @@ sub activate(){
 
   #does the file exist
   my $filename = "$settings->{'path_to_authorizations'}$user_id";
+  my $user;
   $user = &db_to_hash($filename);
   if(!defined($user)){return;}
   #is code valid?
@@ -273,6 +279,7 @@ sub login() {
   $filename = "$settings->{'path_to_users'}$filename";
   if(-e $filename){
     #$result = &db_to_hash($filename , $user); #get user data
+    my $user = $self->{'user'}; #tie to module object
     $user = &db_to_hash($filename); #get user data
     if(!defined($user)){return 0}
     my $encrypted_password_stored = $user->{'password'};
@@ -298,13 +305,13 @@ sub login() {
      #how do we set cookie? just set $set_cookie_string : Set-Cookie: <cookie-name>=<cookie-value>
      $set_cookie_string = "Set-Cookie: $settings->{'token_name'}=$token; Max-Age=$settings->{'token_max-age'};\nSet-Cookie: $settings->{'user_id_name'}=$user_id; Max-Age=$settings->{'token_max-age'};";
 
-     $last_message = "$user->{'email'} is logged in";
+     $message = "$message $user->{'email'} is logged in";
      $logged_in = 1; #let the world know we are logged in
      }
    else{
     $logged_in = 0;
     $set_cookie_string = '';
-    $last_message = "Login for $user->{'email'} failed";
+    $message = "$message Login for $user->{'email'} failed";
     $result = 0;
    }
   return $result ;
@@ -325,7 +332,7 @@ sub logout(){
  sub logout_all_devices(){
  my $filename = "$settings->{'path_to_tokens'}$user_id";
  my $result = unlink($filename);
-
+#sign out
  $set_cookie_string = "Set-Cookie: $settings->{'token_name'}= ; Max-Age=-1 ;\nSet-Cookie: $settings->{'user_id_name'}= ; Max-Age=-1 ;";
  return $result;
  }
@@ -338,12 +345,13 @@ sub reset_password(){
  shift;
  my $current_password = shift;
  my $new_password = shift;
- #if(&AmILoggedIn() == 0){return 0;}
+ my $user = $self->{'user'}; #tie to module object
+ if( !defined( $user ) ){$message = "$message Are you logged in?"; return 0;}
  #validate current password
  my $current_password_encrypted = &encrypt_password($current_password);
  if($current_password_encrypted ne $user->{'password'}){
   return 0;
- }
+  }
  #change to new password
  my $filename = $user->{'user_id'};
  $filename = "$settings->{'path_to_users'}$filename";
@@ -358,7 +366,7 @@ sub forgot_password(){
  my $email = shift;
  #check email
  if(&valid_email($email) != 1){
-  $last_message = "Invalid Email $email";
+  $message = "$message Invalid Email $email";
   return 0;
  }
  #check user_id : exists?
@@ -366,7 +374,7 @@ sub forgot_password(){
  my $filename = $user_id;
  $filename = "$settings->{'path_to_users'}$filename";
  if(! -e $filename){
-  $last_message = "User does not exist for $email";
+  $message = "$message User does not exist for $email";
   return 0;
  }
  #set auth_file named $user_id: will contain random forgot_password_set_id
@@ -374,7 +382,7 @@ sub forgot_password(){
   $filename = "$settings->{'path_to_authorizations'}$user_id";
   $result = &hash_to_db({password_code => $random_number} , $filename);
   if($result != 1){
-    $last_message = "could not save to $filename";
+    $message = "$message Could not save to $filename";
     return 0;
   }
  #send email with link ?command=forgot_password_set&forgot_password_set_id=????????????
@@ -384,7 +392,7 @@ sub forgot_password(){
  #send email message
  &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , 'IMOK account activation email' , $email_message , $settings->{'smtp_server'});
 
- $last_message = "Your password recovery email has been sent to $email : $email_message";
+ $message = "$message Your password recovery email has been sent to $email : $email_message";
  return 1;
  }
 
@@ -399,23 +407,24 @@ sub set_password(){
  my $set_password_code_stored = $hash_auth_ref->{'password_code'};
 
  if($set_password_code != $set_password_code_stored){
-  $last_message = "codes do not match";
+  $message = "$message Codes do not match";
   return 0;
  }
  my $result = 1;
  #change password and store it
  my $filename2 = "$settings->{'path_to_users'}$user_id";
  #$result = &db_to_hash($filename2 , $user);
+ my $user;
  $user = &db_to_hash($filename2);
  if($result != 1){
-    $last_message = "could not open $filename2";
+    $message = "$message Could not open $filename2";
     return 0;
   }
  my $encrypted_password = &encrypt_password($set_password_code_stored);
  $user->{'password'} = $encrypted_password;
  $result = &hash_to_db($user,$filename2);
  if($result != 1){
-    $last_message = "could not save $filename2";
+    $message = "$message Could not save $filename2";
     return 0;
   }
  #delete code file
