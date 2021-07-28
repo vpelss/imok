@@ -45,7 +45,7 @@ our $settings;
 
 sub test(){
 my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
-
+#my $e = __PACKAGE__->$self;
  my $r = 8;
  my $t = 6;
 
@@ -81,19 +81,45 @@ sub get_user_id(){#use so external calling routines can find our db file
  return $user_id;
 }
 
-sub load_user(){#based on ?
+sub load_user(){#based on user_id &load_user( user_id )
+  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
+  my $userid = shift;
+
+  my $filename = "$settings->{'path_to_users'}$user_id";
+
+  my $user = &db_to_hash($self->{'user'} , $filename); # test -e file & load user data (for other routines, reset password, etc...)
+  $self->{'user'} = $user;
+
+  if(defined $user){
+   return 1;
+  }
+  else{
+   return 0;
+  }
 }
 
-sub save_user{#based on ?
+sub save_user{#$self->{'user'} must exist &save_user()
+  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
+  my $userid;
+
+  if(defined $self->{'user'}->{'user_id'}){
+    $user_id = $self->{'user'}->{'user_id'};
+  }
+  else{
+   return 0;
+  }
+
+  my $filename = "$settings->{'path_to_users'}$user_id";
+  my $result = &hash_to_db($self->{'user'} , $filename); # test -e file & load user data (for other routines, reset password, etc...)
+
+  return $result;
 }
 
 #copy ANY hash ref to a file
 sub hash_to_db(){#arg: \%hash , $filename
  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
-
-  #iterate through all keys and copy to db_hash
 
   my $hash_ref = shift;
   my $filename = shift;
@@ -137,10 +163,9 @@ sub get_message(){
  }
 }
 
-sub AmILoggedIn(){#also fills in and returns $user or undef
+sub AmILoggedIn(){#also fills in $self->{'user}
  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
- #undef $user; #start fresh
  my $user;
 
  $cookies = &get_cookies();
@@ -156,7 +181,13 @@ sub AmILoggedIn(){#also fills in and returns $user or undef
      $filename = "$settings->{'path_to_users'}$user_id";
      $user = &db_to_hash($filename); # test -e file & load user data (for other routines, reset password, etc...)
     }
- return $user;
+ }
+ $self->{'user'} = $user;
+ if(defined $user){
+  return 1;
+  }
+ else{
+  return 0;
  }
 }
 

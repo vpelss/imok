@@ -3,7 +3,7 @@
 use strict;
 use Socket;
 use lib '.'; #nuts, PERL has changed. add local path to @INC
-use lib './'; #nuts, PERL has changed. add local path to @INC
+#use lib './'; #nuts, PERL has changed. add local path to @INC
 #use lib '/home/cgi/imok/'; #nuts, PERL has changed. add local path to @INC
 #use lib '/home/emogic/public_html/cgi/imok/'; #nuts, PERL has changed. add local path to @INC
 use AuthorizeMe;
@@ -11,7 +11,7 @@ use AuthorizeMe;
 my %in;
 
 my $path_to_templates = './templates';
-my $logged_in;
+#my $logged_in;
 my $trigger_time = 0;
 
 #initialize and create AutorizeMe
@@ -39,7 +39,8 @@ $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
 #my $user = $AuthorizeMeObj->{'user'}; #allows shorter local strings like $user->{'user_id'} not $AuthorizeMeObj->{'users'}->{'user_id'}
 
-AuthorizeMe->test();
+#AuthorizeMe->test();
+$AuthorizeMeObj->test();
 
 my $message = '';
 
@@ -56,9 +57,11 @@ my $command = $in{'command'};
 my $output = '';
 $output = &get_template_page('main.html');
 
-my $user = $AuthorizeMeObj->AmILoggedIn();
+#my $logged_in; #username & pw
+my $logged_in = $AuthorizeMeObj->AmILoggedIn();
+my $user = $AuthorizeMeObj->{'user'};
 
-if ( defined($user) ) {#we are logged in
+if ( $logged_in ) {#we are logged in
     if ( $command eq 'logout' ) { &logout() } #login email , password
     if ( $command eq 'logout_all_devices' ) { &logout_all_devices() }
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) }
@@ -70,15 +73,19 @@ if ( defined($user) ) {#we are logged in
 else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
 				if ( $command eq 'activate' ) { &activate($in{'activate_code'} , $in{'user_id'}) } #login email , password
-    if ( $command eq 'login' ) { $logged_in = &login() } #login email , password
+    if ( $command eq 'login' ) {
+     $logged_in = &login();
+     $user = $AuthorizeMeObj->{'user'};
+     } #login email , password
     if ( $command eq 'forgot_password' ) { &forgot_password($in{'email'}) }
     if ( $command eq 'set_password' ) { &set_password($in{'user_id'} , $in{'set_password_code'}); }#from link sent by &forgot_password
     }
 
 if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
 
-$user = $AuthorizeMeObj->AmILoggedIn();
-if ( defined($user) || ($logged_in) ) {#we are logged in from cookie token or login routine
+#$logged_in = $AuthorizeMeObj->AmILoggedIn();
+#$user = $AuthorizeMeObj->{'user'};
+if ( $logged_in ) {#we are logged in from cookie token or login routine
     $output =~ s/<%logged_out%>/hide_me/g; #hide login, register , forgot pw
     $output =~  s/<%logged_in%>/show_me/g; #show logout, settings, reset pw
     if($trigger_time != 0) {$output =~  s/<%trigger_time%>/$trigger_time/g;} #for main page  != 0
@@ -124,8 +131,9 @@ sub write_to_log(){
 }
 
 sub imok(){
-my $user = $AuthorizeMeObj->AmILoggedIn(); #get user details
-if( !defined($user) ){return 0;}
+my $logged_in = $AuthorizeMeObj->AmILoggedIn();
+my $user = $AuthorizeMeObj->{'user'};
+if( ! $logged_in ){return 0;}
 my $filename = "$AuthorizeMeObj->{'settings'}->{'path_to_users'}$user->{'user_id'}";
 my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$current_time_stamp,$ctime,$blksize,$blocks) = stat($filename);
 my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + time_out
@@ -169,8 +177,9 @@ return $result;
 }
 
 sub imnotok(){
- my $user = $AuthorizeMeObj->AmILoggedIn(); #get user details
- my $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
+my $logged_in = $AuthorizeMeObj->AmILoggedIn();
+my $user = $AuthorizeMeObj->{'user'};
+my $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
  $message = "sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}";
 }
@@ -185,27 +194,27 @@ sub cron(){
   if($timestamp > time()){#we are not alarming
    next;
   }
-  my $user = &AuthorizeMeObj->db_to_hash($filename); #open file get details
+  my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
  # &write_to_log("Result of user db $result user $user->{'user_id'}");
   #send alert emails
   #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
-  my $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
+  my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
   &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
-  $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
-  $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
+  $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
+  $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
   #&write_to_log("sendmail result : $result : $user{'email_contact_1'} : $user{'email'}");
   #set time stamp ahead one hour. So we do not send an email for another hour
   $user->{'timestamp'} = (60 * 60) + $timestamp;
   #increase email file count
   $user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};
   #save file
-  &AuthorizeMeObj->hash_to_db($user , $filename);
+  $AuthorizeMeObj->hash_to_db($user , $filename);
   #update time stamp
   &change_time_stamp($user->{'timestamp'} , $filename);
   &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
   $message = "$message email alert sent $user->{'timestamp'}";
  }
-
+&write_to_log("end of cron");
 }
 
 sub change_time_stamp(){
@@ -254,8 +263,9 @@ sub get_settings(){
  my $output = shift; #string passed by ref so we can modify it
  $$output = &get_template_page('settings.html'); #string passed by ref so we can modify it
  #get user data
- my $user = $AuthorizeMeObj->AmILoggedIn();
- if(!defined($user)){return 0}
+my $logged_in = $AuthorizeMeObj->AmILoggedIn();
+my $user = $AuthorizeMeObj->{'user'};
+if(! $logged_in){return 0}
  #replace tokens
  $$output =~ s/<%email_contact_1%>/$user->{'email_contact_1'}/g; #hide login, register , forgot pw
  $$output =~ s/<%email_contact_2%>/$user->{'email_contact_2'}/g; #hide login, register , forgot pw
@@ -267,8 +277,9 @@ sub get_settings(){
 }
 
 sub set_settings(){
- my $user = $AuthorizeMeObj->AmILoggedIn();
- if(!defined($user)){ return 0; }
+my $logged_in = $AuthorizeMeObj->AmILoggedIn();
+my $user = $AuthorizeMeObj->{'user'};
+if(! $logged_in){ return 0; }
  my $email = $in{'email_contact_1'};
  if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_1'} = $email;
@@ -304,17 +315,13 @@ sub set_settings(){
  $user->{'tz_offset_hours'} = $in{'tz_offset_hours'};
  $user->{'timestamp'} = $in{'timestamp'};
 
- #my $result = $AuthorizeMeObj->hash_to_db(\%user , );
  #get_user_id
  my $user_id = $AuthorizeMeObj->get_user_id();
 
  my $filename = "$path_to_users$user_id";
- ##my $result = $AuthorizeMeObj->user_to_db($user_id);
  my $result = $AuthorizeMeObj->hash_to_db($user , $filename);
 
- #$result = imok();
-
- if($result == 1){
+  if($result == 1){
   $message = "$message Settings changed.";
   }
  else{
