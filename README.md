@@ -1,5 +1,7 @@
 # imok
 
+This idea came to me after a relative had passed away and was not found for 7 days.
+
 This program was designed for those who live alone.
 It is a fail safe alarm that will alert friends or family, vial email, if the IMOK button is not pushed before a specific planned interval. Eg: daily.
 It would be great for people that have pets and worry what would happen to them if they passed away or were incapacitated.
