@@ -7,6 +7,9 @@ It is a fail safe alarm that will alert friends or family, vial email, if the IM
 
 It would be great for people that have pets and worry what would happen to them if they passed away or were incapacitated.
 
+You can test it at:
+https://www.emogic.com/cgi/imok/imok.cgi
+
 As it is web page based, any device can be used. Smart phone, PC, etc.
 
 It was designed to be a fail safe. If it was designed as a stand alone app on a phone (no server, no web page), and your battery dies, no message would be sent. By having to report to a server, the server can send out the alert if you do not report in.
