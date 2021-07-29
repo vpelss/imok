@@ -27,7 +27,7 @@
 		</form>
 	</div>
 
-	<div align="center" class='<%logged_in%>' id='countdown'>00:00:00</div>
+	<b><font color='red'><div align="center" class='<%logged_in%>' id='countdown'>00:00:00</div></font></b>
 
 	<div align="center">
 		<h2><%last_message%></h2>
@@ -86,20 +86,45 @@
 		</form>
 	</div>
 
+<input name="difference" type="hidden" value="<%difference%>" id="difference">
+<input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
+
 	<script>
 
-function main(){
-		var trigger_time = "<%trigger_time%>";
-		if(trigger_time == "<%trigger_time%>") {return 0;}
-		trigger_time = parseInt(trigger_time);
-		}
+	var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
+const date1 = new Date();
 
-	main();
+function countdown() {
+		var now = Date.now();
+		var difference = trigger_time - now;
+		var difference_seconds = difference / 1000;
+		if(difference <= 0) {
+		document.getElementById('countdown').innerHTML = "Timeout exceeded. Alerts are being sent.";
+	}
+	else{
+		//date1.setTime(difference);
+			var day = Math.floor( difference_seconds / (60 * 60 * 24) );
+			var day_seconds =  day * (60 * 60 * 24);
+			difference_seconds = difference_seconds - day_seconds;
+			var hour = Math.floor( difference_seconds / (60 * 60) );
+			var hour_seconds = hour * (60 * 60);
+			difference_seconds = difference_seconds - hour_seconds;
+			var minute = Math.floor( difference_seconds / (60) );
+			var minute_seconds = minute * (60);
+			difference_seconds = Math.floor( difference_seconds - minute_seconds );
 
-	function about() {
+			var countdown_string = 'Days:' + day + ' Hours:' + hour + ' Minutes:' + minute + ' Seconds:' + difference_seconds;
+			document.getElementById('countdown').innerHTML = countdown_string;
+	}
+
+}
+
+setInterval( countdown , 5000 );
+countdown();
+
+function about() {
 		alert(`This program was designed for those who live alone and want a fail safe alarm to alert friends or family if the IMOK button is not pushed before a specific interval.`);
-
-    }
+  }
 
 	</script>
 

@@ -42,12 +42,13 @@
 	<p><a href='imok.cgi'><input type='button' value='Cancel'></a></p>
 
 	<script>
-	function calc_date(){
+	function calc_date()
+	{
 	const date1 = new Date();
 	var tz_offset_hours = date1.getTimezoneOffset() / 60 ;
 	document.getElementById("tz_offset_hours").value = -tz_offset_hours;
 
-	var start_date = document.getElementById("start_date").value;
+	var start_date = document.getElementById("start_date").value; //gives us yyyy-mm-dd
 	var date_ip = start_date.split('-');
 	var year = date_ip[0];
 	var month = parseInt(date_ip[1]) - 1; //months start at 0 in Date.UTC
@@ -57,28 +58,14 @@
 	var hour = time_ip[0];
 	var minute = time_ip[1];
 
-	//var start_UTC = Date.UTC(year, month , day , hour , minute);
-	//start_UTC = Math.floor(start_UTC/1000);
-	//start_UTC = start_UTC + (tz_offset_hours * 60 * 60); //add timezone shift so we are sending server the trigger date and time at UTC.
-	//NOTE: Date.UTC sees the date we feed it as UTC and converts it to out local time.
-	//Odd. I was hoping it would covert the input time to UTC. Nope.
-	//eg: we are in EST
-	//when we feed Date.UTC a trigger time of 1pm UTC, it gives us local epoch time for 9am EST (-4 EST depending on DST)
-	//so we need to convert it back to 1pm UTC by adding back our timezone offset hours (4 or 5 hours depending on DST)
-	//we feed the final trigger time to server as 1pm UTC,
-	//the server (in another timezone) will convert the UTC time of 1pm to it's local time courtesy of utime
-
-	//alternate method, but why create an object?
 	var date_trigger = new Date(year, month , day , hour , minute);
 	var start_UTC = Math.floor( date_trigger.getTime() / 1000 );
-	//var a1 = date_trigger.getTime();
-	//var a2 = date1.getTime();
 	if(date_trigger.getTime() < date1.getTime()){//do not allow trigger time in the past
 		//alert("Trying to set a trigger time in the past. Please choose a time in the future.");
 		//return 0;
 	}
 
-	document.getElementById("timestamp").value = start_UTC; //set timestamp value to send to server
+	document.getElementById("timestamp").value = start_UTC; //set time stamp value to send to server
 	return 1;
 	}
 

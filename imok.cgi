@@ -11,8 +11,6 @@ use AuthorizeMe;
 my %in;
 
 my $path_to_templates = './templates';
-#my $logged_in;
-my $trigger_time = 0;
 
 #initialize and create AutorizeMe
 my $AuthorizeMeObj = AuthorizeMe->new();
@@ -37,9 +35,6 @@ my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
-#my $user = $AuthorizeMeObj->{'user'}; #allows shorter local strings like $user->{'user_id'} not $AuthorizeMeObj->{'users'}->{'user_id'}
-
-#AuthorizeMe->test();
 $AuthorizeMeObj->test();
 
 my $message = '';
@@ -57,18 +52,22 @@ my $command = $in{'command'};
 my $output = '';
 $output = &get_template_page('main.html');
 
-#my $logged_in; #username & pw
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'};
+$AuthorizeMeObj->{'settings'}->{'test_email_template'} = qq(This email was sent by the IMOK system as a test by $AuthorizeMeObj->{'user'}->{'email'} . Please let them know you received it.
+    );
+$AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} = qq($AuthorizeMeObj->{'user'}->{'email'} has pushed the IM_NOT_OK button. Please check on them.
+    );
 
 if ( $logged_in ) {#we are logged in
-    if ( $command eq 'logout' ) { &logout() } #login email , password
-    if ( $command eq 'logout_all_devices' ) { &logout_all_devices() }
+    if ( $command eq 'logout' ) { $logged_in = &logout() } #login email , password
+    if ( $command eq 'logout_all_devices' ) { $logged_in = &logout_all_devices() }
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) }
     if ( $command eq 'get_settings' ) { &get_settings(\$output) }
     if ( $command eq 'set_settings' ) { &set_settings() }
     if ( $command eq 'imok' ) { &imok() }
     if ( $command eq 'imnotok' ) { &imnotok() }
+    if ( $command eq 'testimok' ) { &testimok() }
     }
 else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
@@ -86,6 +85,15 @@ if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
 #$logged_in = $AuthorizeMeObj->AmILoggedIn();
 #$user = $AuthorizeMeObj->{'user'};
 if ( $logged_in ) {#we are logged in from cookie token or login routine
+    #calculate difference between file time stamp and now...
+    #feed back to main.html to countdown
+
+    my $filename = "$AuthorizeMeObj->{'settings'}->{'path_to_users'}$user->{'user_id'}";
+    my $trigger_time = &get_time_stamp($filename);
+    #my $b = time();
+    #my $difference = &get_time_stamp($filename) - time();
+
+    #$output =~ s/<%difference%>/$difference/g; #time difference until alert triggers
     $output =~ s/<%logged_out%>/hide_me/g; #hide login, register , forgot pw
     $output =~  s/<%logged_in%>/show_me/g; #show logout, settings, reset pw
     if($trigger_time != 0) {$output =~  s/<%trigger_time%>/$trigger_time/g;} #for main page  != 0
@@ -179,9 +187,21 @@ return $result;
 sub imnotok(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'};
-my $result = &AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
+my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
+$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
+$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
- $message = "sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}";
+ $message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} ";
+}
+
+sub testimok(){
+my $logged_in = $AuthorizeMeObj->AmILoggedIn();
+my $user = $AuthorizeMeObj->{'user'};
+my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'test_email_template'} , $smtp_server);
+$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'test_email_template'} , $smtp_server);
+$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'test_email_template'} , $smtp_server);
+ &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
+ $message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'test_email_template'}";
 }
 
 sub cron(){
@@ -212,7 +232,7 @@ sub cron(){
   #update time stamp
   &change_time_stamp($user->{'timestamp'} , $filename);
   &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
-  $message = "$message email alert sent $user->{'timestamp'}";
+  $message = "$message email alert sent to $user->{'email_contact_1'} : $user->{'timestamp'}";
  }
 &write_to_log("end of cron");
 }
@@ -401,6 +421,7 @@ sub logout(){
  else{
   $message = "$message $user->{'email'} could not log out";
   }
+ return ! $result;
  }
 
 sub logout_all_devices(){
@@ -412,6 +433,7 @@ sub logout_all_devices(){
  else{
   $message = "$message $user->{'email'} could not log out of all devices";
   }
+ return ! $result;
 }
 
 sub forgot_password(){

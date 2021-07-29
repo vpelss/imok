@@ -309,9 +309,8 @@ sub login() {
   my $filename = $user_id;
   $filename = "$settings->{'path_to_users'}$filename";
   if(-e $filename){
-    #$result = &db_to_hash($filename , $user); #get user data
-    my $user = $self->{'user'}; #tie to module object
-    $user = &db_to_hash($filename); #get user data
+    my $user = &db_to_hash($filename); #get user data
+    $self->{'user'} = $user; #tie to module object
     if(!defined($user)){return 0}
     my $encrypted_password_stored = $user->{'password'};
     my $encrypted_password = &encrypt_password( $password);
@@ -322,8 +321,7 @@ sub login() {
      my $filename = "$settings->{'path_to_tokens'}$user_id";
      my $tokens = {};
      if(-e $filename){ #does token file exist?
-        #$result = &db_to_hash($filename , $tokens);  # get existing tokens (ie: logon's on other devices)
-        $tokens = &db_to_hash($filename);  # get existing tokens (ie: logon's on other devices)
+         $tokens = &db_to_hash($filename);  # get existing tokens (ie: logon's on other devices)
       }
       my @the_keys = keys( %$tokens);
       my $len =  @the_keys;
@@ -352,9 +350,8 @@ sub login() {
 sub logout(){
  my $filename = "$settings->{'path_to_tokens'}$user_id";
  my $tokens = {};
-# my $result = &db_to_hash($filename , $tokens);  # get existing tokens (ie: logon's on other devices) $tokens = &db_to_hash($filename);  # get existing tokens (ie: logon's on other devices)
  delete $tokens->{$token};
- my $result = &hash_to_db($tokens , $filename);  # get existing tokens (ie: logon's on other devices)
+ my $result = &hash_to_db($tokens , $filename);  # set existing tokens (ie: logon's on other devices)
 
  $set_cookie_string = "Set-Cookie: $settings->{'token_name'}= ; Max-Age=-1 ;\nSet-Cookie: $settings->{'user_id_name'}= ; Max-Age=-1 ;";
  return $result;
