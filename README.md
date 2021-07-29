@@ -9,3 +9,6 @@ It was designed to be a fail safe. If it was designed as a stand alone app on a 
 
 Program is subject to change and no assumption of reliability can be assumed.
 This is a proof of concept script. Don't risk your life on it.
+
+It also comes with a simple PERL Module, AuthorizeMe, that takes care of the account registration, password managemet, tokens, etc.
+It also has methods you can use to easily save and retrieve database information (hash, array or scalars) to a text flat file.
