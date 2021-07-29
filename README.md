@@ -6,7 +6,7 @@ This program was designed for those who live alone.
 It is a fail safe alarm that will alert friends or family by email.
 It is be great for people that have pets and worry what would happen to them if they passed away or were incapacitated.
 
-You can add up to three email addresses to alert.
+You can add up to three email addresses to send alerts to.
 You select a start date and time. Then you select a repeating interval. Daily seems reasonable.
 If you do not push thee IMOK button before interval time is up, it wil send your personalized email message to all your addressees. 
 
