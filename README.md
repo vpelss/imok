@@ -9,6 +9,9 @@ It is be great for people that have pets and worry what would happen to them if 
 You can add up to three email addresses to send alerts to.
 You select a start date and time. Then you select a repeating interval. Daily seems reasonable.
 If you do not push thee IMOK button before interval time is up, it wil send your personalized email message to all your addressees. 
+When you do push the IMOK button, it sets the trigger alert time to the next chosen interval time (based on your initial start date and time).
+
+Example: If you choose a start date of 10 Sept 2021 and a start time of 9 am and a Count Down time of one day, every time you push the IMOK button will set the next Alert time to 9 am on the next day. 
 
 You can test it at:
 https://www.emogic.com/cgi/imok/imok.cgi
