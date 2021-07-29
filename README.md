@@ -4,7 +4,7 @@ The idea for this program came to me after a relative had passed away and was no
 
 This program was designed for those who live alone.
 It is a fail safe alarm that will alert friends or family by email.
-It is be great for people that have pets and worry what would happen to them if they passed away or were incapacitated.
+People who live alone and have pets worry about what would happen if they passed away or were incapacitated. This is a possible solution.
 
 You can add up to three email addresses to send alerts to.
 You select a start date and time. Then you select a Countdown time. Daily seems reasonable.
