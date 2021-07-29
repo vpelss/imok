@@ -1,6 +1,6 @@
 # imok
 
-This idea came to me after a relative had passed away and was not found for 7 days.
+The idea for this program came to me after a relative had passed away and was not found for 7 days.
 
 This program was designed for those who live alone.
 It is a fail safe alarm that will alert friends or family by email.
