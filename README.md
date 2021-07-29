@@ -3,9 +3,12 @@
 This idea came to me after a relative had passed away and was not found for 7 days.
 
 This program was designed for those who live alone.
-It is a fail safe alarm that will alert friends or family, vial email, if the IMOK button is not pushed before a specific planned interval. Eg: daily.
+It is a fail safe alarm that will alert friends or family by email.
+It is be great for people that have pets and worry what would happen to them if they passed away or were incapacitated.
 
-It would be great for people that have pets and worry what would happen to them if they passed away or were incapacitated.
+You can add up to three email addresses to alert.
+You select a start date and time. Then you select a repeating interval. Daily seems reasonable.
+If you do not push thee IMOK button before interval time is up, it wil send your personalized email message to all your addressees. 
 
 You can test it at:
 https://www.emogic.com/cgi/imok/imok.cgi
