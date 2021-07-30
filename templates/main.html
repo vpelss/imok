@@ -14,13 +14,28 @@
 	_visibility: hidden;
 	}
 
+	@media (orientation: landscape) {
+	*{
+		font-size: 3vh;
+	}
+}
+
+@media (orientation: portrait) {
+	*{
+		font-size: 3vw;
+	}
+}
+
+
+
 	</style>
 </head>
 
-<body>
-	<h4 align="center">IMOK, not Lost</h4>
+<body align="center">
 
-	<div align="center" class='<%logged_in%>'>
+	<h4 >IMOK, not Lost</h4>
+
+	<div  class='<%logged_in%>'>
 		<form id="form_login" action="./imok.cgi" method="get" name="form_login">
 			<input name="command" type="hidden" value="imok" id="command_login">
 			<p><input type="submit" value="IMOK" title="You are ok for theis interval. This will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm)."></p>
@@ -29,57 +44,57 @@
 
 	<b><font color='red'><div align="center" class='<%logged_in%>' id='countdown'>00:00:00</div></font></b>
 
-	<div align="center">
+	<div >
 		<h2><%last_message%></h2>
 	</div>
 
-	<div class='<%logged_out%>' align="center">
+	<div class='<%logged_out%>' >
 		<a href="login.html">Login</a>
 	</div>
 
-	<div class='<%logged_out%>' align="center">
+	<div class='<%logged_out%>' >
 		<a href="forgot_password.html">Forgot Password</a>
 	</div>
 
-	<div class='<%logged_out%>' align="center">
+	<div class='<%logged_out%>' >
 		<a href="register.html">Register for account</a>
 	</div>
 
-	<div class='<%logged_in%>' align="center">
+	<div class='<%logged_in%>' >
 		<a href="./imok.cgi?command=get_settings">Settings</a>
 	</div>
 
-	<div class='<%logged_in%>' align="center">
+	<div class='<%logged_in%>' >
 		<a href="reset_password.html">Reset Password</a>
 	</div>
 
-	<div class='<%logged_in%>' align="center">
+	<div class='<%logged_in%>' >
 		<a href="./imok.cgi?command=logout">Logout</a>
 	</div>
 
-	<div class='<%logged_in%>' align="center">
+	<div class='<%logged_in%>' >
 		<a href="./imok.cgi?command=logout_all_devices">Logout all devices</a>
 	</div>
 
- <div class='' align="center">
+ <div class='' >
 		<a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'>About</a>
 	</div>
 
-		<div align="center" class='<%logged_in%>'>
+		<div  class='<%logged_in%>'>
 		<form id="form_login2" action="./imok.cgi" method="get" name="form_login2">
 			<input name="command" type="hidden" value="imnotok" id="command_login2">
 			<p><input type="submit" value="IM NOT OK" title="You are NOT ok for theis interval. This will immediately send the alert email to your alert list."></p>
 		</form>
 	</div>
 
-				<div align="center" class='<%logged_in%>'>
+				<div  class='<%logged_in%>'>
 		<form id="form_login3" action="./imok.cgi" method="get" name="form_login3">
 			<input name="command" type="hidden" value="testimok" id="command_login3">
 			<p><input type="submit" value="Send a Test Email." title="Send a test email to your alert list."></p>
 		</form>
 	</div>
 
-								<div align="center" class='<%logged_in%>'>
+								<div  class='<%logged_in%>'>
 		<form id="form_login3" action="./imok.cgi" method="get" name="form_login4">
 			<input name="command" type="hidden" value="cron" id="cron">
 			<p><input type="submit" value="cron" title="Simulate cron."></p>
@@ -90,7 +105,7 @@
 <input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
 
 
-	<div align="center">Code is here:<a href='https://github.com/vpelss/imok' target='_blank'>https://github.com/vpelss/imok</a></div>
+	<div >Code is here:<a href='https://github.com/vpelss/imok' target='_blank'>https://github.com/vpelss/imok</a></div>
 
 	<script>
 

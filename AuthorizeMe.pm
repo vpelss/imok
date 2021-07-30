@@ -15,10 +15,6 @@ $VERSION  = '0.2';
 #manages token cookie, flat file db read and write, mailing,
 #does not manage forms, or login, logout, reset logic
 
-#manages db read and write, can add fields!!!!!
-#manages mailing
-#DOES NOT manage forms and log in, reset, log out logic
-
 #require Exporter;
 #our @ISA = qw(Exporter);
 #our @EXPORT = qw( $email );
@@ -31,7 +27,7 @@ my $random_number_size = 1000000000;
 my $set_cookie_string = ""; #calling program can use get_set_cookie_string
 my $message = ''; #used for &get_last_message()
 
-#determined by calling program. we are a module and code is inaccessible?
+#determined by calling program. we are a module and code is inaccessible
 #my $settings->{'path_to_users'};
 #my $settings->{'path_to_tokens'};
 #my $settings->{'path_to_authorizations'};
@@ -39,9 +35,8 @@ my $message = ''; #used for &get_last_message()
 #my $settings->{'user_id_name'} = "AuthorizeMeUserId";
 #my $settings->{'token_max-age'} = '3153600000'; #default 100 years, in case not supplied in new()
 
-my $self; #so our methods can access module object data
+my $self; #so our module methods can access module object data
 our $settings;
-#our $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
 
 sub new() { #initialize settings
  my $class = shift;
@@ -49,7 +44,6 @@ sub new() { #initialize settings
   $self = {};
  $self->{'user'} = {};
  $self->{'settings'} = {};
- #$user = $self->{'user'}; #better way to locally access user
  $settings = $self->{'settings'}; #better way to locally access settings
 
  bless $self, $class;

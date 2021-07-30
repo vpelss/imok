@@ -347,7 +347,7 @@ if(! $logged_in){ return 0; }
 }
 
 sub register() {
-	my $email = $in{'email'};
+	my $email = lc $in{'email'};#note email coveted to lower case!
 	my $password = $in{'password'};
 	my $result = $AuthorizeMeObj->register_account($email , $password);
 
@@ -372,7 +372,6 @@ my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
 
  if($result == 0) {$message = "$message Your activation failed. DB write error."; return 0};
 
- #$result = imok();
  if($result == 1){
   $message = "$message Your account $user->{'email'} has been authorized. Please log in and go to setup.";
   }
@@ -384,7 +383,7 @@ my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
 
 sub login(){
  #email points to data file
- my $result =  $AuthorizeMeObj->login( $in{'email'} , $in{'password'} );
+ my $result =  $AuthorizeMeObj->login( lc $in{'email'} , $in{'password'} );#note email coveted to lower case!
  my $user = $AuthorizeMeObj->{'user'};
  if($result == 1){
   $message = "$message $user->{'email'} has logged in";
