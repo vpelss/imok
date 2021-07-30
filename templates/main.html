@@ -62,7 +62,7 @@
 	</div>
 
  <div class='' align="center">
-		<a href="#" onclick='about();'>About</a>
+		<a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'>About</a>
 	</div>
 
 		<div align="center" class='<%logged_in%>'>
@@ -89,42 +89,39 @@
 <input name="difference" type="hidden" value="<%difference%>" id="difference">
 <input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
 
+
+	<div align="center">Code is here:<a href='https://github.com/vpelss/imok' target='_blank'>https://github.com/vpelss/imok</a></div>
+
 	<script>
 
 	var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
-const date1 = new Date();
 
 function countdown() {
 		var now = Date.now();
 		var difference = trigger_time - now;
 		var difference_seconds = difference / 1000;
 		if(difference <= 0) {
-		document.getElementById('countdown').innerHTML = "Timeout exceeded. Alerts are being sent.";
-	}
-	else{
-		//date1.setTime(difference);
-			var day = Math.floor( difference_seconds / (60 * 60 * 24) );
-			var day_seconds =  day * (60 * 60 * 24);
+			document.getElementById('countdown').innerHTML = "Timeout exceeded. Alerts are being sent.";
+			}
+		else{
+			var days = Math.floor( difference_seconds / (60 * 60 * 24) );
+			var day_seconds =  days * (60 * 60 * 24);
 			difference_seconds = difference_seconds - day_seconds;
-			var hour = Math.floor( difference_seconds / (60 * 60) );
-			var hour_seconds = hour * (60 * 60);
+			var hours = Math.floor( difference_seconds / (60 * 60) );
+			var hour_seconds = hours * (60 * 60);
 			difference_seconds = difference_seconds - hour_seconds;
-			var minute = Math.floor( difference_seconds / (60) );
-			var minute_seconds = minute * (60);
+			var minutes = Math.floor( difference_seconds / (60) );
+			var minute_seconds = minutes * (60);
 			difference_seconds = Math.floor( difference_seconds - minute_seconds );
 
-			var countdown_string = 'Days:' + day + ' Hours:' + hour + ' Minutes:' + minute + ' Seconds:' + difference_seconds;
+			var countdown_string = 'Alert will be sent in<br>' + days + ' days ' + hours + ' hours ' + minutes + ' minutes ' + difference_seconds + ' seconds';
 			document.getElementById('countdown').innerHTML = countdown_string;
-	}
+			}
 
 }
 
 setInterval( countdown , 5000 );
 countdown();
-
-function about() {
-		alert(`This program was designed for those who live alone and want a fail safe alarm to alert friends or family if the IMOK button is not pushed before a specific interval.`);
-  }
 
 	</script>
 

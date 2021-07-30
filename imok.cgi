@@ -3,16 +3,13 @@
 use strict;
 use Socket;
 use lib '.'; #nuts, PERL has changed. add local path to @INC
-#use lib './'; #nuts, PERL has changed. add local path to @INC
-#use lib '/home/cgi/imok/'; #nuts, PERL has changed. add local path to @INC
-#use lib '/home/emogic/public_html/cgi/imok/'; #nuts, PERL has changed. add local path to @INC
 use AuthorizeMe;
 
 my %in;
 
 my $path_to_templates = './templates';
 
-#initialize and create AutorizeMe
+#create and initialize AutorizeMe
 my $AuthorizeMeObj = AuthorizeMe->new();
 #set all settings
 $AuthorizeMeObj->{'settings'}->{'token_name'} = 'imok_token'; #will show up in cookie
@@ -22,6 +19,8 @@ my $from_email = $AuthorizeMeObj->{'settings'}->{'from_email'} = 'imok@emogic.co
 my $reply_email = $AuthorizeMeObj->{'settings'}->{'reply_email'} = 'imok@emogic.com';
 my $sendmail = $AuthorizeMeObj->{'settings'}->{'sendmail'} = '/usr/lib/sendmail -t';
 my $smtp_server = $AuthorizeMeObj->{'settings'}->{'smtp_server'} = '';
+my $alert_email_subject = $AuthorizeMeObj->{'settings'}->{'alert_email_subject'} = 'IMOK Alert';
+$AuthorizeMeObj->{'settings'}->{'forgot_password_email_subject'} = 'Password Reset - IMOK';
 $AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
 $AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
     Click to activate:
@@ -35,8 +34,7 @@ my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
-$AuthorizeMeObj->test();
-
+my $email_list;
 my $message = '';
 
 eval { &main(); };     # Trap any fatal errors so the program hopefully
@@ -54,6 +52,8 @@ $output = &get_template_page('main.html');
 
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'};
+$email_list = "$user->{'email'} $user->{'email_contact_1'} $user->{'email_contact_2'} $user->{'email_contact_3'}"; #sendmail will replace spaces with , DO NOT add your own , also no leading or lagging space
+
 $AuthorizeMeObj->{'settings'}->{'test_email_template'} = qq(This email was sent by the IMOK system as a test by $AuthorizeMeObj->{'user'}->{'email'} . Please let them know you received it.
     );
 $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} = qq($AuthorizeMeObj->{'user'}->{'email'} has pushed the IM_NOT_OK button. Please check on them.
@@ -82,21 +82,14 @@ else{#we are not logged in
 
 if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
 
-#$logged_in = $AuthorizeMeObj->AmILoggedIn();
-#$user = $AuthorizeMeObj->{'user'};
 if ( $logged_in ) {#we are logged in from cookie token or login routine
-    #calculate difference between file time stamp and now...
-    #feed back to main.html to countdown
-
+    #send trigger time to the js in main.html
     my $filename = "$AuthorizeMeObj->{'settings'}->{'path_to_users'}$user->{'user_id'}";
     my $trigger_time = &get_time_stamp($filename);
-    #my $b = time();
-    #my $difference = &get_time_stamp($filename) - time();
 
-    #$output =~ s/<%difference%>/$difference/g; #time difference until alert triggers
     $output =~ s/<%logged_out%>/hide_me/g; #hide login, register , forgot pw
     $output =~  s/<%logged_in%>/show_me/g; #show logout, settings, reset pw
-    if($trigger_time != 0) {$output =~  s/<%trigger_time%>/$trigger_time/g;} #for main page  != 0
+    $output =~  s/<%trigger_time%>/$trigger_time/g; #for main page  != 0
     }
 else{
     $output =~ s/<%logged_out%>/show_me/g; #show login, register , forgot pw
@@ -133,7 +126,7 @@ sub write_to_log(){
  }
 
  open(FH, '>>', $filename) or return 0;# $!;
- print FH "$text\n\n";
+ print FH "$text\n";
  close(FH);
  return 1;
 }
@@ -172,7 +165,6 @@ $mon = $mon + 1;
 $year = 1900 + $year;
 my $trigger_time_string = sprintf("%d-%.2d-%.2d  %d:%.2d", $year , $mon , $mday , $hour , $min);
 
-
 my $result = &change_time_stamp($new_time_stamp , $filename);
 if($result == 1){
  $message = "$message your next IMOK trigger time is: $trigger_time_string";
@@ -187,53 +179,44 @@ return $result;
 sub imnotok(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'};
-my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
-$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
-$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
+my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
+#$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
+#$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
  $message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} ";
 }
 
 sub testimok(){
-my $logged_in = $AuthorizeMeObj->AmILoggedIn();
-my $user = $AuthorizeMeObj->{'user'};
-my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'test_email_template'} , $smtp_server);
-$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'test_email_template'} , $smtp_server);
-$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , 'IMOK Alert' , $AuthorizeMeObj->{'settings'}->{'test_email_template'} , $smtp_server);
- &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
- $message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'test_email_template'}";
+  my $logged_in = $AuthorizeMeObj->AmILoggedIn();
+  my $user = $AuthorizeMeObj->{'user'};
+  my $result;
+  $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'test_email_template'} , $smtp_server);
+  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
+  $message = "$message sendmail result : $result : To: $email_list : $AuthorizeMeObj->{'settings'}->{'test_email_template'}";
 }
 
 sub cron(){
- #get list of files in a directory
   &write_to_log("start of cron");
- my @filenames = glob("$path_to_users*");
- foreach my $filename (@filenames){
-  #$filename = "$AuthorizeMe_Settings{'path_to_users'}$filename";
-  my $timestamp = &get_time_stamp($filename);
-  if($timestamp > time()){#we are not alarming
-   next;
-  }
-  my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
- # &write_to_log("Result of user db $result user $user->{'user_id'}");
-  #send alert emails
-  #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
-  my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_1'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
-  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
-  $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
-  $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , 'IMOK Alert' , $user->{'email_form'} , $smtp_server);
-  #&write_to_log("sendmail result : $result : $user{'email_contact_1'} : $user{'email'}");
-  #set time stamp ahead one hour. So we do not send an email for another hour
-  $user->{'timestamp'} = (60 * 60) + $timestamp;
-  #increase email file count
-  $user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};
-  #save file
-  $AuthorizeMeObj->hash_to_db($user , $filename);
-  #update time stamp
-  &change_time_stamp($user->{'timestamp'} , $filename);
-  &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
-  $message = "$message email alert sent to $user->{'email_contact_1'} : $user->{'timestamp'}";
- }
+  my @filenames = glob("$path_to_users*");#get the list of files in the users directory
+  foreach my $filename (@filenames){
+    my $timestamp = &get_time_stamp($filename);
+    if($timestamp > time()){ next; }#we are not alarming
+    my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
+    # &write_to_log("Result of user db $result user $user->{'user_id'}");
+    #send alert emails
+    #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
+    my $alert_msg = $user->{'email_form'};
+    $alert_msg = "$alert_msg </br> Alert was sent on behalf of $user->{'email'}"; #add users email at end of message in case they do not provide any identification in the email
+    $email_list = "$user->{'email'} $user->{'email_contact_1'} $user->{'email_contact_2'} $user->{'email_contact_3'}"; #sendmail will replace spaces with , DO NOT add your own , also no leading or lagging space
+    my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $alert_msg , $smtp_server);
+    &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
+   $user->{'timestamp'} = (60 * 60) + $timestamp; #set time stamp ahead one hour. So we do not send an email for another hour
+    $user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};  #increase email file count
+    $AuthorizeMeObj->hash_to_db($user , $filename); #save file
+    &change_time_stamp($user->{'timestamp'} , $filename);#update time stamp
+    &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
+    $message = "$message $alert_msg";
+    }
 &write_to_log("end of cron");
 }
 
@@ -381,7 +364,7 @@ sub activate(){
  $user->{'email_contact_1'} = '';
  $user->{'email_contct_2'} = '';
  $user->{'email_contact_3'} = '';
- $user->{'email_form'} = 'Member has not reported in to IMOK in a specified amount of time. You may want to check on them.';
+ $user->{'email_form'} = '"Put your name here" has not reported in to the IMOK website by the chosen Alert time. You may want to check on them. Their phone number is xxx-xxx-xxxx. Their email address is put_your_email_here@gmail.com';
  $user->{'timeout_ms'} = '86400000'; #24hours
  my $filename = "$path_to_users$user->{'user_id'}";
 

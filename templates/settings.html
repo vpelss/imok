@@ -16,13 +16,15 @@
 	<p>Email Contact 2:<br><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
 	<p>Email Contact 3:<br><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
 
-	<p>Alert Mail Message:</br><textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
+	<p>Alert Mail Message:
+	</br>
+	<textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
 
 	<p><label for="start_date">Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>' onchange='calc_date();'></p>
 	<p><label for="start_time">Start Time</label> <input type="time" id="start_time" name="start_time" value="<%start_time%>" onchange='calc_date();'></p>
 
 	<p>
-<label for="time_out">Countdown time every </label>
+<label for="time_out">Countdown Time. Every </label>
 <select name="time_out" id="time_out" value="<%time_out%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
@@ -63,15 +65,11 @@
 	if(date_trigger.getTime() < date1.getTime()){//do not allow trigger time in the past
 		//alert("Trying to set a trigger time in the past. Please choose a time in the future.");
 		//return 0;
-	}
+		}
 
 	document.getElementById("timestamp").value = start_UTC; //set time stamp value to send to server
 	return 1;
 	}
-
-//calc_date(); //in case we don't change date / time
-
-//document.getElementById("myForm").submit();
 
 </script>
 

@@ -12,16 +12,16 @@ $NAME     = 'AutorizeMe';
 $ABSTRACT = 'AutorizeMe Module for Simple CGI Registration & Authentication in Perl';
 $VERSION  = '0.2';
 
-#require Exporter;
-#our @ISA = qw(Exporter);
-#our @EXPORT = qw( $email );
+#manages token cookie, flat file db read and write, mailing,
+#does not manage forms, or login, logout, reset logic
 
-#manages token cookie
 #manages db read and write, can add fields!!!!!
 #manages mailing
 #DOES NOT manage forms and log in, reset, log out logic
 
-#my $settings; #ref to hash, sent from calling program
+#require Exporter;
+#our @ISA = qw(Exporter);
+#our @EXPORT = qw( $email );
 
 my $cookies; #will be a ref to a anonymous hash
 our $email;
@@ -42,14 +42,6 @@ my $message = ''; #used for &get_last_message()
 my $self; #so our methods can access module object data
 our $settings;
 #our $user ; #ref to hash of user structure provided by calling program at new(\%user) so $user->{}. calling program simply accesses it's %user after module has updated it
-
-sub test(){
-my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
-#my $e = __PACKAGE__->$self;
- my $r = 8;
- my $t = 6;
-
-}
 
 sub new() { #initialize settings
  my $class = shift;
@@ -377,9 +369,7 @@ sub reset_password(){
  if( !defined( $user ) ){$message = "$message Are you logged in?"; return 0;}
  #validate current password
  my $current_password_encrypted = &encrypt_password($current_password);
- if($current_password_encrypted ne $user->{'password'}){
-  return 0;
-  }
+ if($current_password_encrypted ne $user->{'password'}){ return 0; }#Is current password valid? you sir, are a liar!
  #change to new password
  my $filename = $user->{'user_id'};
  $filename = "$settings->{'path_to_users'}$filename";
@@ -418,7 +408,7 @@ sub forgot_password(){
  $email_message =~ s/<%set_password_code%>/$random_number/g;
  $email_message =~ s/<%user_id%>/$user_id/g;
  #send email message
- &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , 'IMOK account activation email' , $email_message , $settings->{'smtp_server'});
+ &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , $settings->{'forgot_password_email_subject'} , $email_message , $settings->{'smtp_server'});
 
  $message = "$message Your password recovery email has been sent to $email : $email_message";
  return 1;
@@ -516,6 +506,8 @@ sub valid_email{
 sub sendmail()
 {
  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
+#multiple $to addresses separated by SPACES. No leading spaces
 
 #error codes below for those who bother to check result codes <gr>
 # 1 success
