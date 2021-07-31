@@ -63,8 +63,12 @@ if ( $logged_in ) {#we are logged in
     if ( $command eq 'logout' ) { $logged_in = &logout() } #login email , password
     if ( $command eq 'logout_all_devices' ) { $logged_in = &logout_all_devices() }
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) }
-    if ( $command eq 'get_settings' ) { &get_settings(\$output) }
-    if ( $command eq 'set_settings' ) { &set_settings() }
+    #if ( $command eq 'get_settings' ) { &get_settings(\$output) }
+    if ( $command eq 'get_settings' ) { $output = &get_settings($user) }
+    if ( $command eq 'set_settings' ) {
+      &set_settings();
+      $user = $AuthorizeMeObj->{'user'};#get changes that were saved. may need these below
+      }
     if ( $command eq 'imok' ) { &imok() }
     if ( $command eq 'imnotok' ) { &imnotok() }
     if ( $command eq 'testimok' ) { &testimok() }
@@ -73,12 +77,16 @@ else{#we are not logged in
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
 				if ( $command eq 'activate' ) { &activate($in{'activate_code'} , $in{'user_id'}) } #login email , password
     if ( $command eq 'login' ) {
-     $logged_in = &login();
-     $user = $AuthorizeMeObj->{'user'};
-     } #login email , password
+      $logged_in = &login();
+      $user = $AuthorizeMeObj->{'user'};
+    } #login email , password
     if ( $command eq 'forgot_password' ) { &forgot_password($in{'email'}) }
     if ( $command eq 'set_password' ) { &set_password($in{'user_id'} , $in{'set_password_code'}); }#from link sent by &forgot_password
     }
+
+if( $user->{'first_login'} == 1 ) {
+       $output = &get_settings($user)
+      }
 
 if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
 
@@ -180,8 +188,6 @@ sub imnotok(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'};
 my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
-#$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_2'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
-#$result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email_contact_3'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
  $message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} ";
 }
@@ -263,20 +269,24 @@ sub get_template_page(){
 }
 
 sub get_settings(){
- my $output = shift; #string passed by ref so we can modify it
- $$output = &get_template_page('settings.html'); #string passed by ref so we can modify it
+ #my $output = shift; #string passed by ref so we can modify it
+ my $user = shift;
+ #$$output = &get_template_page('settings.html'); #string passed by ref so we can modify it
+ my $output = &get_template_page('settings.html'); #string passed by ref so we can modify it
  #get user data
-my $logged_in = $AuthorizeMeObj->AmILoggedIn();
-my $user = $AuthorizeMeObj->{'user'};
-if(! $logged_in){return 0}
+#my $logged_in = $AuthorizeMeObj->AmILoggedIn();
+#my $user = $AuthorizeMeObj->{'user'};
+#if(! $logged_in){return 0}
  #replace tokens
- $$output =~ s/<%email_contact_1%>/$user->{'email_contact_1'}/g; #hide login, register , forgot pw
- $$output =~ s/<%email_contact_2%>/$user->{'email_contact_2'}/g; #hide login, register , forgot pw
- $$output =~ s/<%email_contact_3%>/$user->{'email_contact_3'}/g; #hide login, register , forgot pw
- $$output =~  s/<%email_form%>/$user->{'email_form'}/g; #show logout, settings, reset pw
- $$output =~  s/<%time_out%>/$user->{'time_out'}/g; #show logout, settings, reset pw
- $$output =~  s/<%start_date%>/$user->{'start_date'}/g; #show logout, settings, reset pw
- $$output =~  s/<%start_time%>/$user->{'start_time'}/g; #show logout, settings, reset pw
+ $output =~ s/<%email_contact_1%>/$user->{'email_contact_1'}/g; #hide login, register , forgot pw
+ $output =~ s/<%email_contact_2%>/$user->{'email_contact_2'}/g; #hide login, register , forgot pw
+ $output =~ s/<%email_contact_3%>/$user->{'email_contact_3'}/g; #hide login, register , forgot pw
+ $output =~  s/<%email_form%>/$user->{'email_form'}/g; #show logout, settings, reset pw
+ $output =~  s/<%time_out%>/$user->{'time_out'}/g; #show logout, settings, reset pw
+ $output =~  s/<%start_date%>/$user->{'start_date'}/g; #show logout, settings, reset pw
+ $output =~  s/<%start_time%>/$user->{'start_time'}/g; #show logout, settings, reset pw
+
+ return $output;
 }
 
 sub set_settings(){
@@ -318,11 +328,14 @@ if(! $logged_in){ return 0; }
  $user->{'tz_offset_hours'} = $in{'tz_offset_hours'};
  $user->{'timestamp'} = $in{'timestamp'};
 
+ $user->{'first_login'} = 0; #clear this
+
  #get_user_id
  my $user_id = $AuthorizeMeObj->get_user_id();
 
  my $filename = "$path_to_users$user_id";
  my $result = $AuthorizeMeObj->hash_to_db($user , $filename);
+ $AuthorizeMeObj->{'user'} = $user; #save it back to object as hash_to_db does not
 
   if($result == 1){
   $message = "$message Settings changed.";
@@ -364,13 +377,18 @@ sub activate(){
  $user->{'email_contact_1'} = '';
  $user->{'email_contct_2'} = '';
  $user->{'email_contact_3'} = '';
- $user->{'email_form'} = '"Put your name here" has not reported in to the IMOK website by the chosen Alert time. You may want to check on them. Their phone number is xxx-xxx-xxxx. Their email address is put_your_email_here@gmail.com';
- $user->{'timeout_ms'} = '86400000'; #24hours
+ $user->{'email_form'} = qq("Put your name here" has not reported in to the IMOK website by the chosen Alert time.
+You may want to check on them.
+Their phone number is xxx-xxx-xxxx.
+Their email address is put_your_email_here\@gmail.com');
+ $user->{'timeout_ms'} = 86400; #24hours
+ my $now = time();
+ $user->{'timestamp'} = time() + $user->{'timeout_ms'}; #set a default of 1 day
+ $user->{'first_login'} = 1;
+
  my $filename = "$path_to_users$user->{'user_id'}";
-
-my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
-
- if($result == 0) {$message = "$message Your activation failed. DB write error."; return 0};
+ my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
+ &change_time_stamp($user->{'timestamp'} , $filename);#update time stamp
 
  if($result == 1){
   $message = "$message Your account $user->{'email'} has been authorized. Please log in and go to setup.";
