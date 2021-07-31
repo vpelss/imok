@@ -12,7 +12,7 @@ $NAME     = 'AutorizeMe';
 $ABSTRACT = 'AutorizeMe Module for Simple CGI Registration & Authentication in Perl';
 $VERSION  = '0.2';
 
-#manages token cookie, flat file db read and write, mailing,
+#manages token cookie, flat file db read and write, mailing, pw attempt lockout
 #does not manage forms, or login, logout, reset logic
 
 #require Exporter;
@@ -41,7 +41,7 @@ our $settings;
 sub new() { #initialize settings
  my $class = shift;
 
-  $self = {};
+ $self = {};
  $self->{'user'} = {};
  $self->{'settings'} = {};
  $settings = $self->{'settings'}; #better way to locally access settings
@@ -292,12 +292,22 @@ sub login() {
   my $logged_in;
   my $result;
 
-  my $filename = $user_id;
-  $filename = "$settings->{'path_to_users'}$filename";
+  my $filename = "$settings->{'path_to_users'}$user_id";
   if(-e $filename){
     my $user = &db_to_hash($filename); #get user data
     $self->{'user'} = $user; #tie to module object
     if(!defined($user)){return 0}
+    if($user->{'locked'}){#see if account is loced
+      if( $user->{'lock_out_until'} > time() ){#still locked out
+        $message = "$message Too many wrong password attempts. Account will unlock later.";
+        return 0;
+      }
+      else{#no longer locked out. clear it
+        $user->{'lock_out_until'} = 0;
+        $user->{'failed_attempts'} = 0;
+        &hash_to_db($user , $filename );
+      }
+    }
     my $encrypted_password_stored = $user->{'password'};
     my $encrypted_password = &encrypt_password( $password);
     if($encrypted_password eq $encrypted_password_stored){
@@ -324,6 +334,13 @@ sub login() {
      $logged_in = 1; #let the world know we are logged in
      }
    else{
+    $user->{'failed_attempts'} = 1 + $user->{'failed_attempts'};
+    $user->{'lock_out_until'} = time() + (60 * $settings->{'lock_time'});
+    if( $user->{'failed_attempts'} >= $settings->{'max_failed_attempts'} ) {#too many wrong pw. lock for a time
+      $user->{'locked'} = 1;
+    }
+    $filename = "$settings->{'path_to_users'}$user_id";
+    &hash_to_db($user , $filename );
     $logged_in = 0;
     $set_cookie_string = '';
     $message = "$message Login for $user->{'email'} failed";

@@ -1,0 +1,20 @@
+.show_me {
+	_visibility: visible;
+	}
+
+	.hide_me {
+	display: none;
+	_visibility: hidden;
+	}
+
+	@media (orientation: landscape) {
+	*{
+		font-size: 3vw;
+	}
+}
+
+@media (orientation: portrait) {
+	*{
+		font-size: 3vw;
+	}
+}

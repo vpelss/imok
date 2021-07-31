@@ -34,6 +34,11 @@ my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
+$AuthorizeMeObj->{'settings'}->{'max_failed_attempts'} = 3;
+$AuthorizeMeObj->{'settings'}->{'lock_time'} = 15;#in minutes
+#$AuthorizeMeObj->{'user'}->{'failed_attempts'} = 0;
+#$AuthorizeMeObj->{'lock_out_until'}
+
 my $email_list;
 my $message = '';
 
@@ -385,6 +390,7 @@ Their email address is put_your_email_here\@gmail.com');
  my $now = time();
  $user->{'timestamp'} = time() + $user->{'timeout_ms'}; #set a default of 1 day
  $user->{'first_login'} = 1;
+ $user->{'failed_attempts'} = 0;
 
  my $filename = "$path_to_users$user->{'user_id'}";
  my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);
