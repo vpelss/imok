@@ -1,5 +1,7 @@
 # imok
 
+A web based application that alerts family and friendss if you don't check in.
+
 The idea for this program came to me after a relative had passed away and was not found for 7 days.
 
 This program was designed for those who live alone.
