@@ -7,9 +7,13 @@ The idea for this program came to me after a relative had passed away and was no
 This program was designed for those who live alone.
 It is a fail safe alarm that will alert friends or family by email if you do not report in.
 Potential uses:
+
 -For those who worry their animals or pets may suffer or die if their owner passed away or became incapacitated.
+
 -For those who live in a remote location.
+
 -For someone taking a long trip alone.
+
 -For those living alone and not in regular contact with anyone.
 
 You can add up to three email addresses to send alerts to.
