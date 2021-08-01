@@ -24,12 +24,13 @@ $AuthorizeMeObj->{'settings'}->{'forgot_password_email_subject'} = 'Password Res
 $AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
 $AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
     Click to activate:
-    https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>
+    <a target='_blank' href="./imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>">?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%></a>
     );
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
     http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
+$AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} = qq(Your IMOK alert will be sent soon. You should push the IMOK button.);
 my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/';
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
@@ -157,7 +158,6 @@ if( $current_time_stamp <= $now ){#alarm was/is triggered
   until( $new_time_stamp  > $now ){
    $new_time_stamp = $new_time_stamp + $user->{'timeout_ms'};
   }
- #$new_time_stamp = $new_time_stamp + $user{'timeout_ms'};
  $message = "$message Alarm was likely triggered. Please email your contacts and tell them you are OK.";
  #send out IMOK email. Member has checked in...
 }
@@ -165,11 +165,9 @@ elsif( ($current_time_stamp - $user->{'timeout_ms'}) <= $now ){ #we are clicking
  $new_time_stamp = $current_time_stamp + $user->{'timeout_ms'};
 }
 elsif( ($current_time_stamp - $user->{'timeout_ms'}) > $now  ){# we are a full timeout before the time stamp. do nothing
- #do nothing
-}
+}#do nothing
 elsif( ($current_time_stamp - (2 * $user->{'timeout_ms'}) ) > $now ){#time stamp is greater than 2 or more full timeouts, this should never happen, but if it does, imok moves us
- #do nothing
-}
+}#do nothing
 
 #trigger time on users comp?
 my $new_time_stamp_user_tz = $new_time_stamp + ($user->{'tz_offset_hours' } * 60 * 60);
@@ -210,9 +208,12 @@ sub cron(){
   &write_to_log("start of cron");
   my @filenames = glob("$path_to_users*");#get the list of files in the users directory
   foreach my $filename (@filenames){
+				my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
     my $timestamp = &get_time_stamp($filename);
+				if( time() > ($timestamp - $user->{'pre_warn_time'}) ){#send pre warn email to self
+						my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} , $smtp_server);
+				}
     if($timestamp > time()){ next; }#we are not alarming
-    my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
     # &write_to_log("Result of user db $result user $user->{'user_id'}");
     #send alert emails
     #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
@@ -262,7 +263,6 @@ sub time_zone(){
 }
 
 sub get_template_page(){
-  #shift;
   my $filename = shift;
   my $output = '';
   open(FH, '<', "$path_to_templates/$filename") or die $!;
@@ -273,23 +273,19 @@ sub get_template_page(){
   return $output;
 }
 
-sub get_settings(){
- #my $output = shift; #string passed by ref so we can modify it
+sub get_settings(){ #input user, output html
  my $user = shift;
- #$$output = &get_template_page('settings.html'); #string passed by ref so we can modify it
  my $output = &get_template_page('settings.html'); #string passed by ref so we can modify it
- #get user data
-#my $logged_in = $AuthorizeMeObj->AmILoggedIn();
-#my $user = $AuthorizeMeObj->{'user'};
-#if(! $logged_in){return 0}
  #replace tokens
- $output =~ s/<%email_contact_1%>/$user->{'email_contact_1'}/g; #hide login, register , forgot pw
- $output =~ s/<%email_contact_2%>/$user->{'email_contact_2'}/g; #hide login, register , forgot pw
- $output =~ s/<%email_contact_3%>/$user->{'email_contact_3'}/g; #hide login, register , forgot pw
- $output =~  s/<%email_form%>/$user->{'email_form'}/g; #show logout, settings, reset pw
- $output =~  s/<%time_out%>/$user->{'time_out'}/g; #show logout, settings, reset pw
- $output =~  s/<%start_date%>/$user->{'start_date'}/g; #show logout, settings, reset pw
- $output =~  s/<%start_time%>/$user->{'start_time'}/g; #show logout, settings, reset pw
+ $output =~ s/<%email_contact_1%>/$user->{'email_contact_1'}/g;
+ $output =~ s/<%email_contact_2%>/$user->{'email_contact_2'}/g;
+ $output =~ s/<%email_contact_3%>/$user->{'email_contact_3'}/g;
+ $output =~  s/<%email_form%>/$user->{'email_form'}/g;
+ $output =~  s/<%time_out%>/$user->{'time_out'}/g;
+ $output =~  s/<%start_date%>/$user->{'start_date'}/g;
+ $output =~  s/<%start_time%>/$user->{'start_time'}/g;
+	my $pre_warn_hours = $user->{'pre_warn_time'} / 3600;
+	$output =~  s/<%pre_warn_time%>/$pre_warn_hours/g;
 
  return $output;
 }
@@ -326,8 +322,9 @@ if(! $logged_in){ return 0; }
  $user->{'email_form'} = $in{'email_form'};
  $user->{'time_out'} = $in{'time_out'};
  $user->{'timeout_ms'} = 24 * 60 * 60 * $in{'time_out'};
+	$user->{'pre_warn_time'} = 60 * 60 * $in{'pre_warn_time'};
 
- $user->{'start_date'} = $in{'start_date'};
+	$user->{'start_date'} = $in{'start_date'};
  $user->{'start_time'} = $in{'start_time'};
 
  $user->{'tz_offset_hours'} = $in{'tz_offset_hours'};
@@ -335,8 +332,7 @@ if(! $logged_in){ return 0; }
 
  $user->{'first_login'} = 0; #clear this
 
- #get_user_id
- my $user_id = $AuthorizeMeObj->get_user_id();
+ my $user_id = $AuthorizeMeObj->get_user_id();  #get_user_id
 
  my $filename = "$path_to_users$user_id";
  my $result = $AuthorizeMeObj->hash_to_db($user , $filename);
@@ -391,6 +387,7 @@ Their email address is put_your_email_here\@gmail.com');
  $user->{'timestamp'} = time() + $user->{'timeout_ms'}; #set a default of 1 day
  $user->{'first_login'} = 1;
  $user->{'failed_attempts'} = 0;
+	$user->{'pre_warn_time'} = 60 * 60; #in seconds. default 60 min
 
  my $filename = "$path_to_users$user->{'user_id'}";
  my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);

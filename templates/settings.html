@@ -39,8 +39,24 @@
   <option value="3">5</option>
   <option value="3">6</option>
   <option value="3">7</option>
-</select>	days. It is currently set to <b><%time_out%></b> days. It defaults to 1 day. Change drop down if required!
+</select>	days. It is currently set to <b><%time_out%></b> days. Defaults is 1 day. Change drop down if required!
 				 </p>
+
+	<p>
+<label for="time_out">Pre Warn Time </label>
+<select name="pre_warn_time" id="pre_warn_time" value="<%pre_warn_time%>">
+  <option value=".5">.5</option>
+  <option value="1" selected>1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="3">4</option>
+  <option value="3">5</option>
+  <option value="3">6</option>
+  <option value="3">7</option>
+</select>	hours. It is currently set to <b><%pre_warn_time%></b> hours. Defaults is 1 hour. Change drop down if required!
+				 </p>
+
+
 
 <p><input type='submit' onclick="calc_date();"> </p>
 
