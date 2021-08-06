@@ -126,6 +126,12 @@ sub write_to_log(){
  my $filename = 'log.txt';
  my $MAXSIZE = 2**15;
 
+	my $now = time();
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($now);
+$mon = $mon + 1;
+$year = 1900 + $year;
+my $time_string = sprintf("%d-%.2d-%.2d  %d:%.2d", $year , $mon , $mday , $hour , $min);
+
  if(-s $filename > $MAXSIZE){
   open(FH, '<', $filename);
   my @lines = <FH>;
@@ -140,7 +146,7 @@ sub write_to_log(){
  }
 
  open(FH, '>>', $filename) or return 0;# $!;
- print FH "$text\n";
+ print FH "$time_string: $text\n";
  close(FH);
  return 1;
 }
@@ -210,10 +216,19 @@ sub cron(){
   foreach my $filename (@filenames){
 				my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
     my $timestamp = &get_time_stamp($filename);
-				if( time() > ($timestamp - $user->{'pre_warn_time'}) ){#send pre warn email to self
-						my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} , $smtp_server);
-				}
-    if($timestamp > time()){ next; }#we are not alarming
+
+    my $t = time();
+    my $ts = $timestamp;
+    my $diff = $user->{'pre_warn_time'};
+    my $window = $timestamp - $user->{'pre_warn_time'};
+
+    if( ( time() > ($timestamp - $user->{'pre_warn_time'}) ) && ($timestamp > time()) ){#send pre warn email to self
+         my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} , $smtp_server);
+         }
+    if($timestamp > time()){
+       next;
+       }#we are not alarming
+
     # &write_to_log("Result of user db $result user $user->{'user_id'}");
     #send alert emails
     #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
