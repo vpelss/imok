@@ -217,10 +217,10 @@ sub cron(){
 				my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
     my $timestamp = &get_time_stamp($filename);
 
-    my $t = time();
-    my $ts = $timestamp;
-    my $diff = $user->{'pre_warn_time'};
-    my $window = $timestamp - $user->{'pre_warn_time'};
+   # my $t = time();
+   # my $ts = $timestamp;
+   # my $diff = $user->{'pre_warn_time'};
+   # my $window = $timestamp - $user->{'pre_warn_time'};
 
     if( ( time() > ($timestamp - $user->{'pre_warn_time'}) ) && ($timestamp > time()) ){#send pre warn email to self
          my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} , $smtp_server);
@@ -237,7 +237,7 @@ sub cron(){
     $email_list = "$user->{'email'} $user->{'email_contact_1'} $user->{'email_contact_2'} $user->{'email_contact_3'}"; #sendmail will replace spaces with , DO NOT add your own , also no leading or lagging space
     my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $alert_msg , $smtp_server);
     &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
-   $user->{'timestamp'} = (60 * 60) + $timestamp; #set time stamp ahead one hour. So we do not send an email for another hour
+    $user->{'timestamp'} = (60 * 60) + $timestamp; #set time stamp ahead one hour. So we do not send an email for another hour
     $user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};  #increase email file count
     $AuthorizeMeObj->hash_to_db($user , $filename); #save file
     &change_time_stamp($user->{'timestamp'} , $filename);#update time stamp
@@ -299,7 +299,7 @@ sub get_settings(){ #input user, output html
  $output =~  s/<%time_out%>/$user->{'time_out'}/g;
  $output =~  s/<%start_date%>/$user->{'start_date'}/g;
  $output =~  s/<%start_time%>/$user->{'start_time'}/g;
-	my $pre_warn_hours = $user->{'pre_warn_time'} / 3600;
+	my $pre_warn_hours = $user->{'pre_warn_time'} / 3600; #convert hours to seconds
 	$output =~  s/<%pre_warn_time%>/$pre_warn_hours/g;
 
  return $output;
@@ -335,6 +335,8 @@ if(! $logged_in){ return 0; }
  }
 
  $user->{'email_form'} = $in{'email_form'};
+ $user->{'email_form'} =~ s/\r//g; #fix windows from adding extra lines
+
  $user->{'time_out'} = $in{'time_out'};
  $user->{'timeout_ms'} = 24 * 60 * 60 * $in{'time_out'};
 	$user->{'pre_warn_time'} = 60 * 60 * $in{'pre_warn_time'};
