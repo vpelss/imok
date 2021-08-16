@@ -30,7 +30,7 @@ $AuthorizeMeObj->{'settings'}->{'forgot_password_email_template'} = qq(You have 
     Click the link to reset your password to <%set_password_code%>:
     http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
-$AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} = qq(Your IMOK alert will be sent soon. You should push the IMOK button.);
+$AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} = qq(Your IMOK alert will be sent soon. You should push the IMOK button at: https://www.e,ogic.com/cgi/imok/imok.cgi.);
 my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/';
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
@@ -199,7 +199,7 @@ return $result;
 sub imnotok(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'};
-my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
+my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , "IM(Not)OK Alert" , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
  &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
  $message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} ";
 }
@@ -231,6 +231,9 @@ sub cron(){
     if($timestamp > time()){
        next;
        }#we are not alarming
+    if($user->{'last_email_sent_at'} < (time()-(60 * 60)) ){
+       next;
+    }#we are waiting an hour before sending another alert email!
 
     # &write_to_log("Result of user db $result user $user->{'user_id'}");
     #send alert emails
@@ -240,10 +243,11 @@ sub cron(){
     $email_list = "$user->{'email'} $user->{'email_contact_1'} $user->{'email_contact_2'} $user->{'email_contact_3'}"; #sendmail will replace spaces with , DO NOT add your own , also no leading or lagging space
     my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $alert_msg , $smtp_server);
     &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
-    $user->{'timestamp'} = (60 * 60) + $timestamp; #set time stamp ahead one hour. So we do not send an email for another hour
+    #$user->{'timestamp'} = (60 * 60) + $timestamp; #set time stamp ahead one hour. So we do not send an email for another hour
+    $user->{'last_email_sent_at'} = (60 * 60) + time();
     $user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};  #increase email file count
     $AuthorizeMeObj->hash_to_db($user , $filename); #save file
-    &change_time_stamp($user->{'timestamp'} , $filename);#update time stamp
+    #&change_time_stamp($user->{'timestamp'} , $filename);#update time stamp
     &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
     $message = "$message $alert_msg";
     }

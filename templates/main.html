@@ -12,18 +12,21 @@
 
 	<h4 class='center'>IMOK, not Lost</h4>
 
-	<div  class='<%logged_in%> center'>
+<input name="difference" type="hidden" value="<%difference%>" id="difference">
+<input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
+
+<div  class='<%logged_in%> center'>
 		<form id="form_login" action="./imok.cgi" method="get" name="form_login">
 			<input name="command" type="hidden" value="imok" id="command_login">
 			<p><input type="submit" value="IMOK"  title="You are ok for theis interval. This will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm)."></p>
 		</form>
-	</div>
+</div>
 
-	<b><font color='red'><div class='<%logged_in%> center' id='countdown'>00:00:00</div></font></b>
+<b><font color='red'><div class='<%logged_in%> center' id='countdown'>00:00:00</div></font></b>
 
-	<div class='center' >
+<div class='center' >
 		<h2><%last_message%></h2>
-	</div>
+</div>
 
 <div class='<%logged_out%>'>
 <table width='90%'  class='center'><tr>
@@ -35,6 +38,7 @@
 	<td width='50%'><a href="forgot_password.html">Forgot Password</a></td>
 	<td width='50%'><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'>About</a></td>
 </tr></table>
+<br>
 </div>
 
 <div class='<%logged_in%> center' >
@@ -51,41 +55,35 @@
 </tr></table>
 </div>
 
-
-		<div	class='<%logged_in%> center'>
+<div	class='<%logged_in%> center'>
 		<form id="form_login2" action="./imok.cgi" method="get" name="form_login2">
 			<input name="command" type="hidden" value="imnotok" id="command_login2">
 			<p><input type="submit" value="IM NOT OK" title="You are NOT ok for theis interval. This will immediately send the alert email to your alert list."></p>
 		</form>
-		</div>
+</div>
 
-
-				<div  class='<%logged_in%> center' >
+<div  class='<%logged_in%> center' >
 		<form id="form_login3" action="./imok.cgi" method="get" name="form_login3">
 			<input name="command" type="hidden" value="testimok" id="command_login3">
 			<p><input type="submit" value="Send a Test Email." title="Send a test email to your alert list."></p>
 		</form>
-	</div>
+</div>
 
-								<div  class='<%logged_in%> center'>
+<div  class='<%logged_in%> center'>
 		<form id="form_login3" action="./imok.cgi" method="get" name="form_login4">
 			<input name="command" type="hidden" value="cron" id="cron">
 			<p><input type="submit" value="cron" title="Simulate cron."></p>
 		</form>
-			</br>
-	</div>
+</div>
 
-<input name="difference" type="hidden" value="<%difference%>" id="difference">
-<input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
+<div class='center'>Code is here:
+</br>
+<a href='https://github.com/vpelss/imok' target='_blank'>https://github.com/vpelss/imok</a>
+</div>
 
+<script>
 
-	<div class='center'>Code is here:
-	</br>
-	<a href='https://github.com/vpelss/imok' target='_blank'>https://github.com/vpelss/imok</a></div>
-
-	<script>
-
-	var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
+var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
 
 function countdown() {
 		var now = Date.now();
