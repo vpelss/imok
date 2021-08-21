@@ -4,6 +4,7 @@ use strict;
 use Socket;
 use Fcntl;   # For O_RDWR, O_CREAT, etc.
 use Data::Dumper;
+use Net::SMTP;
 use Digest::SHA qw(sha1_base64 sha1_hex sha512_base64);
 #use vars qw($NAME $ABSTRACT $VERSION);
 our ($NAME , $ABSTRACT , $VERSION);
@@ -235,7 +236,12 @@ sub register_account()
     $email_message =~ s/<%user_id%>/$user_id/g;
 
     #send email message
-    $result = &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , $settings->{'Activation_Email_Subject'} , $email_message ,$settings->{'smtp_server'});
+    $settings->{'email_to'} = $email;
+    $settings->{'email_subject'} = $settings->{'Activation_Email_Subject'};
+    $settings->{'email_message'} = $email_message; #add users email at end of message in case they do not provide any identification in the email
+    $result = &email();
+
+    #$result = &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , $settings->{'Activation_Email_Subject'} , $email_message ,$settings->{'smtp_server'});
     #my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
 
     #delete any old token files
@@ -419,7 +425,10 @@ sub forgot_password(){
  $email_message =~ s/<%set_password_code%>/$random_number/g;
  $email_message =~ s/<%user_id%>/$user_id/g;
  #send email message
- &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , $settings->{'forgot_password_email_subject'} , $email_message , $settings->{'smtp_server'});
+ $settings->{'email_to'} = $email;
+ $settings->{'email_subject'} = $settings->{'forgot_password_email_subject'};
+ $settings->{'email_message'} = $email_message; #add users email at end of message in case they do not provide any identification in the email
+ $result = &email();
 
  $message = "$message Your password recovery email has been sent to $email : $email_message";
  return 1;
@@ -514,158 +523,106 @@ sub valid_email{
   else { return 1; }
 }
 
-sub sendmail()
-{
- my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+sub email(){
+  my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+  &write_to_log("sendmail start");
 
-#multiple $to addresses separated by SPACES. No leading spaces
+  my $sendmail = $settings->{'email_sendmail'};
+  my $smtp_server = $settings->{'email_smtp_server'};
+  my $smtp_port = $settings->{'email_smtp_port'};
+  my $helo =  $settings->{'email_smtp_helo'};
+  my $from = $settings->{'email_from'};
+  my $reply = $settings->{'email_reply'};
+  my $to = $settings->{'email_to'};
+  my $subject = $settings->{'email_subject'};
+  my $message = $settings->{'email_message'};
 
-#error codes below for those who bother to check result codes <gr>
-# 1 success
-# -1 $smtphost unknown
-# -2 socket() failed
-# -3 connect() failed
-# -4 service not available
-# -5 unspecified communication error
-# -6 local user $to unknown on host $smtp
-# -7 transmission of message failed
-# -8 argument $to empty
-#
-#  Sample call:
-#
-# &sendmail($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER);
-#
-#  Note that there are several commands for cleaning up possible bad inputs - if you
-#  are hard coding things from a library file, so of those are unnecesssary
+if ($smtp_server ne ""){
+  my %options;
+  $options{'Host'} = $smtp_server;
+  $options{'Port'} = $smtp_port;
+  $options{'Hello'} = $helo;
+  $options{'Debug'} = 1;
+  my $smtp = Net::SMTP->new(%options) || return $!;
 
-    my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
+  $smtp->mail($from) || return $!; #sender
+  my @recipients = split(/,/, $to);
+  my @goodrecips = $smtp->recipient( @recipients , { Notify => ['FAILURE'], SkipBad => 1 }) || return $!;  # Good
 
+  $smtp->data() || return $!;
+  $smtp->datasend("From: $from");
+  $smtp->datasend("\n");
+  $smtp->datasend("Reply: $reply");
+  $smtp->datasend("\n");
+  $smtp->datasend("Subject: $subject");
+  $smtp->datasend("\n");
+  $smtp->datasend ($message);
+  $smtp->dataend;
+  $smtp->quit;
+  return 1;
+  }
+
+#try sendmail
+if ($sendmail ne ""){
+   open(MAIL, "|$sendmail");
+   print MAIL "To: $to\n";
+   print MAIL "From: $from\n";
+   print MAIL "Subject: $subject\n\n";
+   print MAIL $message;
+  if ( close(MAIL) ) {
+     return 1;
+     }  else {
+     return $!;
+     }
+   #return 1;
+   }
+
+ return 0;
+
+=pod
     $to =~ s/[ \t]+/, /g; # pack spaces and add comma
-    $fromaddr =~ s/.*<([^\s]*?)>/$1/; # get from email address
-    $replyaddr =~ s/.*<([^\s]*?)>/$1/; # get reply email address
-    $replyaddr =~ s/^([^\s]+).*/$1/; # use first address
+    $from =~ s/.*<([^\s]*?)>/$1/; # get from email address
+    $reply =~ s/.*<([^\s]*?)>/$1/; # get reply email address
+    $reply =~ s/^([^\s]+).*/$1/; # use first address
     $message =~ s/^\./\.\./gm; # handle . as first character
     $message =~ s/\r\n/\n/g; # handle line ending
     $message =~ s/\n/\r\n/g;
-    $smtp =~ s/^\s+//g; # remove spaces around $smtp
-    $smtp =~ s/\s+$//g;
+    $sendmail =~ s/^\s+//g; # remove spaces around $smtp
+    $sendmail =~ s/\s+$//g;
+=cut
 
-    if (!$to)
-    {
-        return(-8);
-    }
-
- if ($SMTP_SERVER ne "")
-  {
-    my($proto) = (getprotobyname('tcp'))[2];
-    my($port) = (getservbyname('smtp', 'tcp'))[2];
-
-    my($smtpaddr) = ($smtp =~
-                     /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
-        ? pack('C4',$1,$2,$3,$4)
-            : (gethostbyname($smtp))[4];
-
-    if (!defined($smtpaddr))
-    {
-        return(-1);
-    }
-
-    if (!socket(MAIL, AF_INET, SOCK_STREAM, $proto))
-    {
-        return(-2);
-    }
-
-    if (!connect(MAIL, pack('Sna4x8', AF_INET, $port, $smtpaddr)))
-    {
-        return(-3);
-    }
-
-    my($oldfh) = select(MAIL);
-    $| = 1;
-    select($oldfh);
-
-    $_ = <MAIL>;
-    if (/^[45]/)
-    {
-        close(MAIL);
-        return(-4);
-    }
-
-    print MAIL "helo $SMTP_SERVER\r\n";
-    $_ = <MAIL>;
-    if (/^[45]/)
-    {
-        close(MAIL);
-        return(-5);
-    }
-
-    print MAIL "mail from: <$fromaddr>\r\n";
-    $_ = <MAIL>;
-    if (/^[45]/)
-    {
-        close(MAIL);
-        return(-5);
-    }
-
-    foreach (split(/, /, $to))
-    {
-        print MAIL "rcpt to: <$_>\r\n";
-        $_ = <MAIL>;
-        if (/^[45]/)
-        {
-            close(MAIL);
-            return(-6);
-        }
-    }
-
-    print MAIL "data\r\n";
-    $_ = <MAIL>;
-    if (/^[45]/)
-    {
-        close MAIL;
-        return(-5);
-    }
-
-   }
-
-  if ($smtp ne "")
-   {
-     open (MAIL,"| $smtp");
-   }
-
-    print MAIL "To: $to\n";
-    print MAIL "From: $fromaddr\n";
-    #print MAIL "Reply-to: $replyaddr\n" if $replyaddr;
-    print MAIL "Subject: $subject\n";
-    print MAIL qq|Content-Type: text/html; charset="iso-8859-1"
-   Content-Transfer-Encoding: quoted-printable
-   |
-   ;
-    print MAIL "\n\n";
-    #print MAIL 'Mime-Version: 1.0'."\n";
-    #print MAIL 'content-type:' . "text/HTML\n\n"; # <----------------- put the double \n\n here
-    #print MAIL "Content-Transfer-Encoding: quoted-printable\n\n";
-
-    print MAIL "$message";
-
-    print MAIL "\n.\n";
-
- if ($SMTP_SERVER ne "")
-  {
-    $_ = <MAIL>;
-    if (/^[45]/)
-    {
-        close(MAIL);
-        return(-7);
-    }
-
-    print MAIL "quit\r\n";
-    $_ = <MAIL>;
-  }
-
-    close(MAIL);
-    return(1);
 }
+
+sub write_to_log(){
+ my $text = shift;
+ my $filename = 'log.txt';
+ my $MAXSIZE = 2**15;
+
+	my $now = time();
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($now);
+$mon = $mon + 1;
+$year = 1900 + $year;
+my $time_string = sprintf("%d-%.2d-%.2d  %d:%.2d", $year , $mon , $mday , $hour , $min);
+
+ if(-s $filename > $MAXSIZE){
+  open(FH, '<', $filename);
+  my @lines = <FH>;
+  close FH;
+  my $number_of_lines = scalar @lines;
+  for(my $i = 0 ; $i < ($number_of_lines/2) ; $i++){
+   shift @lines;
+  }
+  open(FH, '>', $filename) or return 0;
+  print FH @lines;
+  close FH;
+ }
+
+ open(FH, '>>', $filename) or return 0;# $!;
+ print FH "$time_string: $text\n";
+ close(FH);
+ return 1;
+}
+
 
 1; #module returns a win!
 

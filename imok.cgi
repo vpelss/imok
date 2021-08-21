@@ -15,11 +15,21 @@ my $AuthorizeMeObj = AuthorizeMe->new();
 $AuthorizeMeObj->{'settings'}->{'token_name'} = 'imok_token'; #will show up in cookie
 $AuthorizeMeObj->{'settings'}->{'token_max-age'} = '3153600000'; #string time in seconds the cookie will live
 $AuthorizeMeObj->{'settings'}->{'user_id_name'} = 'imok_user_id'; #will show up in cookie
-my $from_email = $AuthorizeMeObj->{'settings'}->{'from_email'} = 'imok@emogic.com';
-my $reply_email = $AuthorizeMeObj->{'settings'}->{'reply_email'} = 'imok@emogic.com';
-my $sendmail = $AuthorizeMeObj->{'settings'}->{'sendmail'} = '/usr/lib/sendmail -t';
-my $smtp_server = $AuthorizeMeObj->{'settings'}->{'smtp_server'} = '';
-my $alert_email_subject = $AuthorizeMeObj->{'settings'}->{'alert_email_subject'} = 'IMOK Alert';
+
+$AuthorizeMeObj->{'settings'}->{'email_sendmail'} = '/usr/lib/sendmail -t';
+$AuthorizeMeObj->{'settings'}->{'email_smtp_server'} = 'localhost';
+$AuthorizeMeObj->{'settings'}->{'email_smtp_port'} = '25';
+$AuthorizeMeObj->{'settings'}->{'email_smtp_helo'} = 'emogic.com';
+$AuthorizeMeObj->{'settings'}->{'email_from'} = 'IMOK<imok@emogic.com>';
+$AuthorizeMeObj->{'settings'}->{'email_reply'} = 'imok@emogic.com';
+#later
+$AuthorizeMeObj->{'settings'}->{'email_to'} = '';#provide later
+$AuthorizeMeObj->{'settings'}->{'email_subject'} = '';#provide later
+$AuthorizeMeObj->{'settings'}->{'email_message'} = '';#provide later
+#to send, set above, then $AuthorizeMeObj->email();
+
+my $alert_email_subject = 'IMOK Alert';
+
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_subject'} = 'Password Reset - IMOK';
 $AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
 $AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
@@ -30,22 +40,29 @@ $AuthorizeMeObj->{'settings'}->{'forgot_password_email_template'} = qq(You have 
     Click the link to reset your password to <%set_password_code%>:
     http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
-$AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} = qq(Your IMOK alert will be sent soon. You should push the IMOK button at: https://www.e,ogic.com/cgi/imok/imok.cgi.);
+$AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} = qq(Your IMOK alert will be sent soon. You should push the IMOK button at: https://www.emogic.com/cgi/imok/imok.cgi.);
 my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/';
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
-$AuthorizeMeObj->{'settings'}->{'max_failed_attempts'} = 3;
+$AuthorizeMeObj->{'settings'}->{'max_failed_attempts'} = 3; #password
 $AuthorizeMeObj->{'settings'}->{'lock_time'} = 15;#in minutes
-#$AuthorizeMeObj->{'user'}->{'failed_attempts'} = 0;
-#$AuthorizeMeObj->{'lock_out_until'}
 
 my $email_list;
+
 my $message = '';
 
 eval { &main(); };     # Trap any fatal errors so the program hopefully
 if ($@) { &cgierr("fatal error: $@"); }     # never produces that nasty 500 server error page.
 exit;   # There are only two exit calls in the script, here and in in &cgierr.
+
+sub make_email_list(){
+  my $user = shift;
+  my @email_list = ($user->{'email'},$user->{'email_contact_1'},$user->{'email_contact_2'},$user->{'email_contact_3'});
+  @email_list = grep /\S/, @email_list; #remove blank email entries
+  my $email_list = join(',' , @email_list);
+  return $email_list;
+}
 
 sub main(){
 if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit.
@@ -57,13 +74,10 @@ my $output = '';
 $output = &get_template_page('main.html');
 
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
-my $user = $AuthorizeMeObj->{'user'};
-$email_list = "$user->{'email'} $user->{'email_contact_1'} $user->{'email_contact_2'} $user->{'email_contact_3'}"; #sendmail will replace spaces with , DO NOT add your own , also no leading or lagging space
-
-$AuthorizeMeObj->{'settings'}->{'test_email_template'} = qq(This email was sent by the IMOK system as a test by $AuthorizeMeObj->{'user'}->{'email'} . Please let them know you received it.
-    );
-$AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} = qq($AuthorizeMeObj->{'user'}->{'email'} has pushed the IM_NOT_OK button. Please check on them.
-    );
+my $user = $AuthorizeMeObj->{'user'}; #local copy of user
+$email_list = &make_email_list($user);
+$AuthorizeMeObj->{'settings'}->{'test_email_template'} = qq(This email was sent by the IMOK system as a test by $AuthorizeMeObj->{'user'}->{'email'} . Please let them know you received it.);
+$AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} = qq($AuthorizeMeObj->{'user'}->{'email'} has pushed the IM_NOT_OK button. Please check on them.);
 
 if ( $logged_in ) {#we are logged in
     if ( $command eq 'logout' ) { $logged_in = &logout() } #login email , password
@@ -199,16 +213,25 @@ return $result;
 sub imnotok(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'};
-my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , "IM(Not)OK Alert" , $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} , $smtp_server);
- &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
- $message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} ";
+
+$AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
+$AuthorizeMeObj->{'settings'}->{'email_subject'} = "IM(Not)OK Alert";
+$AuthorizeMeObj->{'settings'}->{'email_message'} = $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'};
+my $result = $AuthorizeMeObj->email();
+&write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
+$message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} ";
 }
 
 sub testimok(){
   my $logged_in = $AuthorizeMeObj->AmILoggedIn();
   my $user = $AuthorizeMeObj->{'user'};
   my $result;
-  $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'test_email_template'} , $smtp_server);
+
+  $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
+  $AuthorizeMeObj->{'settings'}->{'email_subject'} = $alert_email_subject;
+  $AuthorizeMeObj->{'settings'}->{'email_message'} = $AuthorizeMeObj->{'settings'}->{'test_email_template'};
+  $result = $AuthorizeMeObj->email();
+
   &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
   $message = "$message sendmail result : $result : To: $email_list : $AuthorizeMeObj->{'settings'}->{'test_email_template'}";
 }
@@ -217,39 +240,49 @@ sub cron(){
   &write_to_log("start of cron");
   my @filenames = glob("$path_to_users*");#get the list of files in the users directory
   foreach my $filename (@filenames){
+    &write_to_log("Looking at $filename");
 				my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
+    $email_list = &make_email_list($user);
     my $timestamp = &get_time_stamp($filename);
 
-   # my $t = time();
+    my $t = time();
    # my $ts = $timestamp;
    # my $diff = $user->{'pre_warn_time'};
    # my $window = $timestamp - $user->{'pre_warn_time'};
 
+    &write_to_log("Time is $t and timestamp is $timestamp and pretime is $user->{'pre_warn_time'} and last email sent at $user->{'last_email_sent_at'}");
+
     if( ( time() > ($timestamp - $user->{'pre_warn_time'}) ) && ($timestamp > time()) ){#send pre warn email to self
-         my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $user->{'email'} , $sendmail , $alert_email_subject , $AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} , $smtp_server);
+         $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
+         $AuthorizeMeObj->{'settings'}->{'email_subject'} = $alert_email_subject;
+         $AuthorizeMeObj->{'settings'}->{'email_message'} = $AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'};
+         my $result = $AuthorizeMeObj->email();
          }
     if($timestamp > time()){
        next;
        }#we are not alarming
-    if($user->{'last_email_sent_at'} < (time()-(60 * 60)) ){
-       next;
-    }#we are waiting an hour before sending another alert email!
+    if(defined $user->{'last_email_sent_at'}){
+      if($user->{'last_email_sent_at'} > (time()-(60 * 60)) ){
+         next;
+      }#we are waiting an hour before sending another alert email!
+    }
 
     # &write_to_log("Result of user db $result user $user->{'user_id'}");
     #send alert emails
-    #($from, $reply, $to, $smtp, $subject, $message ,$SMTP_SERVER)
-    my $alert_msg = $user->{'email_form'};
-    $alert_msg = "$alert_msg </br> Alert was sent on behalf of $user->{'email'}"; #add users email at end of message in case they do not provide any identification in the email
-    $email_list = "$user->{'email'} $user->{'email_contact_1'} $user->{'email_contact_2'} $user->{'email_contact_3'}"; #sendmail will replace spaces with , DO NOT add your own , also no leading or lagging space
-    my $result = $AuthorizeMeObj->sendmail($from_email , $reply_email , $email_list , $sendmail , $alert_email_subject , $alert_msg , $smtp_server);
+    $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
+    $AuthorizeMeObj->{'settings'}->{'email_subject'} = $alert_email_subject;
+    $AuthorizeMeObj->{'settings'}->{'email_message'} = "$user->{'email_form'} </br> Alert was sent on behalf of $user->{'email'}"; #add users email at end of message in case they do not provide any identification in the email
+    my $result = $AuthorizeMeObj->email();
     &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
     #$user->{'timestamp'} = (60 * 60) + $timestamp; #set time stamp ahead one hour. So we do not send an email for another hour
-    $user->{'last_email_sent_at'} = (60 * 60) + time();
-    $user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};  #increase email file count
-    $AuthorizeMeObj->hash_to_db($user , $filename); #save file
-    #&change_time_stamp($user->{'timestamp'} , $filename);#update time stamp
-    &write_to_log("$filename Alert to $user->{'user_id'} $user->{'email_contact_1'} $user->{'email_contact_1'} at $user->{'timestamp'}");
-    $message = "$message $alert_msg";
+
+    #$user->{'last_email_sent_at'} = time();
+    #$user->{'alerts_sent'} = 1 + $user->{'alerts_sent'};  #increase email file count
+    #$AuthorizeMeObj->hash_to_db($user , $filename); #save file
+    #&change_time_stamp($timestamp , $filename);#restore old time stamp : so db update does not change it.
+
+    $message = "$message $AuthorizeMeObj->{'settings'}->{'email_message'}";
+    &write_to_log("$filename Alert to $email_list at $t : $message");
     }
 &write_to_log("end of cron");
 }
@@ -347,6 +380,7 @@ if(! $logged_in){ return 0; }
  $user->{'time_out'} = $in{'time_out'};
  $user->{'timeout_ms'} = 24 * 60 * 60 * $in{'time_out'};
 	$user->{'pre_warn_time'} = 60 * 60 * $in{'pre_warn_time'};
+ $user->{'last_email_sent_at'} = 0;
 
 	$user->{'start_date'} = $in{'start_date'};
  $user->{'start_time'} = $in{'start_time'};
