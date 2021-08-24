@@ -1,4 +1,4 @@
-#!/usr/bin/perl -d
+#!/usr/bin/perl
 
 use strict;
 use Socket;
@@ -34,11 +34,11 @@ $AuthorizeMeObj->{'settings'}->{'forgot_password_email_subject'} = 'Password Res
 $AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
 $AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
     Click to activate:
-    <a target='_blank' href="./imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>">?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%></a>
+    <a target='_blank' href="https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>">https://www.emogic.com/cgi/imok.cgi/imok?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%></a>
     );
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
-    http://localhost/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
+    https://www.emogic.com/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
 $AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} = qq(Your IMOK alert will be sent soon. You should push the IMOK button at: https://www.emogic.com/cgi/imok/imok.cgi.);
 my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/';
@@ -70,16 +70,26 @@ if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit.
 %in = &parse_form();
 my $command = $in{'command'};
 
+&write_to_log("Parsed command: $command");
+
 my $output = '';
 $output = &get_template_page('main.html');
 
+&write_to_log("Loaded template main");
+
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'}; #local copy of user
+
+&write_to_log("checked login");
+
 $email_list = &make_email_list($user);
 $AuthorizeMeObj->{'settings'}->{'test_email_template'} = qq(This email was sent by the IMOK system as a test by $AuthorizeMeObj->{'user'}->{'email'} . Please let them know you received it.);
 $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} = qq($AuthorizeMeObj->{'user'}->{'email'} has pushed the IM_NOT_OK button. Please check on them.);
 
+&write_to_log("built email list: $email_list");
+
 if ( $logged_in ) {#we are logged in
+    &write_to_log("logged in");
     if ( $command eq 'logout' ) { $logged_in = &logout() } #login email , password
     if ( $command eq 'logout_all_devices' ) { $logged_in = &logout_all_devices() }
     if ( $command eq 'reset_password' ) { &reset_password($in{'current_password'} , $in{'new_password'}) }
@@ -94,6 +104,7 @@ if ( $logged_in ) {#we are logged in
     if ( $command eq 'testimok' ) { &testimok() }
     }
 else{#we are not logged in
+    &write_to_log("not logged in");
     if ( $command eq 'register' ) { &register(); } #load register form from ./forms/register.html or just jump to it?
 				if ( $command eq 'activate' ) { &activate($in{'activate_code'} , $in{'user_id'}) } #login email , password
     if ( $command eq 'login' ) {
@@ -124,6 +135,7 @@ else{
     $output =~  s/<%logged_in%>/hide_me/g; #hide logout, settings, reset pw
     }
 
+&write_to_log("ready to print");
 my $AuthMessage = $AuthorizeMeObj->get_message();
 $message = "$message $AuthMessage";
 $output =~  s/<%last_message%>/$message/g;
@@ -422,9 +434,12 @@ sub register() {
 	my $email = lc $in{'email'};#note email coveted to lower case!
 	my $password = $in{'password'};
 	my $result = $AuthorizeMeObj->register_account($email , $password);
-
- return $result;
+ if($result == 0){
+    $message = $AuthorizeMeObj->get_message();
+    $message = "$message Your registration failed."
  }
+ return $result;
+}
 
 sub activate(){
  my $authorize_code = shift;
@@ -498,6 +513,7 @@ sub logout_all_devices(){
 }
 
 sub forgot_password(){
+ &write_to_log("For");
  my $email = shift;
  my $result = $AuthorizeMeObj->forgot_password($email);
  if($result == 1){

@@ -185,11 +185,12 @@ sub create_user_id(){
  return $user_id;
 }
 
-sub register_account()
-    { #get data
+sub register_account(){ #get data
     shift; #remove module #
     my $email = shift;
     $email =~ s/\A\s\Z//g; #remove white space
+
+    &write_to_log("register start");
 
     my $password = shift;
     $password =~ s/\s\W//; #no white space, only alpha numeric
@@ -198,12 +199,18 @@ sub register_account()
       return 0;
     }
 
+    &write_to_log("password checked");
+
     if( ! valid_email($email) ){ #check for valid email
       $message = "$message Invalid Email Address";
       return 0;
       }
 
+    &write_to_log("email checked");
+
     my $user_id = &create_user_id($email); #user id is hash of email
+
+    &write_to_log("user id created");
 
     #see if  user file exists, fail if it does, pass message?
     my $filename = "$settings->{'path_to_users'}$user_id";
@@ -217,19 +224,25 @@ sub register_account()
       return 0;
       }
 
+    &write_to_log("previous registration checked");
+
     # $user->{'username'} = $username; #simplest case just use email as username also
     my $user;
     $user->{'email'} = $email;
-    $user->{'user_id'} = $user_id; #also use as activate code
+    $user->{'user_id'} = $user_id;
     #salt it up!!!!!!!!! with userid?
     my $password_hash = &encrypt_password($password);
     $user->{'password'} = $password_hash;
+
+    &write_to_log("pw saved");
 
     #save account data in file $random_number. when we ru
     my $random_number = int(rand($random_number_size));
     $user->{'Auth_Code'} = $random_number;
     #$filename = "$settings->{'path_to_authorizations'}$random_number";
     my $result = &hash_to_db($user , $filename);
+
+    &write_to_log("auth file saved");
 
     my $email_message = $settings->{'registration_email_template'};
     $email_message =~ s/<%activate_code%>/$random_number/g;
@@ -241,12 +254,16 @@ sub register_account()
     $settings->{'email_message'} = $email_message; #add users email at end of message in case they do not provide any identification in the email
     $result = &email();
 
+    &write_to_log("email sent : $result");
+
     #$result = &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , $settings->{'Activation_Email_Subject'} , $email_message ,$settings->{'smtp_server'});
     #my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
 
     #delete any old token files
     $filename = "$settings->{'path_to_tokens'}$user_id";
     $result = unlink($filename);
+
+    &write_to_log("delete old tokens");
 
     #return success with message stating auth email must be clicked!
     $message = "$message You have been registered, but must activate your account by clicking on the link in the email sent to $email. It may take up to an hour to receive. Check your spam folder. : $email_message";
@@ -556,6 +573,10 @@ if ($smtp_server ne ""){
   $smtp->datasend("\n");
   $smtp->datasend("Subject: $subject");
   $smtp->datasend("\n");
+  $smtp->datasend("Content-Type: text/html");
+    $smtp->datasend("\n");
+  $smtp->datasend("MIME-Version: 1.0");
+  $smtp->datasend("\n");
   $smtp->datasend ($message);
   $smtp->dataend;
   $smtp->quit;
@@ -568,6 +589,8 @@ if ($sendmail ne ""){
    print MAIL "To: $to\n";
    print MAIL "From: $from\n";
    print MAIL "Subject: $subject\n\n";
+   print MAIL "Content-Type: text/html";
+   print MAIL "MIME-Version: 1.0";
    print MAIL $message;
   if ( close(MAIL) ) {
      return 1;
