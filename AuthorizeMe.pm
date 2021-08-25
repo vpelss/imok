@@ -567,6 +567,8 @@ if ($smtp_server ne ""){
   my @goodrecips = $smtp->recipient( @recipients , { Notify => ['FAILURE'], SkipBad => 1 }) || return $!;  # Good
 
   $smtp->data() || return $!;
+  $smtp->datasend("To: $to");
+  $smtp->datasend("\n");
   $smtp->datasend("From: $from");
   $smtp->datasend("\n");
   $smtp->datasend("Reply: $reply");
