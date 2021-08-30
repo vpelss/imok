@@ -68,7 +68,14 @@
 </div>
 
 <div  class='<%logged_in%> center'>
-		<form id="form_login3" action="./imok.cgi" method="post" name="form_login4">
+		<form id="form_login4" action="./imok.cgi" method="post" name="form_login4">
+			<input name="command" type="hidden" value="delete_account" id="command_login">
+			<p><input type="submit" value="Delete Account" title="Delete Account" onclick='test_delete();'></p>
+		</form>
+</div>
+
+<div  class='<%logged_in%> center'>
+		<form id="form_login5" action="./imok.cgi" method="post" name="form_login5">
 			<input name="command" type="hidden" value="cron" id="cron">
 			<p><input type="submit" value="cron" title="Simulate cron."></p>
 		</form>
@@ -80,6 +87,10 @@
 </div>
 
 <script>
+
+function test_delete(){
+	if( confirm("Are you sure you want to delete your account?") ){return 1;}else{return 0;}
+}
 
 var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
 
@@ -110,7 +121,7 @@ function countdown() {
 setInterval( countdown , 5000 );
 countdown();
 
-	</script>
+</script>
 
 </body>
 </html>

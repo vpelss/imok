@@ -218,13 +218,13 @@ sub register_account(){ #get data
       $message = "$message This Email Address is already registered : $email";
       return 0;
       }
-     $filename = "$settings->{'path_to_authorizations'}$user_id";
-    if(-e $filename){
-      $message = "$message This Email Address has already requested an account. You will receive, or should have been sent an activation email to $email";
-      return 0;
-      }
+    $filename = "$settings->{'path_to_authorizations'}$user_id";
+    #if(-e $filename){
+     # $message = "$message This Email Address has already requested an account. You will receive, or should have been sent an activation email to $email";
+      #return 0;
+      #}
 
-    &write_to_log("previous registration checked");
+    #&write_to_log("previous registration checked");
 
     # $user->{'username'} = $username; #simplest case just use email as username also
     my $user;
@@ -277,7 +277,7 @@ sub encrypt_password(){
   return $password_hash;
   }
 
-sub activate(){
+sub activate_account(){
   shift;
   my $authorize_code = shift;
   my $user_id = shift;
@@ -381,6 +381,13 @@ sub logout(){
 
  $set_cookie_string = "Set-Cookie: $settings->{'token_name'}= ; Max-Age=-1 ;\nSet-Cookie: $settings->{'user_id_name'}= ; Max-Age=-1 ;";
  return $result;
+ }
+
+ sub delete_account(){
+   my $result = &logout_all_devices();
+   my $filename = "$settings->{'path_to_users'}$user_id";
+   $result = unlink($filename);
+   return $result;
  }
 
  sub logout_all_devices(){

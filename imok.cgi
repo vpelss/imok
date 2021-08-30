@@ -1,4 +1,4 @@
-#!/usr/bin/perl -d
+#!/usr/bin/perl
 
 use strict;
 use Socket;
@@ -28,8 +28,6 @@ $AuthorizeMeObj->{'settings'}->{'email_subject'} = '';#provide later
 $AuthorizeMeObj->{'settings'}->{'email_message'} = '';#provide later
 #to send, set above, then $AuthorizeMeObj->email();
 
-my $alert_email_subject = 'IMOK Alert';
-
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_subject'} = 'Password Reset - IMOK';
 $AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
 $AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
@@ -40,13 +38,16 @@ $AuthorizeMeObj->{'settings'}->{'forgot_password_email_template'} = qq(You have 
     Click the link to reset your password to <%set_password_code%>:
     https://www.emogic.com/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
     );
-$AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'} = qq(Your IMOK alert will be sent soon. You should push the IMOK button at: https://www.emogic.com/cgi/imok/imok.cgi.);
 my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/';
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
 
 $AuthorizeMeObj->{'settings'}->{'max_failed_attempts'} = 3; #password
 $AuthorizeMeObj->{'settings'}->{'lock_time'} = 15;#in minutes
+
+my $test_email_template;
+my $imnotok_email_template;
+my $pre_warn_email_template;
 
 my $email_list;
 
@@ -83,8 +84,9 @@ my $user = $AuthorizeMeObj->{'user'}; #local copy of user
 &write_to_log("checked login");
 
 $email_list = &make_email_list($user);
-$AuthorizeMeObj->{'settings'}->{'test_email_template'} = qq(This email was sent by the IMOK system as a test by $AuthorizeMeObj->{'user'}->{'email'} . Please let them know you received it.);
-$AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} = qq($AuthorizeMeObj->{'user'}->{'email'} has pushed the IM_NOT_OK button. Please check on them.);
+$test_email_template = qq(This email was sent by the IMOK system as a test by $AuthorizeMeObj->{'user'}->{'email'} . Please let them know you received it.);
+$imnotok_email_template = qq($AuthorizeMeObj->{'user'}->{'email'} has pushed the IM_NOT_OK button. Please check on them.);
+$pre_warn_email_template = qq(Your IMOK alert will be sent soon. You should push the IMOK button at: https://www.emogic.com/cgi/imok/imok.cgi.);
 
 &write_to_log("built email list: $email_list");
 
@@ -102,6 +104,7 @@ if ( $logged_in ) {#we are logged in
     if ( $command eq 'imok' ) { &imok() }
     if ( $command eq 'imnotok' ) { &imnotok() }
     if ( $command eq 'testimok' ) { &testimok() }
+    if ( $command eq 'delete_account' ) { $logged_in = ! &delete_account() }
     }
 else{#we are not logged in
     &write_to_log("not logged in");
@@ -125,10 +128,10 @@ if ( $logged_in ) {#we are logged in from cookie token or login routine
     #send trigger time to the js in main.html
     my $filename = "$AuthorizeMeObj->{'settings'}->{'path_to_users'}$user->{'user_id'}";
     my $trigger_time = &get_time_stamp($filename);
+    $output =~  s/<%trigger_time%>/$trigger_time/g; #for main page  != 0
 
     $output =~ s/<%logged_out%>/hide_me/g; #hide login, register , forgot pw
     $output =~  s/<%logged_in%>/show_me/g; #show logout, settings, reset pw
-    $output =~  s/<%trigger_time%>/$trigger_time/g; #for main page  != 0
     }
 else{
     $output =~ s/<%logged_out%>/show_me/g; #show login, register , forgot pw
@@ -204,7 +207,7 @@ elsif( ($current_time_stamp - $user->{'timeout_ms'}) > $now  ){# we are a full t
   return 1;
 }#do nothing
 
-#trigger time on users comp?
+#trigger time on users computer
 my $new_time_stamp_user_tz = $new_time_stamp + ($user->{'tz_offset_hours' } * 60 * 60);
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($new_time_stamp_user_tz);
 $mon = $mon + 1;
@@ -228,10 +231,10 @@ my $user = $AuthorizeMeObj->{'user'};
 
 $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
 $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IM(Not)OK Alert";
-$AuthorizeMeObj->{'settings'}->{'email_message'} = $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'};
+$AuthorizeMeObj->{'settings'}->{'email_message'} = $imnotok_email_template;
 my $result = $AuthorizeMeObj->email();
 &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
-$message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $AuthorizeMeObj->{'settings'}->{'imnotok_email_template'} ";
+$message = "$message sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'} : $imnotok_email_template ";
 }
 
 sub testimok(){
@@ -240,12 +243,12 @@ sub testimok(){
   my $result;
 
   $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
-  $AuthorizeMeObj->{'settings'}->{'email_subject'} = $alert_email_subject;
-  $AuthorizeMeObj->{'settings'}->{'email_message'} = $AuthorizeMeObj->{'settings'}->{'test_email_template'};
+  $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IMOK Test Email";
+  $AuthorizeMeObj->{'settings'}->{'email_message'} = $test_email_template;
   $result = $AuthorizeMeObj->email();
 
   &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
-  $message = "$message sendmail result : $result : To: $email_list : $AuthorizeMeObj->{'settings'}->{'test_email_template'}";
+  $message = "$message sendmail result : $result : To: $email_list : $test_email_template";
 }
 
 sub cron(){
@@ -258,16 +261,12 @@ sub cron(){
     my $timestamp = &get_time_stamp($filename);
 
     my $t = time();
-   # my $ts = $timestamp;
-   # my $diff = $user->{'pre_warn_time'};
-   # my $window = $timestamp - $user->{'pre_warn_time'};
-
     &write_to_log("Time is $t and timestamp is $timestamp and pretime is $user->{'pre_warn_time'} and last email sent at $user->{'last_email_sent_at'}");
 
     if( ( time() > ($timestamp - $user->{'pre_warn_time'}) ) && ($timestamp > time()) ){#send pre warn email to self
          $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
-         $AuthorizeMeObj->{'settings'}->{'email_subject'} = $alert_email_subject;
-         $AuthorizeMeObj->{'settings'}->{'email_message'} = $AuthorizeMeObj->{'settings'}->{'pre_warn_email_template'};
+         $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IMOK Alert";
+         $AuthorizeMeObj->{'settings'}->{'email_message'} = $pre_warn_email_template;
          my $result = $AuthorizeMeObj->email();
          }
     if($timestamp > time()){
@@ -282,8 +281,8 @@ sub cron(){
     # &write_to_log("Result of user db $result user $user->{'user_id'}");
     #send alert emails
     $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
-    $AuthorizeMeObj->{'settings'}->{'email_subject'} = $alert_email_subject;
-    $AuthorizeMeObj->{'settings'}->{'email_message'} = "$user->{'email_form'} </br> Alert was sent on behalf of $user->{'email'}"; #add users email at end of message in case they do not provide any identification in the email
+    $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IMOK Alert";
+    $AuthorizeMeObj->{'settings'}->{'email_message'} = "$user->{'email_form'} <p> Alert was sent on behalf of $user->{'email'} </p>"; #add users email at end of message in case they do not provide any identification in the email
     my $result = $AuthorizeMeObj->email();
     &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
     #$user->{'timestamp'} = (60 * 60) + $timestamp; #set time stamp ahead one hour. So we do not send an email for another hour
@@ -396,6 +395,10 @@ if(! $logged_in){ return 0; }
 
 	$user->{'start_date'} = $in{'start_date'};
  $user->{'start_time'} = $in{'start_time'};
+
+ if( $in{'timestamp'} eq "NaN" ){
+    $in{'timestamp'} = time();
+ }
  $user->{'start_unix_time'} = $in{'timestamp'};
  $user->{'timestamp'} = $in{'timestamp'};
  $user->{'tz_offset_hours'} = $in{'tz_offset_hours'};
@@ -435,7 +438,7 @@ sub register() {
 	my $password = $in{'password'};
 	my $result = $AuthorizeMeObj->register_account($email , $password);
  if($result == 0){
-    $message = $AuthorizeMeObj->get_message();
+    #$message = $AuthorizeMeObj->get_message();
     $message = "$message Your registration failed."
  }
  return $result;
@@ -445,7 +448,7 @@ sub activate(){
  my $authorize_code = shift;
  my $user_id = shift;
 
- my $user =  $AuthorizeMeObj->activate( $authorize_code , $user_id );
+ my $user =  $AuthorizeMeObj->activate_account( $authorize_code , $user_id );
  if(!defined($user)) {$message = "$message Your activation failed."; return 0};
 
  $user->{'email_contact_1'} = '';
@@ -510,6 +513,18 @@ sub logout_all_devices(){
   $message = "$message $user->{'email'} could not log out of all devices";
   }
  return ! $result;
+}
+
+sub delete_account(){
+ my $user = $AuthorizeMeObj->{'user'};
+ my $result =  $AuthorizeMeObj->delete_account();
+ if($result == 1){
+  $message = "$message $user->{'email'} has deleted their account";
+  }
+ else{
+  $message = "$message $user->{'email'} could not delete their account";
+  }
+ return $result;
 }
 
 sub forgot_password(){
