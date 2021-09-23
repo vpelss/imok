@@ -1,15 +1,13 @@
 # IMOK
 
-IMOK is a web based, fail safe, alarm that will email family and friends if you don't check in.
-
-This program was designed for those who live alone and do not have regular personal contact.
+IMOK is a web based, fail safe, alarm that will email your family and friends if you don't check in.
 
 Potential uses:
 
+-For those living alone and do not have regular personal contact.
 -For those who have animals or pets that may suffer or die if they pass away or became incapacitated.
 -For those who live in a remote location.
 -For those taking a long trip alone.
--For those living alone and not in regular personal contact.
 -For those planning on getting kidnapped
 
 How to use:
@@ -17,13 +15,12 @@ How to use:
 -After registering for an account, click on 'Settings'.
 -You select a 'Check In Start Date' and a 'Check In Start Time' that you will be able to 'check in' by. 
 -Then you select a 'Check In Interval'. Daily seems reasonable. 
--You can add up to three email addresses to send alerts to. 
--Alerts are sent to these email addresses if you do not click 'IMOK' before the 'Check In Time'.  
+-You can add up to three email addresses to send alerts to. You must enter at least one.
 -You will want to modify the default alert message to suit your situation. You may want to add contact numbers, instructions, etc...
 -If you push the IMOK button before the 'Check In Time' no alert will be sent to your email list, and a new 'Check In Time' is set to the next 'Check In Interval'. 
 -If you do not push the IMOK button before the 'Check In Time', an alert email will be sent to your email list every half hour until you push the IMOK button.
 
-Example: If you choose a 'Check In Start Date' of 10 Sept 2021 and a 'Check In Start Time' of 9am and a 'Check In Interval' of one day, every time you push the IMOK button the program will set the 'Check In Time' to 9 am the next day.
+Example: If you choose a 'Check In Start Date' of 10 Sept 2021 and a 'Check In Start Time' of 9am and a 'Check In Interval' of one day, every time you push the IMOK button your  'Check In Time' will be reset to 9 am the next day.
 
 You can test it at:
 
