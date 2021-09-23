@@ -1,20 +1,14 @@
 # imok
 
-A web based application that alerts family and friends if you don't check in.
+IMOK is a web based, fail safe, alarm that will email family and friends if you don't check in.
 
-The idea for this program came to me after a relative had passed away and was not found for 7 days.
+This program was designed for those who live alone and do not have regular personal contact.
 
-This program was designed for those who live alone.
-It is a fail safe alarm that will alert friends or family by email if you do not report in.
 Potential uses:
-
--For those who worry their animals or pets may suffer or die if their owner passed away or became incapacitated.
-
+-For those who worry their animals or pets may suffer or die if they pass away or became incapacitated.
 -For those who live in a remote location.
-
--For someone taking a long trip alone.
-
--For those living alone and not in regular contact with anyone.
+-For those taking a long trip alone.
+-For those living alone and not in regular personal contact.
 
 You can add up to three email addresses to send alerts to.
 You select a start date and time. Then you select a Countdown time. Daily seems reasonable.
@@ -36,6 +30,9 @@ This is a proof of concept script. Don't risk your life on it.
 
 It also comes with a simple PERL Module, AuthorizeMe, that takes care of the account registration, password management, tokens, etc.
 It also has methods you can use to easily save and retrieve database information (hash, array or scalars) in a text flat file format.
+
+The idea for this program came to me after a relative had passed away and was not found for 7 days.
+
 
 Possible to do list:
 
