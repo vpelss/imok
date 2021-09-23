@@ -10,8 +10,12 @@ Potential uses:
 -For those taking a long trip alone.
 -For those living alone and not in regular personal contact.
 
+How to use:
+
+After registering for an account, click on 'Settings'.
+You select a 'Start Date' and a 'Start Time' that you will be able to 'check in' by. 
+Then you select a 'Countdown Time'. Daily seems reasonable. Once the 'Start Date' and 'Start Time' are set, the timer counts down to the The Co
 You can add up to three email addresses to send alerts to.
-You select a start date and time. Then you select a Countdown time. Daily seems reasonable.
 If you do not push the IMOK button before the Countdown time, it will send an email message to all your addressees.
 When you push the IMOK button, it adds the Countdown time to the current Alert time.
 
