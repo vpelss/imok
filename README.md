@@ -13,10 +13,10 @@ Potential uses:
 How to use:
 
 -After registering for an account, click on 'Settings'.
--You select a 'Check In Start Date' and a 'Check In Start Time' that you will be able to 'check in' by. 
--Then you select a 'Check In Interval'. Daily seems reasonable. 
--You can add up to three email addresses to send alerts to. You must enter at least one.
--You will want to modify the default alert message to suit your situation. You may want to add contact numbers, instructions, etc...
+-Select a 'Check In Start Date' and a 'Check In Start Time' that you will be able to 'check in' by. 
+-Select a 'Check In Interval'. Daily seems reasonable. 
+-Add up to three email addresses to send alerts to. You must enter at least one.
+-Modify the default alert message to suit your situation. Add contact numbers, instructions, etc...
 -If you push the IMOK button before the 'Check In Time' no alert will be sent to your email list, and a new 'Check In Time' is set to the next 'Check In Interval'. 
 -If you do not push the IMOK button before the 'Check In Time', an alert email will be sent to your email list every half hour until you push the IMOK button.
 
