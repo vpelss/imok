@@ -1,6 +1,6 @@
 # IMOK
 
-#ABOUT
+# ABOUT
 
 IMOK is a web based, fail safe, alarm that will email your family and friends if you don't check in.
 
@@ -12,7 +12,7 @@ Potential uses:
 -For those taking a trip alone.
 -For those planning on getting kidnapped
 
-#HELP
+# HELP
 
 -After registering for an account, click on 'Settings'.
 -Select a 'Check In Start Date' and a 'Check In Start Time' that you will be able to 'check in' by. 
