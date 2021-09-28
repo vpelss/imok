@@ -14,6 +14,7 @@ Potential uses:
 
 # HELP
 
+-Some options are accessed from the hamburger icon.
 -After registering for an account, click on 'Settings'.
 -Select a 'Check In Start Date' and a 'Check In Start Time' that you will be able to 'check in' by. 
 -Select a 'Check In Interval'. Daily seems reasonable. 
