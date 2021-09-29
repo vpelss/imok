@@ -16,7 +16,7 @@ Potential uses:
 
 -Some options are accessed from the hamburger icon.
 -After registering for an account, click on 'Settings'.
--Select a 'Check In Start Date' and a 'Check In Start Time' that you will be able to 'check in' by. 
+-Select a 'Check In Start Date' and a 'Check In Start Time' that you will be able to 'Check In' by. 
 -Select a 'Check In Interval'. Daily seems reasonable. 
 -Add up to three email addresses to send alerts to. You must enter at least one.
 -Modify the default alert message to suit your situation. Add contact numbers, instructions, etc...
