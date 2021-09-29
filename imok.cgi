@@ -7,7 +7,7 @@ use AuthorizeMe;
 
 my %in;
 
-my $path_to_templates = './templates';
+my $path_to_templates = './';
 
 #create and initialize AutorizeMe
 my $AuthorizeMeObj = AuthorizeMe->new();
@@ -66,6 +66,13 @@ sub make_email_list(){
 }
 
 sub main(){
+my @directories = ('authorizations' , 'tokens' , 'users');
+foreach my $directory (@directories){
+   unless(-e $directory or mkdir $directory) {
+          die "Unable to create $directory\n";
+      }
+}
+
 if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit.
 
 %in = &parse_form();
