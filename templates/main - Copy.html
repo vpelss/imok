@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html  >
+<head>
+	<title>IMOK : Not Lost!</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="stylesheet" href="styles.css ">
+</head>
+
+<body >
+
+	<h4 class='center'>IMOK, not Lost</h4>
+
+<input name="difference" type="hidden" value="<%difference%>" id="difference">
+<input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
+
+<div  class='<%logged_in%> center'>
+		<form id="form_login" action="./imok.cgi" method="post" name="form_login">
+			<input name="command" type="hidden" value="imok" id="command_login">
+			<p><input type="submit" value="IMOK"  title="You are ok for theis interval. This will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm)."></p>
+		</form>
+</div>
+
+<b><font color='red'><div class='<%logged_in%> center' id='countdown'>00:00:00</div></font></b>
+
+<div class='center' >
+		<h2><%last_message%></h2>
+</div>
+
+<div class='<%logged_out%>'>
+<table width='90%'  class='center'><tr>
+	<td width='50%'><a href="login.html">Login</a></td>
+	<td width='50%'><a href="register.html" >Register for account</a></td>
+</tr></table>
+<br>
+<table width='90%' class='center'><tr>
+	<td width='50%'><a href="forgot_password.html">Forgot Password</a></td>
+	<td width='50%'><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'>About</a></td>
+</tr></table>
+<br>
+</div>
+
+<div class='<%logged_in%> center' >
+<a href="./imok.cgi?command=get_settings">Settings</a>
+<br><br>
+<table width='90%'  class='center'><tr>
+	<td width='50%'><a href="./imok.cgi?command=logout">Logout</a></td>
+	<td width='50%'><a href="./imok.cgi?command=logout_all_devices">Logout all devices</a></td>
+</tr></table>
+<br>
+<table width='90%'  class='center'><tr>
+	<td width='50%'>	<a href="reset_password.html">Reset Password</a></td>
+	<td width='50%'><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'>About</a></td>
+</tr></table>
+</div>
+
+<div	class='<%logged_in%> center'>
+		<form id="form_login2" action="./imok.cgi" method="post" name="form_login2">
+			<input name="command" type="hidden" value="imnotok" id="command_login2">
+			<p><input type="submit" value="IM NOT OK" title="You are NOT ok for theis interval. This will immediately send the alert email to your alert list."></p>
+		</form>
+</div>
+
+<div  class='<%logged_in%> center' >
+		<form id="form_login3" action="./imok.cgi" method="post" name="form_login3">
+			<input name="command" type="hidden" value="testimok" id="command_login3">
+			<p><input type="submit" value="Send a Test Email." title="Send a test email to your alert list."></p>
+		</form>
+</div>
+
+<div  class='<%logged_in%> center'>
+		<form id="form_login4" action="./imok.cgi" method="post" name="form_login4">
+			<input name="command" type="hidden" value="delete_account" id="command_login">
+			<p><input type="submit" value="Delete Account" title="Delete Account" onclick='test_delete();'></p>
+		</form>
+</div>
+
+<div  class='<%logged_in%> center'>
+		<form id="form_login5" action="./imok.cgi" method="post" name="form_login5">
+			<input name="command" type="hidden" value="cron" id="cron">
+			<p><input type="submit" value="cron" title="Simulate cron."></p>
+		</form>
+</div>
+
+<div class='center'>Code is here:
+</br>
+<a href='https://github.com/vpelss/imok' target='_blank'>https://github.com/vpelss/imok</a>
+</div>
+
+<script>
+
+function test_delete(){
+	if( confirm("Are you sure you want to delete your account?") ){return 1;}else{return 0;}
+}
+
+var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
+
+function countdown() {
+		var now = Date.now();
+		var difference = trigger_time - now;
+		var difference_seconds = difference / 1000;
+		if(difference <= 0) {
+			document.getElementById('countdown').innerHTML = "Timeout exceeded. Alerts are being sent.";
+			}
+		else{
+			var days = Math.floor( difference_seconds / (60 * 60 * 24) );
+			var day_seconds =  days * (60 * 60 * 24);
+			difference_seconds = difference_seconds - day_seconds;
+			var hours = Math.floor( difference_seconds / (60 * 60) );
+			var hour_seconds = hours * (60 * 60);
+			difference_seconds = difference_seconds - hour_seconds;
+			var minutes = Math.floor( difference_seconds / (60) );
+			var minute_seconds = minutes * (60);
+			difference_seconds = Math.floor( difference_seconds - minute_seconds );
+
+			var countdown_string = 'Alert in<br>' + days + ' days ' + hours + ' hours ' + minutes + ' minutes ' + difference_seconds + ' seconds';
+			document.getElementById('countdown').innerHTML = countdown_string;
+			}
+
+}
+
+setInterval( countdown , 5000 * 3 ); //update every 15 seconds
+countdown();
+
+</script>
+
+</body>
+</html>

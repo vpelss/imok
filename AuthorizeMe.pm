@@ -26,7 +26,7 @@ my $user_id; #made from $email, stored in cookie, or passed in argument in a fro
 my $token;
 my $random_number_size = 1000000000;
 my $set_cookie_string = ""; #calling program can use get_set_cookie_string
-my $message = ''; #used for &get_last_message()
+my $message = ''; #used for &get_message()
 
 #determined by calling program. we are a module and code is inaccessible
 #my $settings->{'path_to_users'};
@@ -535,7 +535,8 @@ sub parse_form
 sub valid_email{
   my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
-  my $username = qr/[a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?/;
+  #my $username = qr/[a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?/;
+  my $username = qr/[a-z0-9_+]([a-z0-9_+\-.]*[a-z0-9_+])?/;
   my $domain   = qr/[a-z0-9.-]+/;
   #my $regex = $email =~ /^$username\@$domain$/;
 
@@ -559,7 +560,18 @@ sub email(){
   my $reply = $settings->{'email_reply'};
   my $to = $settings->{'email_to'};
   my $subject = $settings->{'email_subject'};
-  my $message = $settings->{'email_message'};
+  my $email_message = $settings->{'email_message'};
+
+  my @server_message;
+  push  @server_message , "From: $from\n";
+  push  @server_message , "Sender: $from\n";
+  push  @server_message , "To: $to\n";
+  push  @server_message , "Reply: $reply\n";
+  push  @server_message , "Subject: $subject\n";
+  push  @server_message , "Content-Type: text/html\n";
+  push  @server_message , "MIME-Version: 1.0\n";
+  push  @server_message , "\n";
+  push  @server_message , "$email_message";
 
 if ($smtp_server ne ""){
   my %options;
@@ -573,20 +585,15 @@ if ($smtp_server ne ""){
   my @recipients = split(/,/, $to);
   my @goodrecips = $smtp->recipient( @recipients , { Notify => ['FAILURE'], SkipBad => 1 }) || return $!;  # Good
 
-  $smtp->data() || return $!;
-  $smtp->datasend("To: $to");
-  $smtp->datasend("\n");
-  $smtp->datasend("From: $from");
-  $smtp->datasend("\n");
-  $smtp->datasend("Reply: $reply");
-  $smtp->datasend("\n");
-  $smtp->datasend("Subject: $subject");
-  $smtp->datasend("\n");
-  $smtp->datasend("Content-Type: text/html");
-    $smtp->datasend("\n");
-  $smtp->datasend("MIME-Version: 1.0");
-  $smtp->datasend("\n");
-  $smtp->datasend ($message);
+  $smtp->data(@server_message) || return $!;
+
+=pod
+ $smtp->data() || return $!;
+ foreach ( @server_message ) {
+    $smtp->datasend ($_);
+    }
+=cut
+
   $smtp->dataend;
   $smtp->quit;
   return 1;
@@ -595,34 +602,23 @@ if ($smtp_server ne ""){
 #try sendmail
 if ($sendmail ne ""){
    open(MAIL, "|$sendmail");
-   print MAIL "To: $to\n";
-   print MAIL "From: $from\n";
-   print MAIL "Subject: $subject\n\n";
-   print MAIL "Content-Type: text/html";
-   print MAIL "MIME-Version: 1.0";
-   print MAIL $message;
+   foreach ( @server_message ) {
+     print MAIL $_;
+     }
+   #print MAIL "From: $from\n";
+   #print MAIL "To: $to\n";
+   #print MAIL "Subject: $subject\n";
+   #print MAIL "Content-Type: text/html\n";
+   #print MAIL "MIME-Version: 1.0\n";
+   #print MAIL "\n$message";
   if ( close(MAIL) ) {
      return 1;
      }  else {
      return $!;
      }
-   #return 1;
    }
 
  return 0;
-
-=pod
-    $to =~ s/[ \t]+/, /g; # pack spaces and add comma
-    $from =~ s/.*<([^\s]*?)>/$1/; # get from email address
-    $reply =~ s/.*<([^\s]*?)>/$1/; # get reply email address
-    $reply =~ s/^([^\s]+).*/$1/; # use first address
-    $message =~ s/^\./\.\./gm; # handle . as first character
-    $message =~ s/\r\n/\n/g; # handle line ending
-    $message =~ s/\n/\r\n/g;
-    $sendmail =~ s/^\s+//g; # remove spaces around $smtp
-    $sendmail =~ s/\s+$//g;
-=cut
-
 }
 
 sub write_to_log(){

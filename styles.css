@@ -1,34 +1,142 @@
+body {
+	margin: 0;
+	abackground: #1e3c72;
+	abackground: -webkit-linear-gradient(to right, #2a5298, #1e3c72);
+	abackground: linear-gradient(to right, #2a5298, #1e3c72);
+}
+
+#burger-menu {
+	cursor: pointer;
+	height: 27px;
+	width: 27px;
+	margin: 50px;
+	overflow: visible;
+	position: relative;
+	z-index: 2;
+}
+
+#burger-menu span,
+#burger-menu span:before,
+#burger-menu span:after {
+	background: #00cc00;
+	display: block;
+	height: 2px;
+	opacity: 1;
+	position: absolute;
+	transition: 0.3s ease-in-out;
+}
+
+#burger-menu span:before,
+#burger-menu span:after {
+	content: "";
+}
+
+#burger-menu span {
+	right: 0px;
+	top: 13px;
+	width: 27px;
+}
+
+#burger-menu span:before {
+	left: 0px;
+	top: -10px;
+	width: 27px;
+}
+
+#burger-menu span:after {
+	left: 0px;
+	top: 10px;
+	width: 27px;
+}
+
+#burger-menu.close span {
+	transform: rotate(-45deg);
+	top: 13px;
+	width: 27px;
+}
+
+#burger-menu.close span:before {
+	top: 0px;
+	transform: rotate(90deg);
+	width: 27px;
+}
+
+#burger-menu.close span:after {
+	top: 0px;
+	left: 0;
+	transform: rotate(90deg);
+	opacity: 0;
+	width: 0;
+}
+
+#menu {
+	overflow: scroll;
+	z-index: 1;
+	min-width: 100%;
+	min-height: 100%;
+	position: fixed;
+	top: 0;
+	height: 0;
+	visibility: hidden;
+	opacity: 1;
+	text-align: center;
+	padding-top: 20px;
+	transition: all 0.3s ease-in-out;
+}
+
+#menu.overlay {
+	visibility: visible;
+	opacity: 1;
+	padding-top: 100px;
+	background: rgba(00,00,00,1);
+}
+
+#menu li {
+	list-style: none;
+}
+
+#menu a {
+	color: #fff;
+	display: block;
+	font-size: 4vw;
+	_font-size: 32px;
+	margin-bottom: 30px;
+	text-decoration: none;
+}
+
 .show_me {
-	}
+}
 
 .hide_me {
 	display: none;
-	}
-
-@media (orientation: landscape) {
-	*{
-		font-size: 4vw;
-	}
 }
 
-@media (orientation: portrait) {
-	*{
-		font-size: 4vw;
-	}
+* {
+	font-size: 4vw;
 }
 
-.ckcontent{
-	font-size: 2vw;
+.left {
+	text-align: left;
 }
 
-.left{
-	text-align:left;
+.right {
+	text-align: right;
 }
 
-.right{
-	text-align:right;
-}
-
-.center{
+.center {
 	text-align: center;
+}
+
+button {
+}
+
+@media (hover: none) {
+
+	* {
+		font-size: 4vw;
+	}
+
+	button {
+		font-size: 4vw;
+	}
 }

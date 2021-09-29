@@ -1,35 +1,31 @@
 <html>
 <head>
-	<title>IMOK : Not Lost!</title>
+	<title>IMOK</title>
 	<meta http-equiv="Cache-Control" content="no-store">
 	<meta http-equiv="Cache-Control: max-age=0">
-
 	<link rel="stylesheet" href="styles.css">
 
 </head>
 
 <body align="center">
 
-<h4>Settings</h4>
+<h3>Settings</h3>
+<font color='red'><h4>Set all settings then click 'Save'</h4></font>
 
 <form id='form_login' action='./imok.cgi'  method="post">
 	<input name="command" type="hidden" value="set_settings" id='command_login'>
 	<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
 	<input name="timestamp" type="hidden" value="" id='timestamp'>
 
-	<p>Email Contact 1:<br><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>' autofocus> </p>
-	<p>Email Contact 2:<br><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
-	<p>Email Contact 3:<br><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
+		<p><label for="start_date">Check In Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'></p>
+	<p><label for="start_time">Check In Start Time</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'></p>
 
 	<p>Alert Mail Message:
 	</br>
 	<textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
 
-	<p><label for="start_date">Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>' onchange='calc_date();'></p>
-	<p><label for="start_time">Start Time</label> <input type="time" id="start_time" name="start_time" value="<%start_time%>" onchange='calc_date();'></p>
-
 	<p>
-<label for="time_out">Countdown Time. Every </label>
+<label for="time_out">Check In Interval . Every </label>
 <select name="time_out" id="time_out" value="<%time_out%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
@@ -42,8 +38,12 @@
 </select>	days. It is currently set to <b><%time_out%></b> days. Defaults is 1 day. Change drop down if required!
 				 </p>
 
+<p>Email Contact 1:<br><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>' autofocus> </p>
+	<p>Email Contact 2:<br><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
+	<p>Email Contact 3:<br><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
+
 	<p>
-<label for="time_out">Pre Warn Time </label>
+<label for="time_out">Check In Pre Warn Time </label>
 <select name="pre_warn_time" id="pre_warn_time" value="<%pre_warn_time%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
@@ -56,7 +56,7 @@
 </select>	hours. It is currently set to <b><%pre_warn_time%></b> hours. Defaults is 1 hour. Change drop down if required!
 				 </p>
 
-<p><input type='submit' onclick="calc_date();"> </p>
+<p><input type='submit' value='Save' onclick="return(calc_date());"> </p>
 
 	</form>
 
@@ -65,6 +65,7 @@
 	<script>
 	function calc_date()
 	{
+		//convert yyyy-mm-dd and hh:mm to epoch time to send to server
 	const date1 = new Date();
 	var tz_offset_hours = date1.getTimezoneOffset() / 60 ;
 	document.getElementById("tz_offset_hours").value = -tz_offset_hours;
@@ -74,7 +75,7 @@
 	var year = date_ip[0];
 	var month = parseInt(date_ip[1]) - 1; //months start at 0 in Date.UTC
 	var day = date_ip[2];
-	var start_time = document.getElementById("start_time").value;
+	var start_time = document.getElementById("start_time").value;//gives us hh:mm
 	var time_ip = start_time.split(':');
 	var hour = time_ip[0];
 	var minute = time_ip[1];
@@ -86,8 +87,13 @@
 		//return 0;
 		}
 
+		if( start_date == '' || start_time == '' || document.getElementById("email1").value == '' ){
+				alert("You must set 'Check In Start Date', 'Check In Start Time', and at least 'Email Contact 1'.");
+				return false;
+		}
+
 	document.getElementById("timestamp").value = start_UTC; //set time stamp value to send to server
-	return 1;
+	return true;
 	}
 
 </script>

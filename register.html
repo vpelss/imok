@@ -1,23 +1,24 @@
-<HTML>
-
+<html>
 <head>
-	<title>IMOK : Not Lost!</title>
-
-	<link rel="stylesheet" href="styles.css">
-
+	<title>IMOK</title>
+	<link rel="stylesheet" href="styles.css" type="text/css">
 </head>
 
 <body align="center">
+	<p>&nbsp;</p>
 
-	 <H4>Register</H4>
-	 <FORM ID="form_register" action='./imok.cgi' method='post'>
-		<INPUT NAME="command" TYPE="hidden" VALUE="register" ID="command_register">
-		<P><INPUT TYPE="text" NAME="email" ID="email_register" placeholder='email' autofocus> </P>
-		<P><INPUT TYPE="password" NAME="password" ID="password_register" placeholder='password'> </P>
-		<P><INPUT TYPE="SUBMIT" VALUE="Register"> </P>
-		</FORM>
+	<h4>Register</h4>
 
-	 <p><a href='imok.cgi'><input type='button' value='Cancel'></a></p>
+	<form id="form_register" action='./imok.cgi' method='post'>
+		<input name="command" type="hidden" value="register" id="command_register">
 
-	</body>
-</HTML>
+		<p><input type="text" name="email" id="email_register" placeholder='email' autofocus=""></p>
+
+		<p><input type="password" name="password" id="password_register" placeholder='password'></p>
+
+		<p><input type="submit" value="Register"></p>
+	</form>
+
+	<p><a href='imok.cgi'><input type='button' value='Cancel'></a></p>
+</body>
+</html>

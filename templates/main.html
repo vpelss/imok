@@ -1,96 +1,91 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-
-<html  >
+<html>
 <head>
-	<title>IMOK : Not Lost!</title>
-	<link rel="stylesheet" href="styles.css ">
+	<title>IMOK</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./styles.css">
 </head>
 
-<body >
+<body width='80%'>
 
-	<h4 class='center'>IMOK, not Lost</h4>
+<!-- https://codepen.io/joesayegh/pen/jOEVPKO -->
+<!-- try https://dev.to/ljcdev/easy-hamburger-menu-with-js-2do0  -->
+
+<table><tr>
+<td><div id="burger-menu"><span></span></div></td>
+<td width='100%'><h4 class=''>IMOK</h4></td>
+</tr></table>
+
+<div id="menu">
+    <ul>
+
+					<div class="center <%logged_in%>">
+						<li><a href="./imok.cgi?command=get_settings"><button type="button" onclick="">Settings</button></a></li>
+						<li><a href="./imok.cgi?command=logout" onclick="return confirm('Logout. Are you sure?');"><button type="button" >Logout</button></a></li>
+						<li><a href="./imok.cgi?command=logout_all_devices" onclick="return confirm('Logout all devices. Are you sure?');"><button type="button" >Logout all devices</button></a></li>
+						<li><a href="./reset_password.html"><button type="button" onclick="">Reset Password</button></a></li>
+						<li><a href="./imok.cgi?command=delete_account" onclick="return confirm('Delete account. Are you sure?');"><button type="button" >Delete Account</button></a></li>
+						<li><a href="./imok.cgi?command=testimok"><button type="button">Test IMOK</button></a></li>
+						<li><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" target="_blank"><button type="button" onclick="">About / Help</button></a></li>
+
+						<li><a href="#">&nbsp;</a></li> <!--need so we can see last menu item on scroll-->
+					</div>
+
+					<div class="center <%logged_out%>">
+							<li><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'><button type="button" onclick="">About / Help</button></a></li>
+					</div>
+
+				</ul>
+</div>
 
 <input name="difference" type="hidden" value="<%difference%>" id="difference">
 <input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
 
-<div  class='<%logged_in%> center'>
-		<form id="form_login" action="./imok.cgi" method="post" name="form_login">
-			<input name="command" type="hidden" value="imok" id="command_login">
-			<p><input type="submit" value="IMOK"  title="You are ok for theis interval. This will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm)."></p>
-		</form>
+<div class='center <%logged_in%>' >
+<a href="./imok.cgi?command=imok" title="You are ok for theis interval. his will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm)."><button type="button" onclick="">IM OK</button></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </div>
+</br>
 
+<b><div class='<%logged_in%> center'>Next Check In:</div></b>
+<b><font color='red'><div class='<%logged_in%> center'><%check_in_date%> <%check_in_time%></div></font></b>
 <b><font color='red'><div class='<%logged_in%> center' id='countdown'>00:00:00</div></font></b>
 
 <div class='center' >
-		<h2><%last_message%></h2>
+	<h2><%last_message%></h2>
 </div>
 
-<div class='<%logged_out%>'>
-<table width='90%'  class='center'><tr>
-	<td width='50%'><a href="login.html">Login</a></td>
-	<td width='50%'><a href="register.html" >Register for account</a></td>
-</tr></table>
-<br>
-<table width='90%' class='center'><tr>
-	<td width='50%'><a href="forgot_password.html">Forgot Password</a></td>
-	<td width='50%'><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'>About</a></td>
-</tr></table>
-<br>
+<div class="center <%logged_out%>">
+<a href="./login.html"><button type="button" onclick="">Login</button></a></br></br>
+<a href="./register.html" ><button type="button" onclick="">Register for account</button></a></br></br>
+<a href="./forgot_password.html"><button type="button" onclick="">Forgot Password</button></a></br></br>
+<a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" class="center" onclick='' target='_blank'><button type="button" onclick="">About / Help</button></a>
 </div>
 
-<div class='<%logged_in%> center' >
-<a href="./imok.cgi?command=get_settings">Settings</a>
-<br><br>
-<table width='90%'  class='center'><tr>
-	<td width='50%'><a href="./imok.cgi?command=logout">Logout</a></td>
-	<td width='50%'><a href="./imok.cgi?command=logout_all_devices">Logout all devices</a></td>
-</tr></table>
-<br>
-<table width='90%'  class='center'><tr>
-	<td width='50%'>	<a href="reset_password.html">Reset Password</a></td>
-	<td width='50%'><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'>About</a></td>
-</tr></table>
-</div>
-
-<div	class='<%logged_in%> center'>
-		<form id="form_login2" action="./imok.cgi" method="post" name="form_login2">
-			<input name="command" type="hidden" value="imnotok" id="command_login2">
-			<p><input type="submit" value="IM NOT OK" title="You are NOT ok for theis interval. This will immediately send the alert email to your alert list."></p>
-		</form>
-</div>
-
-<div  class='<%logged_in%> center' >
-		<form id="form_login3" action="./imok.cgi" method="post" name="form_login3">
-			<input name="command" type="hidden" value="testimok" id="command_login3">
-			<p><input type="submit" value="Send a Test Email." title="Send a test email to your alert list."></p>
-		</form>
-</div>
-
-<div  class='<%logged_in%> center'>
-		<form id="form_login4" action="./imok.cgi" method="post" name="form_login4">
-			<input name="command" type="hidden" value="delete_account" id="command_login">
-			<p><input type="submit" value="Delete Account" title="Delete Account" onclick='test_delete();'></p>
-		</form>
-</div>
-
-<div  class='<%logged_in%> center'>
-		<form id="form_login5" action="./imok.cgi" method="post" name="form_login5">
-			<input name="command" type="hidden" value="cron" id="cron">
-			<p><input type="submit" value="cron" title="Simulate cron."></p>
-		</form>
-</div>
-
-<div class='center'>Code is here:
+<div class="center <%logged_in%>">
+<a href="./imok.cgi?command=imnotok" title="You are NOT ok for theis interval. This will immediately send an alert email to your alert list."><button type="button" onclick="return confirm('Send IMNOTOK. Are you sure?');">IM NOT OK</button></a></br>
 </br>
+<a href="./imok.cgi?command=cron"><button type="button" onclick="">cron : vince test only</button></a></br>
+</div>
+
+<p> </p>
+
+<div class='center'>
 <a href='https://github.com/vpelss/imok' target='_blank'>https://github.com/vpelss/imok</a>
 </div>
 
 <script>
+var burgerMenu = document.getElementById('burger-menu');
+var overlay = document.getElementById('menu');
+burgerMenu.addEventListener('click',function(){
+  this.classList.toggle("close");
+  overlay.classList.toggle("overlay");
+});
 
-function test_delete(){
-	if( confirm("Are you sure you want to delete your account?") ){return 1;}else{return 0;}
-}
+//stop repost
+//if ( window.history.replaceState ) {
+    //window.history.replaceState( null, null, window.location.href );
+  //  }
+//window.history.replaceState({}, document.title, "/cgi/imok/imok.cgi" + ""); //kill both post and get repost
+window.history.replaceState(null, "", location.href.split("?")[0]);  //kill both post and get re-posts
 
 var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
 
@@ -112,7 +107,7 @@ function countdown() {
 			var minute_seconds = minutes * (60);
 			difference_seconds = Math.floor( difference_seconds - minute_seconds );
 
-			var countdown_string = 'Alert in<br>' + days + ' days ' + hours + ' hours ' + minutes + ' minutes ' + difference_seconds + ' seconds';
+			var countdown_string = '' + days + ' days ' + hours + ' hours ' + minutes + ' minutes ' + difference_seconds + ' seconds';
 			document.getElementById('countdown').innerHTML = countdown_string;
 			}
 

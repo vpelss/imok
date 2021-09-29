@@ -17,10 +17,10 @@ $AuthorizeMeObj->{'settings'}->{'token_max-age'} = '3153600000'; #string time in
 $AuthorizeMeObj->{'settings'}->{'user_id_name'} = 'imok_user_id'; #will show up in cookie
 
 $AuthorizeMeObj->{'settings'}->{'email_sendmail'} = '/usr/lib/sendmail -t';
-$AuthorizeMeObj->{'settings'}->{'email_smtp_server'} = 'localhost';
-$AuthorizeMeObj->{'settings'}->{'email_smtp_port'} = '25';
+$AuthorizeMeObj->{'settings'}->{'email_smtp_server'} = ''; #mail.emogic.com
+$AuthorizeMeObj->{'settings'}->{'email_smtp_port'} = '25'; #26
 $AuthorizeMeObj->{'settings'}->{'email_smtp_helo'} = 'emogic.com';
-$AuthorizeMeObj->{'settings'}->{'email_from'} = 'IMOK<imok@emogic.com>';
+$AuthorizeMeObj->{'settings'}->{'email_from'} = 'imok@emogic.com';
 $AuthorizeMeObj->{'settings'}->{'email_reply'} = 'imok@emogic.com';
 #later
 $AuthorizeMeObj->{'settings'}->{'email_to'} = '';#provide later
@@ -118,7 +118,7 @@ else{#we are not logged in
     if ( $command eq 'set_password' ) { &set_password($in{'user_id'} , $in{'set_password_code'}); }#from link sent by &forgot_password
     }
 
-if( $user->{'first_login'} == 1 ) {
+if(  ($logged_in == 1) && ($user->{'first_login'} == 1) ) {#force user to see settings page
        $output = &get_settings($user)
       }
 
@@ -129,6 +129,11 @@ if ( $logged_in ) {#we are logged in from cookie token or login routine
     my $filename = "$AuthorizeMeObj->{'settings'}->{'path_to_users'}$user->{'user_id'}";
     my $trigger_time = &get_time_stamp($filename);
     $output =~  s/<%trigger_time%>/$trigger_time/g; #for main page  != 0
+
+     my $check_in_date = $user->{'start_date'};
+     my $check_in_time = $user->{'start_time'};
+     $output =~  s/<%check_in_date%>/$check_in_date/g;
+     $output =~  s/<%check_in_time%>/$check_in_time/g;
 
     $output =~ s/<%logged_out%>/hide_me/g; #hide login, register , forgot pw
     $output =~  s/<%logged_in%>/show_me/g; #show logout, settings, reset pw
@@ -143,6 +148,8 @@ my $AuthMessage = $AuthorizeMeObj->get_message();
 $message = "$message $AuthMessage";
 $output =~  s/<%last_message%>/$message/g;
 my $set_cookie_string = $AuthorizeMeObj->get_set_cookie_string();
+#print "Status: 303\n";
+#print "Location: ./login.html\n";
 print "Content-type: text/html\n";
 print "Cache-Control: max-age=0\n";
 print "Cache-Control: no-store\n";
@@ -238,6 +245,9 @@ $message = "$message sendmail result : $result : $user->{'email_contact_1'} : $u
 }
 
 sub testimok(){
+ $AuthorizeMeObj->{'settings'}->{'email_smtp_server'} = 'mail.emogic.com'; #mail.emogic.com
+ $AuthorizeMeObj->{'settings'}->{'email_smtp_port'} = '26'; #26
+
   my $logged_in = $AuthorizeMeObj->AmILoggedIn();
   my $user = $AuthorizeMeObj->{'user'};
   my $result;
@@ -248,13 +258,16 @@ sub testimok(){
   $result = $AuthorizeMeObj->email();
 
   &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
-  $message = "$message sendmail result : $result : To: $email_list : $test_email_template";
+
+  $message = $AuthorizeMeObj->get_message();
+  $message = "mail result : $result : To: $email_list : $test_email_template";
 }
 
 sub cron(){
   &write_to_log("start of cron");
   my @filenames = glob("$path_to_users*");#get the list of files in the users directory
   foreach my $filename (@filenames){
+   #$message = '';
     &write_to_log("Looking at $filename");
 				my $user = $AuthorizeMeObj->db_to_hash($filename); #open file get details
     $email_list = &make_email_list($user);
@@ -263,8 +276,8 @@ sub cron(){
     my $t = time();
     &write_to_log("Time is $t and timestamp is $timestamp and pretime is $user->{'pre_warn_time'} and last email sent at $user->{'last_email_sent_at'}");
 
-    if( ( time() > ($timestamp - $user->{'pre_warn_time'}) ) && ($timestamp > time()) ){#send pre warn email to self
-         $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
+    if( ( time() > ($timestamp - $user->{'pre_warn_time'}) ) && ($timestamp > time()) ){#send prewarn email to self
+         $AuthorizeMeObj->{'settings'}->{'email_to'} = $user->{'email'};
          $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IMOK Alert";
          $AuthorizeMeObj->{'settings'}->{'email_message'} = $pre_warn_email_template;
          my $result = $AuthorizeMeObj->email();
@@ -283,6 +296,7 @@ sub cron(){
     $AuthorizeMeObj->{'settings'}->{'email_to'} = $email_list;
     $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IMOK Alert";
     $AuthorizeMeObj->{'settings'}->{'email_message'} = "$user->{'email_form'} <p> Alert was sent on behalf of $user->{'email'} </p>"; #add users email at end of message in case they do not provide any identification in the email
+    #my $uu = $AuthorizeMeObj->{'settings'}->{'email_message'} ;
     my $result = $AuthorizeMeObj->email();
     &write_to_log("sendmail result : $result : $user->{'email_contact_1'} : $user->{'email'}");
     #$user->{'timestamp'} = (60 * 60) + $timestamp; #set time stamp ahead one hour. So we do not send an email for another hour
@@ -292,8 +306,8 @@ sub cron(){
     #$AuthorizeMeObj->hash_to_db($user , $filename); #save file
     #&change_time_stamp($timestamp , $filename);#restore old time stamp : so db update does not change it.
 
-    $message = "$message $AuthorizeMeObj->{'settings'}->{'email_message'}";
-    &write_to_log("$filename Alert to $email_list at $t : $message");
+    #$message = "$message $AuthorizeMeObj->{'settings'}->{'email_message'}";
+    &write_to_log("$filename Alert to $email_list at $t :  $AuthorizeMeObj->{'settings'}->{'email_message'}");
     }
 &write_to_log("end of cron");
 }
@@ -360,8 +374,9 @@ sub set_settings(){
 my $logged_in = $AuthorizeMeObj->AmILoggedIn();
 my $user = $AuthorizeMeObj->{'user'};
 if(! $logged_in){ return 0; }
- my $email = $in{'email_contact_1'};
- if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
+$user->{'first_login'} = 0; #clear this
+my $email = $in{'email_contact_1'};
+if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_1'} = $email;
  }
  else{
@@ -402,8 +417,6 @@ if(! $logged_in){ return 0; }
  $user->{'start_unix_time'} = $in{'timestamp'};
  $user->{'timestamp'} = $in{'timestamp'};
  $user->{'tz_offset_hours'} = $in{'tz_offset_hours'};
-
- $user->{'first_login'} = 0; #clear this
 
  my $user_id = $AuthorizeMeObj->get_user_id();  #get_user_id
 
