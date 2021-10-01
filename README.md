@@ -24,7 +24,7 @@ Potential uses:
 -If you do not push the IMOK button before the 'Check In Time', an alert email will be sent to your email list every half hour until you push the IMOK button.
 -If you push the IMNOTOK button an email alert is sent immediately to those in your email list. 
 
-Example: If you choose a 'Check In Start Date' of 10 Sept 2021 and a 'Check In Start Time' of 9am and a 'Check In Interval' of one day, every time you push the IMOK button your  'Check In Time' will be reset to 9 am the next day.
+Example: If you choose a 'Check In Start Date' of 10 Sept 2021 and a 'Check In Start Time' of 9 am and a 'Check In Interval' of one day, every time you push the IMOK button your  'Check In Time' will be reset to 9 am the next day.
 
 You can test it at:
 
