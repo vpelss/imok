@@ -5,11 +5,12 @@
 	<link rel="stylesheet" href="./styles.css">
 </head>
 
-<body width='80%'>
+<body width='80%'  onbeforeunload='wait_icon();' onload=''>
+
+<div class='wait hide_me' id='wait_icon'><img class='' src='./images/wait.gif'></div>
 
 <!-- https://codepen.io/joesayegh/pen/jOEVPKO -->
 <!-- try https://dev.to/ljcdev/easy-hamburger-menu-with-js-2do0  -->
-
 <table><tr>
 <td><div id="burger-menu"><span></span></div></td>
 <td width='100%'><h4 class=''>IMOK</h4></td>
@@ -25,13 +26,12 @@
 						<li><a href="./reset_password.html"><button type="button" onclick="">Reset Password</button></a></li>
 						<li><a href="./imok.cgi?command=delete_account" onclick="return confirm('Delete account. Are you sure?');"><button type="button" >Delete Account</button></a></li>
 						<li><a href="./imok.cgi?command=testimok"><button type="button">Test IMOK</button></a></li>
-						<li><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" target="_blank"><button type="button" onclick="">About / Help</button></a></li>
-
+						<a href="./about.html" class="center"><button type="button">About / Help</button></a>
 						<li><a href="#">&nbsp;</a></li> <!--need so we can see last menu item on scroll-->
 					</div>
 
 					<div class="center <%logged_out%>">
-							<li><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" onclick='' target='_blank'><button type="button" onclick="">About / Help</button></a></li>
+						<li><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" target="_blank"><button type="button" onclick="">About / Help</button></a></li>
 					</div>
 
 				</ul>
@@ -72,6 +72,16 @@
 <a href='https://github.com/vpelss/imok' target='_blank'>https://github.com/vpelss/imok</a>
 </div>
 
+<div id="myModal" class="modal">
+
+<!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+
+  </div>
+
+</div>
+
 <script>
 var burgerMenu = document.getElementById('burger-menu');
 var overlay = document.getElementById('menu');
@@ -79,6 +89,10 @@ burgerMenu.addEventListener('click',function(){
   this.classList.toggle("close");
   overlay.classList.toggle("overlay");
 });
+
+function wait_icon(){
+	document.getElementById('wait_icon').classList.remove('hide_me');
+}
 
 //stop repost
 //if ( window.history.replaceState ) {

@@ -30,7 +30,8 @@ $AuthorizeMeObj->{'settings'}->{'email_message'} = '';#provide later
 
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_subject'} = 'Password Reset - IMOK';
 $AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
-$AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
+$AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(ADD WHAT TO DO AFTER REGISTRATION?
+You have registered for an IMOK account.
     Click to activate:
     <a target='_blank' href="https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>">https://www.emogic.com/cgi/imok.cgi/imok?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%></a>
     );
@@ -66,6 +67,7 @@ sub make_email_list(){
 }
 
 sub main(){
+#create required directories if they do not exist
 my @directories = ('authorizations' , 'tokens' , 'users');
 foreach my $directory (@directories){
    unless(-e $directory or mkdir $directory) {
@@ -73,11 +75,10 @@ foreach my $directory (@directories){
       }
 }
 
-if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit.
+if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit after processing
 
 %in = &parse_form();
 my $command = $in{'command'};
-
 &write_to_log("Parsed command: $command");
 
 my $output = '';

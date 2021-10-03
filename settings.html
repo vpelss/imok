@@ -7,8 +7,11 @@
 
 </head>
 
-<body align="center">
+<body align="center" onbeforeunload='wait_icon();'>
 
+<div class='wait hide_me' id='wait_icon'><img class='' src='./images/wait.gif'></div>
+
+<br><br>
 <h3>Settings</h3>
 <font color='red'><h4>Set all settings then click 'Save'</h4></font>
 
@@ -17,14 +20,17 @@
 	<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
 	<input name="timestamp" type="hidden" value="" id='timestamp'>
 
-		<p><label for="start_date">Check In Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'></p>
-	<p><label for="start_time">Check In Start Time</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'></p>
+<br><br>
+		<label for="start_date">Check In Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'>
+		<br><br>
+	<label for="start_time">Check In Start Time</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
 
-	<p>Alert Mail Message:
+	<br><br>
+	Alert Mail Message:
 	</br>
-	<textarea id="email form" name="email_form" rows="4" cols="50"><%email_form%></textarea></p>
+	<textarea id="email form" name="email_form" rows="4" cols="40"><%email_form%></textarea>
 
-	<p>
+<br><br>
 <label for="time_out">Check In Interval . Every </label>
 <select name="time_out" id="time_out" value="<%time_out%>">
   <option value=".5">.5</option>
@@ -36,13 +42,15 @@
   <option value="3">6</option>
   <option value="3">7</option>
 </select>	days. It is currently set to <b><%time_out%></b> days. Defaults is 1 day. Change drop down if required!
-				 </p>
 
-<p>Email Contact 1:<br><input type='text' name="email_contact_1" placeholder="email contact" id='email1' value='<%email_contact_1%>' autofocus> </p>
-	<p>Email Contact 2:<br><input type='text' name="email_contact_2" placeholder="email contact" id='email2' value='<%email_contact_2%>'> </p>
-	<p>Email Contact 3:<br><input type='text' name="email_contact_3" placeholder="email contact" id='email3' value='<%email_contact_3%>'> </p>
+<br><br>
+<input type='text' name="email_contact_1" placeholder="email contact 1" id='email1' value='<%email_contact_1%>' autofocus>
+<br><br>
+	<input type='text' name="email_contact_2" placeholder="email contact 2" id='email2' value='<%email_contact_2%>'>
+	<br><br>
+	<input type='text' name="email_contact_3" placeholder="email contact 3" id='email3' value='<%email_contact_3%>'>
 
-	<p>
+<br><br>
 <label for="time_out">Check In Pre Warn Time </label>
 <select name="pre_warn_time" id="pre_warn_time" value="<%pre_warn_time%>">
   <option value=".5">.5</option>
@@ -54,15 +62,19 @@
   <option value="3">6</option>
   <option value="3">7</option>
 </select>	hours. It is currently set to <b><%pre_warn_time%></b> hours. Defaults is 1 hour. Change drop down if required!
-				 </p>
 
-<p><input type='submit' value='Save' onclick="return(calc_date());"> </p>
-
+<br><br>
+<input type='submit' value='Save' onclick="return(calc_date());">
 	</form>
 
-	<p><a href='imok.cgi'><input type='button' value='Cancel'></a></p>
+<br>
+<p><a href='imok.cgi'><input type='button' value='Cancel'></a></p>
 
 	<script>
+function wait_icon(){
+	document.getElementById('wait_icon').classList.remove('hide_me');
+}
+
 	function calc_date()
 	{
 		//convert yyyy-mm-dd and hh:mm to epoch time to send to server
