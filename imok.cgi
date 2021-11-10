@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+#after email instructions
+#audio
+#
+
 use strict;
 use Socket;
 use lib '.'; #nuts, PERL has changed. add local path to @INC
@@ -75,6 +79,7 @@ foreach my $directory (@directories){
       }
 }
 
+$pre_warn_email_template = qq(Your IMOK alert will be sent soon. You should push the IMOK button at: https://www.emogic.com/cgi/imok/imok.cgi.); #needs to be BEFORE we run cron
 if ( $ARGV[0] eq 'cron' ) { &cron(); exit;} #from cron so exit after processing
 
 %in = &parse_form();
@@ -94,7 +99,6 @@ my $user = $AuthorizeMeObj->{'user'}; #local copy of user
 $email_list = &make_email_list($user);
 $test_email_template = qq(This email was sent by the IMOK system as a test by $AuthorizeMeObj->{'user'}->{'email'} . Please let them know you received it.);
 $imnotok_email_template = qq($AuthorizeMeObj->{'user'}->{'email'} has pushed the IM_NOT_OK button. Please check on them.);
-$pre_warn_email_template = qq(Your IMOK alert will be sent soon. You should push the IMOK button at: https://www.emogic.com/cgi/imok/imok.cgi.);
 
 &write_to_log("built email list: $email_list");
 
@@ -286,7 +290,8 @@ sub cron(){
 
     if( ( time() > ($timestamp - $user->{'pre_warn_time'}) ) && ($timestamp > time()) ){#send prewarn email to self
          $AuthorizeMeObj->{'settings'}->{'email_to'} = $user->{'email'};
-         $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IMOK Alert";
+         $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IMOK Pre Alert";
+         #$AuthorizeMeObj->{'settings'}->{'email_message'} = "$pre_warn_email_template <p> Alert was sent on behalf of $user->{'email'} </p>";
          $AuthorizeMeObj->{'settings'}->{'email_message'} = $pre_warn_email_template;
          my $result = $AuthorizeMeObj->email();
          }

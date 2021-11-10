@@ -572,6 +572,7 @@ sub email(){
   push  @server_message , "MIME-Version: 1.0\n";
   push  @server_message , "\n";
   push  @server_message , "$email_message";
+  push  @server_message , "\n";
 
 if ($smtp_server ne ""){
   my %options;
