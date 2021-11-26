@@ -12,7 +12,7 @@ Potential uses:
 
 ## HELP
 
-- Some options are accessed from the menu icon.(upper left)
+- Some options are accessed from the menu icon in the upper left corner.
 - After registering for an account, click on 'Settings'.
 - Add up to three email addresses to send alerts to. You must enter at least one.
 - Modify the default alert message to suit your situation. Add contact numbers, instructions, etc...
