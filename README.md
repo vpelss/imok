@@ -32,20 +32,25 @@ Made by [Emogic](https://www.emogic.com)
 
 -------------------------------------
 
+## Benefits
+
 It is web page based. Any device can be used. Smart phone, PC, etc.
 
 It was designed to be a fail safe. By having to report to a server, the server can send out the alert if you do not report in.
 
-Program is subject to change and no assumption of reliability can be assumed.
+## Liabilty
+
+This program is subject to change and no assumption of reliability can be assumed.
 This is a proof of concept script. Don't risk your life on it.
+
+## Module
 
 It also comes with a simple PERL Module, AuthorizeMe, that takes care of the account registration, password management, tokens, etc.
 It also has methods you can use to easily save and retrieve database information (hash, array or scalars) in a text flat file format.
 
 The idea for this program came to me after a relative had passed away and was not found for 7 days.
 
-Possible to do list:
+## To Do
 
--alert to text
-
--alert to social media
+- alert to text
+- alert to social media
