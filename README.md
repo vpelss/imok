@@ -16,15 +16,16 @@ Potential uses:
 
 -Some options are accessed from the menu icon.(upper left)
 -After registering for an account, click on 'Settings'.
--Select an 'Alert Date' and an 'Alert Time' that you will be able to 'Check In' by. 
--Select a 'Check In Interval'. Daily seems reasonable. 
 -Add up to three email addresses to send alerts to. You must enter at least one.
 -Modify the default alert message to suit your situation. Add contact numbers, instructions, etc...
--If you push the IMOK button before the 'Check In Time' no alert will be sent to your email list, and a new 'Check In Time' is set to the next 'Check In Interval'. 
--If you do not push the IMOK button before the 'Check In Time', an alert email will be sent to your email list every half hour until you push the IMOK button.
+-Select an 'Alert Date' and an 'Alert Time' that you will be able to 'Check In' by. 
+-Select an 'Alert Interval'. Daily seems reasonable. 
+
+-If you push the IMOK button before the 'Alert Date/Time' no alert will be sent to your email list, and a new 'Alert Date/Time' is set to the next 'Alert Interval'. 
+-If you do not push the IMOK button before the 'Alert Time', an alert email will be sent to your email list every half hour until you push the IMOK button.
 -If you push the IMNOTOK button an email alert is sent immediately to those in your email list. 
 
-Example: If you choose a 'Check In Start Date' of 10 Sept 2021 and a 'Check In Start Time' of 9 am and a 'Check In Interval' of one day, every time you push the IMOK button your  'Check In Time' will be reset to 9 am the next day.
+Example: If you choose a 'Alert Date' of 10 Sept 2021 and a 'Alert Time' of 9 am and a 'Alert Interval' of one day, every time you push the IMOK button your next 'Alert Date/Time' will be reset to 9 am the next day.
 
 You can test it at:
 
