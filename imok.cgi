@@ -3,7 +3,6 @@
 #after email instructions
 #audio
 #
-
 use strict;
 use Socket;
 use lib '.'; #nuts, PERL has changed. add local path to @INC
@@ -480,10 +479,10 @@ sub activate(){
  $user->{'email_contact_1'} = '';
  $user->{'email_contct_2'} = '';
  $user->{'email_contact_3'} = '';
- $user->{'email_form'} = qq("Put your name here" has not reported in to the IMOK website by the chosen Alert time.
+ $user->{'email_form'} = qq("Type your name here" has not reported in to the IMOK website by the chosen Alert time.
 You may want to check on them.
 Their phone number is xxx-xxx-xxxx.
-Their email address is put_your_email_here\@gmail.com');
+Their email address is type_your_email_here\@domain');
  $user->{'timeout_ms'} = 86400; #24hours
  my $now = time();
  $user->{'timestamp'} = time() + $user->{'timeout_ms'}; #set a default of 1 day

@@ -13,25 +13,33 @@
 
 <br><br>
 <h3>Settings</h3>
-<font color='red'><h4>Set all settings then click 'Save'</h4></font>
 
 <form id='form_login' action='./imok.cgi'  method="post">
 	<input name="command" type="hidden" value="set_settings" id='command_login'>
 	<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
 	<input name="timestamp" type="hidden" value="" id='timestamp'>
 
+<br>
+Type at least one email below:
+<br>
+<input type='text' name="email_contact_1" placeholder="email contact 1" id='email1' value='<%email_contact_1%>' autofocus>
 <br><br>
-		<label for="start_date">Check In Start Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'>
-		<br><br>
-	<label for="start_time">Check In Start Time</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
-
+	<input type='text' name="email_contact_2" placeholder="email contact 2" id='email2' value='<%email_contact_2%>'>
 	<br><br>
+	<input type='text' name="email_contact_3" placeholder="email contact 3" id='email3' value='<%email_contact_3%>'>
+
+<br><br>
 	Alert Mail Message:
 	</br>
 	<textarea id="email form" name="email_form" rows="4" cols="40"><%email_form%></textarea>
 
 <br><br>
-<label for="time_out">Check In Interval . Every </label>
+		<label for="start_date">Alert Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'>
+		<br><br>
+	<label for="start_time">Alert Time</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
+
+<br><br>
+<label for="time_out">Alert Interval . Every </label>
 <select name="time_out" id="time_out" value="<%time_out%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
@@ -41,17 +49,10 @@
   <option value="3">5</option>
   <option value="3">6</option>
   <option value="3">7</option>
-</select>	days. It is currently set to <b><%time_out%></b> days. Defaults is 1 day. Change drop down if required!
+</select>	days.
 
 <br><br>
-<input type='text' name="email_contact_1" placeholder="email contact 1" id='email1' value='<%email_contact_1%>' autofocus>
-<br><br>
-	<input type='text' name="email_contact_2" placeholder="email contact 2" id='email2' value='<%email_contact_2%>'>
-	<br><br>
-	<input type='text' name="email_contact_3" placeholder="email contact 3" id='email3' value='<%email_contact_3%>'>
-
-<br><br>
-<label for="time_out">Check In Pre Warn Time </label>
+<label for="time_out">Send you an email </label>
 <select name="pre_warn_time" id="pre_warn_time" value="<%pre_warn_time%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
@@ -61,7 +62,7 @@
   <option value="3">5</option>
   <option value="3">6</option>
   <option value="3">7</option>
-</select>	hours. It is currently set to <b><%pre_warn_time%></b> hours. Defaults is 1 hour. Change drop down if required!
+</select>	hours before the Alert Date/Time. It is currently set to <b><%pre_warn_time%></b> hours.
 
 <br><br>
 <input type='submit' value='Save' onclick="return(calc_date());">
