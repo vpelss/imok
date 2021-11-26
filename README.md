@@ -26,13 +26,9 @@ Potential uses:
 
 Example: If you choose a 'Alert Date' of 10 Sept 2021 and a 'Alert Time' of 9 am and a 'Alert Interval' of one day, every time you push the IMOK button your next 'Alert Date/Time' will be reset to 9 am the next day.
 
-You can test it at:
+You can test it at: https://www.emogic.com/cgi/imok/imok.cgi
 
-https://www.emogic.com/cgi/imok/imok.cgi
-
-Made by https://www.emogic.com
-
-[Emogic](https://www.emogic.com)
+Made by [Emogic](https://www.emogic.com)
 
 -------------------------------------
 
