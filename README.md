@@ -4,17 +4,17 @@ IMOK is a web based, fail safe, alarm that will email your family and friends if
 
 Potential uses:
 
--For those living alone and do not have regular personal contact.
--For those who have animals or pets that may suffer or die if they pass away or became incapacitated.
--For those who live in a remote location.
--For those taking a trip alone.
--For those planning on getting kidnapped
+- For those living alone and do not have regular personal contact.
+- For those who have animals or pets that may suffer or die if they pass away or became incapacitated.
+- For those who live in a remote location.
+- For those taking a trip alone.
+- For those planning on getting kidnapped
 
 # HELP
 
--Some options are accessed from the menu icon.(upper left)
->After registering for an account, click on 'Settings'.
->Add up to three email addresses to send alerts to. You must enter at least one.
+- Some options are accessed from the menu icon.(upper left)
+- After registering for an account, click on 'Settings'.
+- Add up to three email addresses to send alerts to. You must enter at least one.
 -Modify the default alert message to suit your situation. Add contact numbers, instructions, etc...
 -Select an 'Alert Date' and an 'Alert Time' that you will be able to 'Check In' by. 
 -Select an 'Alert Interval'. Daily seems reasonable. 
