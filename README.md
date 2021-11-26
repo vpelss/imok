@@ -1,4 +1,4 @@
-# IMOK
+## IMOK
 
 IMOK is a web based, fail safe, alarm that will email your family and friends if you don't check in.
 
@@ -10,7 +10,7 @@ Potential uses:
 - For those taking a trip alone.
 - For those planning on getting kidnapped
 
-# HELP
+## HELP
 
 - Some options are accessed from the menu icon.(upper left)
 - After registering for an account, click on 'Settings'.
