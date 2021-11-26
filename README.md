@@ -13,8 +13,8 @@ Potential uses:
 # HELP
 
 -Some options are accessed from the menu icon.(upper left)
--After registering for an account, click on 'Settings'.
--Add up to three email addresses to send alerts to. You must enter at least one.
+>After registering for an account, click on 'Settings'.
+>Add up to three email addresses to send alerts to. You must enter at least one.
 -Modify the default alert message to suit your situation. Add contact numbers, instructions, etc...
 -Select an 'Alert Date' and an 'Alert Time' that you will be able to 'Check In' by. 
 -Select an 'Alert Interval'. Daily seems reasonable. 
