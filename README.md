@@ -20,6 +20,7 @@ Potential uses:
 -Modify the default alert message to suit your situation. Add contact numbers, instructions, etc...
 -Select an 'Alert Date' and an 'Alert Time' that you will be able to 'Check In' by. 
 -Select an 'Alert Interval'. Daily seems reasonable. 
+-click 'Save' on the settings page.
 
 -If you push the IMOK button before the 'Alert Date/Time' no alert will be sent to your email list, and a new 'Alert Date/Time' is set to the next 'Alert Interval'. 
 -If you do not push the IMOK button before the 'Alert Time', an alert email will be sent to your email list every half hour until you push the IMOK button.
