@@ -32,6 +32,8 @@ You can test it at:
 
 https://www.emogic.com/cgi/imok/imok.cgi
 
+Made by https://www.emogic.com
+
 -------------------------------------
 
 It is web page based. Any device can be used. Smart phone, PC, etc.
