@@ -1,49 +1,37 @@
-<html>
+<!DOCTYPE html>
 <head>
 	<title>IMOK</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="./styles.css">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
 </head>
 
-<body width='80%'  onbeforeunload='wait_icon();' onload=''>
+<body onbeforeunload='wait_icon();' onload=''>
+<div class='wait hide_me' id='wait_icon'><img class='' src='./images/wait.gif''></div>
+<script>
+function wait_icon(){document.getElementById('wait_icon').classList.remove('hide_me');}
+</script>
 
-<div class='wait hide_me' id='wait_icon'><img class='' src='./images/wait.gif'></div>
+<div data-role="page">
 
-<!-- https://codepen.io/joesayegh/pen/jOEVPKO -->
-<!-- try https://dev.to/ljcdev/easy-hamburger-menu-with-js-2do0  -->
-<table><tr>
-<td><div id="burger-menu"><span></span></div></td>
-<td width='100%'><h4 class=''>IMOK</h4></td>
-</tr></table>
+	<div data-role="header">
+		<a href='menu.html' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars"></a>
+	  <center ><h4>IMOK</h4></center>
+	</div>
 
-<div id="menu">
-    <ul>
-
-					<div class="center <%logged_in%>">
-						<li><a href="./imok.cgi?command=get_settings"><button type="button" onclick="">Settings</button></a></li>
-						<li><a href="./imok.cgi?command=logout" onclick="return confirm('Logout. Are you sure?');"><button type="button" >Logout</button></a></li>
-						<li><a href="./imok.cgi?command=logout_all_devices" onclick="return confirm('Logout all devices. Are you sure?');"><button type="button" >Logout all devices</button></a></li>
-						<li><a href="./reset_password.html"><button type="button" onclick="">Reset Password</button></a></li>
-						<li><a href="./imok.cgi?command=delete_account" onclick="return confirm('Delete account. Are you sure?');"><button type="button" >Delete Account</button></a></li>
-						<li><a href="./imok.cgi?command=testimok"><button type="button">Test IMOK</button></a></li>
-						<a href="https://github.com/vpelss/imok/blob/main/README.md#imok" class="center" target='_blank'><button type="button">About / Help</button></a>
-						<li><a href="#">&nbsp;</a></li> <!--need so we can see last menu item on scroll-->
-					</div>
-
-					<div class="center <%logged_out%>">
-						<li><a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" target="_blank"><button type="button" onclick="">About / Help</button></a></li>
-					</div>
-
-				</ul>
-</div>
+<div role="main" class="ui-content">
 
 <input name="difference" type="hidden" value="<%difference%>" id="difference">
 <input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
 
 <div class='center <%logged_in%>' >
-<a href="./imok.cgi?command=imok" title="You are ok for theis interval. his will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm)."><button type="button" onclick="">IM OK</button></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="./imok.cgi?command=imok"  class="ui-btn ui-shadow ui-corner-all" title="You are ok for theis interval. his will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm).">IM OK</a>
 </div>
-</br>
 
 <b><div class='<%logged_in%> center'>Next Check In:</div></b>
 <b><font color='red'><div class='<%logged_in%> center'><%check_in_date%> <%check_in_time%></div></font></b>
@@ -54,32 +42,26 @@
 </div>
 
 <div class="center <%logged_out%>">
-<a href="./login.html"><button type="button" onclick="">Login</button></a></br></br>
-<a href="./register.html" ><button type="button" onclick="">Register for account</button></a></br></br>
-<a href="./forgot_password.html"><button type="button" onclick="">Forgot Password</button></a></br></br>
-<a href="https://raw.githubusercontent.com/vpelss/imok/main/README.md" class="center" onclick='' target='_blank'><button type="button" onclick="">About / Help</button></a>
+<a href="./login.html" class="ui-btn ui-shadow ui-corner-all">Login</a>
+
+<a href="./register.html"  class="ui-btn ui-shadow ui-corner-all">Register for account</a>
+
+<a href="./forgot_password.html" class="ui-btn ui-shadow ui-corner-all">Forgot Password</a>
+
+<a href="https://github.com/vpelss/imok#imok" class="ui-btn ui-shadow ui-corner-all" onclick='return alert("You are leaving IMOK. Click BACK button to return.");'>About/Help</a>
 </div>
 
 <div class="center <%logged_in%>">
-<a href="./imok.cgi?command=imnotok" title="You are NOT ok for theis interval. This will immediately send an alert email to your alert list."><button type="button" onclick="return confirm('Send IMNOTOK. Are you sure?');">IM NOT OK</button></a></br>
-</br>
-<a href="./imok.cgi?command=cron"><button type="button" onclick="">cron : vince test only</button></a></br>
+<a href="./imok.cgi?command=imnotok" class="ui-btn ui-shadow ui-corner-all" title="You are NOT ok for theis interval. This will immediately send an alert email to your alert list." onclick="return confirm('Send IMNOTOK. Are you sure?');">IM NOT OK</a>
+
+
+<a href="./imok.cgi?command=cron" class="ui-btn ui-shadow ui-corner-all">cron : vince test only</a>
 </div>
 
-<br>
+</div> <!-- end main -->
+</div> <!-- end page -->
 
 <script>
-var burgerMenu = document.getElementById('burger-menu');
-var overlay = document.getElementById('menu');
-burgerMenu.addEventListener('click',function(){
-  this.classList.toggle("close");
-  overlay.classList.toggle("overlay");
-});
-
-function wait_icon(){
-	document.getElementById('wait_icon').classList.remove('hide_me');
-}
-
 //stop repost
 //if ( window.history.replaceState ) {
     //window.history.replaceState( null, null, window.location.href );

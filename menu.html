@@ -1,1 +1,51 @@
-az
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Menu</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+			<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
+</head>
+
+<body onbeforeunload='wait_icon();' onload=''>
+<div class='wait hide_me' id='wait_icon'><img class='' src='./images/wait.gif''></div>
+<script>
+function wait_icon(){document.getElementById('wait_icon').classList.remove('hide_me');}
+</script>
+
+<div data-role="page">
+
+	<div data-role="header">
+		<a href='imok.cgi' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
+	  <center ><h4>IMOK</h4></center>
+	</div>
+
+<div role="main" class="ui-content">
+
+						<a href="./imok.cgi?command=get_settings" class="ui-btn ui-shadow ui-corner-all">Settings</a>
+
+						<a href="./imok.cgi?command=logout" onclick="return confirm('Logout. Are you sure?');" class="ui-btn ui-shadow ui-corner-all">Logout</a>
+
+						<a href="./imok.cgi?command=logout_all_devices" onclick="return confirm('Logout all devices. Are you sure?');" class="ui-btn ui-shadow ui-corner-all">Logout all devices</a>
+
+						<a href="./reset_password.html" class="ui-btn ui-shadow ui-corner-all">Reset Password</a>
+
+						<a href="./imok.cgi?command=delete_account" onclick="return confirm('Delete account. Are you sure?');" class="ui-btn ui-shadow ui-corner-all">Delete Account</a>
+
+						<a href="./imok.cgi?command=testimok" class="ui-btn ui-shadow ui-corner-all">Test IMOK</a>
+
+						<a href="https://github.com/vpelss/imok#imok" class="ui-btn ui-shadow ui-corner-all" onclick='return alert("You are leaving IMOK. Click BACK button to return.");'>About/Help</a>
+
+						<a href="https://github.com/vpelss/imok#imok" class="ui-btn ui-shadow ui-corner-all" target='_blank'>Get Source Code at GitHub</a>
+
+</div> <!-- end main -->
+</div> <!-- end page -->
+
+</body>
+</html>
+

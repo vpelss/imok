@@ -82,7 +82,7 @@ body {
 	width: 0;
 }
 
-#menu {
+#amenu {
 	overflow: scroll;
 	z-index: 1;
 	min-width: 100%;
@@ -131,10 +131,6 @@ body {
     transform: translate(-50%, -50%);
 }
 
-* {
-	font-size: 4vw;
-}
-
 .left {
 	text-align: left;
 }
@@ -150,6 +146,7 @@ body {
 button {
 }
 
+/*for smartphones*/
 @media (hover: none) {
 
 	* {
@@ -159,4 +156,12 @@ button {
 	button {
 		font-size: 4vw;
 	}
+}
+
+/*for pc*/
+* {
+  /*
+	font-size: 4vw;
+	*/
+
 }
