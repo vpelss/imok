@@ -12,17 +12,11 @@
 
 </head>
 
-<body onbeforeunload='wait_icon();' onload=''>
-<div class='wait hide_me' id='wait_icon'><img class='' src='./images/wait.gif''></div>
-<script>
-function wait_icon(){document.getElementById('wait_icon').classList.remove('hide_me');}
-</script>
-
+<body>
 <div data-role="page">
-
-	<div data-role="header">
-		<a href='imok.cgi' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
-	  <center ><h4>IMOK</h4></center>
+    <div data-role="header">
+        <a href='imok.cgi' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
+        <center><h4>IMOK</h4></center>
 	</div>
 
 <div role="main" class="ui-content">
@@ -48,4 +42,3 @@ function wait_icon(){document.getElementById('wait_icon').classList.remove('hide
 
 </body>
 </html>
-

@@ -3,15 +3,25 @@
 	<title>IMOK</title>
 	<meta http-equiv="Cache-Control" content="no-store">
 	<meta http-equiv="Cache-Control: max-age=0">
-	<link rel="stylesheet" href="styles.css">
+			<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
 </head>
 
-<body align="center" onbeforeunload='wait_icon();'>
+<body>
+	<div data-role="page">
+		<div data-role="header">
+			<a href='imok.cgi' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
 
-<div class='wait hide_me' id='wait_icon'><img class='' src='./images/wait.gif'></div>
+			<center>
+				<h4>IMOK</h4>
+			</center>
+		</div>
 
-<br><br>
+		<div role="main" class="ui-content">
+
 <h3>Settings</h3>
 
 <form id='form_login' action='./imok.cgi'  method="post">
@@ -23,22 +33,19 @@
 Type at least one email below:
 <br>
 <input type='text' name="email_contact_1" placeholder="email contact 1" id='email1' value='<%email_contact_1%>' autofocus>
-<br><br>
+
 	<input type='text' name="email_contact_2" placeholder="email contact 2" id='email2' value='<%email_contact_2%>'>
-	<br><br>
+
 	<input type='text' name="email_contact_3" placeholder="email contact 3" id='email3' value='<%email_contact_3%>'>
 
-<br><br>
 	Alert Mail Message:
 	</br>
 	<textarea id="email form" name="email_form" rows="4" cols="40"><%email_form%></textarea>
 
-<br><br>
 		<label for="start_date">Alert Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'>
-		<br><br>
+
 	<label for="start_time">Alert Time</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
 
-<br><br>
 <label for="time_out">Alert Interval . Every </label>
 <select name="time_out" id="time_out" value="<%time_out%>">
   <option value=".5">.5</option>
@@ -51,7 +58,6 @@ Type at least one email below:
   <option value="3">7</option>
 </select>	days.
 
-<br><br>
 <label for="time_out">Send you an email </label>
 <select name="pre_warn_time" id="pre_warn_time" value="<%pre_warn_time%>">
   <option value=".5">.5</option>
@@ -64,12 +70,11 @@ Type at least one email below:
   <option value="3">7</option>
 </select>	hours before the Alert Date/Time. It is currently set to <b><%pre_warn_time%></b> hours.
 
-<br><br>
-<input type='submit' value='Save' onclick="return(calc_date());">
+<input type='submit' value='Save Settings' onclick="return(calc_date());">
 	</form>
 
-<br>
-<p><a href='imok.cgi'><input type='button' value='Cancel'></a></p>
+		</div><!-- end main -->
+	</div><!-- end page -->
 
 	<script>
 function wait_icon(){
