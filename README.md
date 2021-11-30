@@ -54,3 +54,7 @@ The idea for this program came to me after a relative had passed away and was no
 
 - alert to text
 - alert to social media
+
+## Notes
+
+- target='_top' is required due to dom paging with the jquerymobile. If we don't do this, we get js ID conflicts and pages do not update correctly with js dom updates
