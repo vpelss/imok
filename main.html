@@ -12,13 +12,14 @@
 	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js" type="text/javascript">
 </script>
 
-	<title></title>
 </head>
 
-<body>
+<body onload="document.getElementById('wait_icon').classList.add('hide_me');">
+<div class='wait' id='wait_icon'><img src='./images/wait.gif'></div>
+
 	<div data-role="page">
 		<div data-role="header">
-			<a href='menu.html' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars"></a>
+			<a href='menu.html' target='_top' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars"></a>
 
 			<center>
 				<h4>IMOK</h4>
@@ -41,7 +42,7 @@
 			</div>
 
 			<div class='<%logged_in%> center' id='countdown'>
-				<b><font color='red'>00:00:00</font></b>
+<b><font color='red'>00:00:00</font></b>
 			</div>
 
 			<div class='center'>
@@ -61,7 +62,7 @@
 			</div>
 
 			<div class='<%logged_in%>'>
-				<a href="./imok.cgi?command=imnotok" target='_top' class="ui-btn ui-shadow ui-corner-all" title="You are NOT ok for theis interval. This will immediately send an alert email to your alert list." onclick="return confirm('Send IMNOTOK. Are you sure?');">IM NOT OK</a>
+				<a href="./imok.cgi?command=imnotok" target='_top' class="ui-btn ui-shadow ui-corner-all" title="You are NOT ok for this interval. This will immediately send an alert email to your alert list." onclick="return confirm('Send IMNOTOK. Are you sure?');">IM NOT OK</a>
 			</div>
 
 			<div class='<%logged_in%>'>
@@ -69,7 +70,7 @@
 			</div>
 
 			<script type="text/javascript">
-window.history.replaceState(null, "", location.href.split("?")[0]);  //kill both post and get re-posts
+			window.history.replaceState(null, "", location.href.split("?")[0]);  //kill both post and get re-posts
 
 						var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
 

@@ -1,3 +1,10 @@
+.ui-grid-a>.ui-block-a{
+	width:90%;
+}
+.ui-grid-a>.ui-block-b{
+	width:10%;
+}
+
 .show_me {
 }
 
@@ -5,11 +12,12 @@
 	display: none;
 }
 
-.wait{
-      position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+.wait {
+	z-index: 999;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 .left {
@@ -41,5 +49,4 @@
   /*
 	font-size: 4vw;
 	*/
-
 }

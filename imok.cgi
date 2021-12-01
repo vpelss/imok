@@ -212,17 +212,17 @@ my $now = time();
 
 if( $current_time_stamp <= $now ){#alarm was/is triggered
   until( $new_time_stamp  > $now ){
-   $new_time_stamp = $new_time_stamp + $user->{'timeout_ms'};
+   $new_time_stamp = $new_time_stamp + $user->{'timeout_sec'};
   }
  $message = "$message Alarm was likely triggered. Please email your contacts and tell them you are OK.";
  #send out IMOK email. Member has checked in...
 }
-elsif( ($current_time_stamp - $user->{'timeout_ms'}) <= $now ){ #we are clicking just before alarm is triggered
- until( $new_time_stamp  > ($now + $user->{'timeout_ms'}) ){
-   $new_time_stamp = $new_time_stamp + $user->{'timeout_ms'};
+elsif( ($current_time_stamp - $user->{'timeout_sec'}) <= $now ){ #we are clicking just before alarm is triggered
+ until( $new_time_stamp  > ($now + $user->{'timeout_sec'}) ){
+   $new_time_stamp = $new_time_stamp + $user->{'timeout_sec'};
   }
 }
-elsif( ($current_time_stamp - $user->{'timeout_ms'}) > $now  ){# we are a full timeout before the time stamp. do nothing
+elsif( ($current_time_stamp - $user->{'timeout_sec'}) > $now  ){# we are a full timeout before the time stamp. do nothing
   return 1;
 }#do nothing
 
@@ -235,7 +235,7 @@ my $trigger_time_string = sprintf("%d-%.2d-%.2d  %d:%.2d", $year , $mon , $mday 
 
 my $result = &change_time_stamp($new_time_stamp , $filename);
 if($result == 1){
- $message = "$message your next IMOK trigger time is: $trigger_time_string";
+ $message = "$message Trigger time updated.";
 }
 else{
  $message = "$message IMOK trigger time failed. Please try again.";
@@ -288,7 +288,7 @@ sub cron(){
     my $t = time();
     &write_to_log("Time is $t and timestamp is $timestamp and pretime is $user->{'pre_warn_time'} and last email sent at $user->{'last_email_sent_at'}");
 
-    if( ( time() > ($timestamp - $user->{'pre_warn_time'}) ) && ($timestamp > time()) ){#send prewarn email to self
+    if( ( time() > ($timestamp - $user->{'pre_warn_time_sec'}) ) && ($timestamp > time()) ){#send prewarn email to self
          $AuthorizeMeObj->{'settings'}->{'email_to'} = $user->{'email'};
          $AuthorizeMeObj->{'settings'}->{'email_subject'} = "IMOK Pre Alert";
          #$AuthorizeMeObj->{'settings'}->{'email_message'} = "$pre_warn_email_template <p> Alert was sent on behalf of $user->{'email'} </p>";
@@ -377,8 +377,7 @@ sub get_settings(){ #input user, output html
  $output =~  s/<%time_out%>/$user->{'time_out'}/g;
  $output =~  s/<%start_date%>/$user->{'start_date'}/g;
  $output =~  s/<%start_time%>/$user->{'start_time'}/g;
-	my $pre_warn_hours = $user->{'pre_warn_time'} / 3600; #convert hours to seconds
-	$output =~  s/<%pre_warn_time%>/$pre_warn_hours/g;
+	$output =~  s/<%pre_warn_time%>/$user->{'pre_warn_time'}/g;
 
  return $output;
 }
@@ -417,8 +416,9 @@ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
  $user->{'email_form'} =~ s/\r//g; #fix windows from adding extra lines
 
  $user->{'time_out'} = $in{'time_out'};
- $user->{'timeout_ms'} = 24 * 60 * 60 * $in{'time_out'};
-	$user->{'pre_warn_time'} = 60 * 60 * $in{'pre_warn_time'};
+ $user->{'timeout_sec'} = 24 * 60 * 60 * $in{'time_out'};
+	$user->{'pre_warn_time'} = $in{'pre_warn_time'};
+ $user->{'pre_warn_time_sec'} = 60 * 60 * $in{'pre_warn_time'};
  $user->{'last_email_sent_at'} = 0;
 
 	$user->{'start_date'} = $in{'start_date'};
@@ -441,10 +441,10 @@ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
  $AuthorizeMeObj->{'user'} = $user; #save it back to object as hash_to_db does not
 
   if($result == 1){
-  $message = "$message Settings changed.";
+  $message = "$message Your Alert has been set.";
   }
  else{
-  $message = "$message Settings not changed.";
+  $message = "$message Your Alert has not been set.";
   }
 
  my $hour_seconds = 60 * 60;

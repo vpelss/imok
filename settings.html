@@ -3,17 +3,20 @@
 	<title>IMOK</title>
 	<meta http-equiv="Cache-Control" content="no-store">
 	<meta http-equiv="Cache-Control: max-age=0">
-			<link rel="stylesheet" href="./styles.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
 <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
 <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<link rel="stylesheet" href="./styles.css">
 
 </head>
 
-<body>
+<body onload="document.getElementById('wait_icon').classList.add('hide_me');">
+<div class='wait' id='wait_icon'><img src='./images/wait.gif'></div>
+
 	<div data-role="page">
 		<div data-role="header">
-			<a href='imok.cgi' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
+			<a href='imok.cgi' target='_top' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
 
 			<center>
 				<h4>IMOK</h4>
@@ -32,7 +35,15 @@
 <br>
 Type at least one email below:
 <br>
+<div  class='ui-grid-a'>
+<div class='ui-block-a'>
 <input type='text' name="email_contact_1" placeholder="email contact 1" id='email1' value='<%email_contact_1%>' autofocus>
+</div>
+<div  class='ui-block-b'>
+	<a href='#' onclick='alert("Blah, blah, blah...");'>?</a>
+</div>
+</div>
+
 
 	<input type='text' name="email_contact_2" placeholder="email contact 2" id='email2' value='<%email_contact_2%>'>
 
@@ -46,6 +57,7 @@ Type at least one email below:
 
 	<label for="start_time">Alert Time</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
 
+<input type='hidden' id='time_out_temp' value='<%time_out%>'>
 <label for="time_out">Alert Interval . Every </label>
 <select name="time_out" id="time_out" value="<%time_out%>">
   <option value=".5">.5</option>
@@ -58,29 +70,23 @@ Type at least one email below:
   <option value="3">7</option>
 </select>	days.
 
+<input type='hidden' id='pre_warn_time_temp' value='<%pre_warn_time%>'>
 <label for="time_out">Send you an email </label>
 <select name="pre_warn_time" id="pre_warn_time" value="<%pre_warn_time%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
   <option value="2">2</option>
   <option value="3">3</option>
-  <option value="3">4</option>
-  <option value="3">5</option>
-  <option value="3">6</option>
-  <option value="3">7</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
 </select>	hours before the Alert Date/Time. It is currently set to <b><%pre_warn_time%></b> hours.
 
 <input type='submit' value='Save Settings' onclick="return(calc_date());">
 	</form>
 
-		</div><!-- end main -->
-	</div><!-- end page -->
-
 	<script>
-function wait_icon(){
-	document.getElementById('wait_icon').classList.remove('hide_me');
-}
-
 	function calc_date()
 	{
 		//convert yyyy-mm-dd and hh:mm to epoch time to send to server
@@ -114,7 +120,13 @@ function wait_icon(){
 	return true;
 	}
 
+	//set drop down values
+document.getElementById("time_out").value  = document.getElementById("time_out_temp").value;
+document.getElementById("pre_warn_time").value  = document.getElementById("pre_warn_time_temp").value;
 </script>
+
+		</div><!-- end main -->
+	</div><!-- end page -->
 
 </body>
  </html>
