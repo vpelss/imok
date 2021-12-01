@@ -57,4 +57,6 @@ The idea for this program came to me after a relative had passed away and was no
 
 ## Notes
 
+- issues with jquerymobile:
 - target='_top' is required on anchors due to jquerymobile's ajax paging. If we don't do this, we get js ID conflicts and pages do not update correctly or at all with my js dom updates.
+- ajax paging wreaked havoc with setInterval. even when the page with setInterval is no longer paged, setInterval still exists and is running
