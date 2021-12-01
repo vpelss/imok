@@ -57,4 +57,4 @@ The idea for this program came to me after a relative had passed away and was no
 
 ## Notes
 
-- target='_top' is required due to dom paging with the jquerymobile. If we don't do this, we get js ID conflicts and pages do not update correctly with js dom updates
+- target='_top' is required on anchors due to jquerymobile's ajax paging. If we don't do this, we get js ID conflicts and pages do not update correctly or at all with my js dom updates.
