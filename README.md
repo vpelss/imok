@@ -28,6 +28,8 @@ Example: If you choose an 'Alert Date' of 10 Sept 2021 and an 'Alert Time' of 9 
 
 You can test it at: https://www.emogic.com/cgi/imok/imok.cgi
 
+[go](http://stackoverflow.com){:target="_blank" rel="noopener"}
+
 Made by [Emogic](https://www.emogic.com)
 
 -------------------------------------
