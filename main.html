@@ -20,10 +20,7 @@
 	<div data-role="page">
 		<div data-role="header">
 			<a href='menu.html' target='_top' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars"></a>
-
-			<center>
-				<h4>IMOK</h4>
-			</center>
+				<h6>imok</h6>
 		</div>
 
 		<div role="main" class="ui-content">
@@ -34,7 +31,11 @@
 			</div>
 
 			<div class='<%logged_in%> center'>
-				<b>Next Check In will be at:</b>
+			<img src='./images/arrow-u-black.svg'></img>
+			</div>
+
+			<div class='<%logged_in%> center'>
+				<b>Push this before:</b>
 			</div>
 
 			<div class='<%logged_in%> center'>
@@ -50,19 +51,27 @@
 			</div>
 
 			<div class='<%logged_out%>'>
-				<a href="./login.html" class="ui-btn ui-shadow ui-corner-all">Login</a>
+				<a href="./login.html" target='_top' class="ui-btn ui-shadow ui-corner-all">Login</a>
 			</div>
 
 			<div class='<%logged_out%>'>
-				<a href="./register.html" class="ui-btn ui-shadow ui-corner-all">Register for account</a> <a href="./forgot_password.html" class="ui-btn ui-shadow ui-corner-all">Forgot Password</a>
+				<a href="./register.html" target='_top' class="ui-btn ui-shadow ui-corner-all">Register for account</a> <a href="./forgot_password.html" class="ui-btn ui-shadow ui-corner-all">Forgot Password</a>
 			</div>
 
 			<div class='<%logged_out%>'>
-				<a href="https://github.com/vpelss/imok#imok" class="ui-btn ui-shadow ui-corner-all" onclick='return alert("You are leaving IMOK. Click BACK button to return.");'>About/Help</a>
+				<a href="https://github.com/vpelss/imok#imok" target='_top' class="ui-btn ui-shadow ui-corner-all" onclick='return alert("You are leaving IMOK. Click BACK button to return.");'>About/Help</a>
 			</div>
 
 			<div class='<%logged_in%>'>
 				<a href="./imok.cgi?command=imnotok" target='_top' class="ui-btn ui-shadow ui-corner-all" title="You are NOT ok for this interval. This will immediately send an alert email to your alert list." onclick="return confirm('Send IMNOTOK. Are you sure?');">IM NOT OK</a>
+			</div>
+
+			<div class='<%logged_in%> center'>
+			<img src='./images/arrow-u-black.svg'></img>
+			</div>
+
+			<div class='<%logged_in%> center'>
+				<b>Push this to send an Alert now.</b>
 			</div>
 
 			<div class='<%logged_in%>'>

@@ -108,6 +108,11 @@ if ( $logged_in ) {#we are logged in
     if ( $command eq 'set_settings' ) {
       &set_settings();
       $user = $AuthorizeMeObj->{'user'};#get changes that were saved. may need these below
+      #mail message
+      $AuthorizeMeObj->{'settings'}->{'email_to'} = $user->{'email'};
+      $AuthorizeMeObj->{'settings'}->{'email_subject'} = 'IMOK Settings Changed';#provide later
+      $AuthorizeMeObj->{'settings'}->{'email_message'} = "Your IMOK Settings have been changed.<br>Access site at: https://www.emogic.com/cgi/imok/imok.cgi";
+      $AuthorizeMeObj->email();
       }
     if ( $command eq 'imok' ) { &imok() }
     if ( $command eq 'imnotok' ) { &imnotok() }
@@ -203,10 +208,10 @@ my $user = $AuthorizeMeObj->{'user'};
 if( ! $logged_in ){return 0;}
 my $filename = "$AuthorizeMeObj->{'settings'}->{'path_to_users'}$user->{'user_id'}";
 my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$current_time_stamp,$ctime,$blksize,$blocks) = stat($filename);
-#my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + time_out
+#my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + timeout
 
-#my $new_time_stamp = $user->{'start_unix_time'}; #will ALWAYS jump to next start_time (after now) + time_out
-my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + time_out
+#my $new_time_stamp = $user->{'start_unix_time'}; #will ALWAYS jump to next start_time (after now) + timeout
+my $new_time_stamp = $current_time_stamp; #will ALWAYS jump to next start_time (after now) + timeout
 
 my $now = time();
 
@@ -374,7 +379,7 @@ sub get_settings(){ #input user, output html
  $output =~ s/<%email_contact_2%>/$user->{'email_contact_2'}/g;
  $output =~ s/<%email_contact_3%>/$user->{'email_contact_3'}/g;
  $output =~  s/<%email_form%>/$user->{'email_form'}/g;
- $output =~  s/<%time_out%>/$user->{'time_out'}/g;
+ $output =~  s/<%timeout%>/$user->{'timeout'}/g;
  $output =~  s/<%start_date%>/$user->{'start_date'}/g;
  $output =~  s/<%start_time%>/$user->{'start_time'}/g;
 	$output =~  s/<%pre_warn_time%>/$user->{'pre_warn_time'}/g;
@@ -415,8 +420,8 @@ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
  $user->{'email_form'} = $in{'email_form'};
  $user->{'email_form'} =~ s/\r//g; #fix windows from adding extra lines
 
- $user->{'time_out'} = $in{'time_out'};
- $user->{'timeout_sec'} = 24 * 60 * 60 * $in{'time_out'};
+ $user->{'timeout'} = $in{'timeout'};
+ $user->{'timeout_sec'} = 24 * 60 * 60 * $in{'timeout'};
 	$user->{'pre_warn_time'} = $in{'pre_warn_time'};
  $user->{'pre_warn_time_sec'} = 60 * 60 * $in{'pre_warn_time'};
  $user->{'last_email_sent_at'} = 0;
@@ -489,13 +494,15 @@ sub activate(){
 You may want to check on them.
 Their phone number is xxx-xxx-xxxx.
 Their email address is type_your_email_here\@domain');
- $user->{'timeout_ms'} = 86400; #24hours
+ $user->{'timeout'} = 1; # 1 day
+ #$user->{'timeout_sec'} = 60 * 60 * 24;
+ $user->{'pre_warn_time'} = 1; #1 hour
+ #$user->{'pre_warn_time_sec'} = 60 * 60 ;
  my $now = time();
  #?? need?
  #$user->{'timestamp'} = time() + $user->{'timeout_ms'}; #set a default of 1 day
  $user->{'first_login'} = 1;
  $user->{'failed_attempts'} = 0;
-	$user->{'pre_warn_time'} = 60 * 60; #in seconds. default 60 min
 
  my $filename = "$path_to_users$user->{'user_id'}";
  my $result =  $AuthorizeMeObj->hash_to_db($user , $filename);

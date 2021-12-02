@@ -36,17 +36,13 @@
 @media (hover: none) {
 
 	* {
-		__font-size: 4vw;
 	}
 
 	button {
-		__font-size: 4vw;
 	}
 }
 
 /*for pc*/
 * {
-  /*
-	font-size: 4vw;
-	*/
+
 }

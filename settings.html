@@ -17,24 +17,16 @@
 	<div data-role="page">
 		<div data-role="header">
 			<a href='imok.cgi' target='_top' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
-
-			<center>
-				<h4>IMOK</h4>
-			</center>
+<h6>imok</h6>
 		</div>
 
 		<div role="main" class="ui-content">
-
 <h3>Settings</h3>
-
 <form id='form_login' action='./imok.cgi'  method="post">
 	<input name="command" type="hidden" value="set_settings" id='command_login'>
 	<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
 	<input name="timestamp" type="hidden" value="" id='timestamp'>
-
-<br>
-Type at least one email below:
-<br>
+<div>Type at least one email below:</div>
 <div  class='ui-grid-a'>
 <div class='ui-block-a'>
 <input type='text' name="email_contact_1" placeholder="email contact 1" id='email1' value='<%email_contact_1%>' autofocus>
@@ -44,22 +36,20 @@ Type at least one email below:
 </div>
 </div>
 
-
 	<input type='text' name="email_contact_2" placeholder="email contact 2" id='email2' value='<%email_contact_2%>'>
 
 	<input type='text' name="email_contact_3" placeholder="email contact 3" id='email3' value='<%email_contact_3%>'>
 
-	Alert Mail Message:
-	</br>
+	<div>Alert Mail Message:</div>
 	<textarea id="email form" name="email_form" rows="4" cols="40"><%email_form%></textarea>
 
-		<label for="start_date">Alert Date</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'>
+		<label for="start_date">Alert Date:</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'>
 
-	<label for="start_time">Alert Time</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
+	<label for="start_time">Alert Time:</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
 
-<input type='hidden' id='time_out_temp' value='<%time_out%>'>
-<label for="time_out">Alert Interval . Every </label>
-<select name="time_out" id="time_out" value="<%time_out%>">
+<input type='hidden' id='timeout_temp' value='<%timeout%>'>
+<label for="timeout">Alert Interval . Every _ days</label>
+<select name="timeout" id="timeout" value="<%timeout%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
   <option value="2">2</option>
@@ -68,10 +58,10 @@ Type at least one email below:
   <option value="3">5</option>
   <option value="3">6</option>
   <option value="3">7</option>
-</select>	days.
+</select>
 
 <input type='hidden' id='pre_warn_time_temp' value='<%pre_warn_time%>'>
-<label for="time_out">Send you an email </label>
+<label for="timeout">Reminder email _ hours before the Alert Date/Time.</label>
 <select name="pre_warn_time" id="pre_warn_time" value="<%pre_warn_time%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
@@ -81,7 +71,7 @@ Type at least one email below:
   <option value="5">5</option>
   <option value="6">6</option>
   <option value="7">7</option>
-</select>	hours before the Alert Date/Time. It is currently set to <b><%pre_warn_time%></b> hours.
+</select>
 
 <input type='submit' value='Save Settings' onclick="return(calc_date());">
 	</form>
@@ -121,7 +111,7 @@ Type at least one email below:
 	}
 
 	//set drop down values
-document.getElementById("time_out").value  = document.getElementById("time_out_temp").value;
+document.getElementById("timeout").value  = document.getElementById("timeout_temp").value;
 document.getElementById("pre_warn_time").value  = document.getElementById("pre_warn_time_temp").value;
 </script>
 
