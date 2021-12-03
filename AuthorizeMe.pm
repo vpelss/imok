@@ -219,12 +219,6 @@ sub register_account(){ #get data
       return 0;
       }
     $filename = "$settings->{'path_to_authorizations'}$user_id";
-    #if(-e $filename){
-     # $message = "$message This Email Address has already requested an account. You will receive, or should have been sent an activation email to $email";
-      #return 0;
-      #}
-
-    #&write_to_log("previous registration checked");
 
     # $user->{'username'} = $username; #simplest case just use email as username also
     my $user;
@@ -241,6 +235,10 @@ sub register_account(){ #get data
     $user->{'Auth_Code'} = $random_number;
     #$filename = "$settings->{'path_to_authorizations'}$random_number";
     my $result = &hash_to_db($user , $filename);
+    if($result == 0){
+     $message='File save issue';
+     return 0;
+     };
 
     &write_to_log("auth file saved");
 
@@ -256,17 +254,13 @@ sub register_account(){ #get data
 
     &write_to_log("email sent : $result");
 
-    #$result = &sendmail($settings->{'from_email'} , $settings->{'from_email'} , $email , $settings->{'sendmail'} , $settings->{'Activation_Email_Subject'} , $email_message ,$settings->{'smtp_server'});
-    #my ($fromaddr, $replyaddr, $to, $smtp, $subject, $message , $SMTP_SERVER) = @_;
-
     #delete any old token files
     $filename = "$settings->{'path_to_tokens'}$user_id";
-    $result = unlink($filename);
-
+    unlink($filename);
     &write_to_log("delete old tokens");
 
-    #return success with message stating auth email must be clicked!
-    $message = "$message You have been registered, but must activate your account by clicking on the link in the email sent to $email. It may take up to an hour to receive. Check your spam folder. : $email_message";
+    $message = "$message $email_message";
+
     return 1;
     }
 
