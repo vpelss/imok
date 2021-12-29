@@ -14,3 +14,5 @@
 - If you push the IMNOTOK button an email alert is sent immediately to those in your email list. 
 
 Example: If you choose an 'Alert Date' of 10 Sept 2021 and an 'Alert Time' of 9 am and an 'Alert Interval' of one day, every time you push the IMOK button your next 'Alert Date/Time' will be reset to 9 am the next day.
+
+## kksks
