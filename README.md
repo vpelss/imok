@@ -1,4 +1,4 @@
-About:
+About: https://github.com/vpelss/imok/blob/main/IMOK.md#about
 
 
 You can try it at: https://www.emogic.com/cgi/imok/imok.cgi
