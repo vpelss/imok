@@ -31,9 +31,11 @@ $AuthorizeMeObj->{'settings'}->{'email_message'} = '';#provide later
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_subject'} = 'Password Reset - IMOK';
 $AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
 $AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
-    Click to activate:
+
+    Click this link to activate your account:
     <a target='_blank' href="https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>">https://www.emogic.com/cgi/imok.cgi/imok?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%></a>
-    Then login choose the desired settings for your account.
+
+    Then login, and enter the required settings for your account.
     );
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
     Click the link to reset your password to <%set_password_code%>:
@@ -141,6 +143,9 @@ if(  ($logged_in == 1) && ($user->{'first_login'} == 1) ) {#force user to see se
        $output = &get_settings($user);
        $output =~ s/<%welcome%>/$welcome/g; #first welcome for settings page
       }
+else{
+ $output =~ s/<%welcome%>//g; #blank welcome for settings page on all other visits
+}
 
 if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
 
@@ -400,27 +405,30 @@ my $user = $AuthorizeMeObj->{'user'};
 if(! $logged_in){ return 0; }
 $user->{'first_login'} = 0; #clear this
 my $email = $in{'email_contact_1'};
+$email =~ s/^\s+|\s+$//g; #trim email
 if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_1'} = $email;
  }
  else{
-  $message = "$message : $email is not a valid email address";
+  $message = "$message : $email is not a valid email address. Go back to settings and enter a valid email address.";
   return 0;
  }
  $email = $in{'email_contact_2'};
+ $email =~ s/^\s+|\s+$//g; #trim email
  if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_2'} = $email;
  }
  else{
-  $message = "$message : $email is not a valid email address";
+  $message = "$message : $email is not a valid email address. Go back to settings and enter a valid email address.";
   return 0;
  }
  $email = $in{'email_contact_3'};
+ $email =~ s/^\s+|\s+$//g; #trim email
  if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
   $user->{'email_contact_3'} = $email;
  }
  else{
-  $message = "$message : $email is not a valid email address";
+  $message = "$message : $email is not a valid email address. Go back to settings and enter a valid email address.";
   return 0;
  }
 
@@ -453,7 +461,7 @@ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
  $AuthorizeMeObj->{'user'} = $user; #save it back to object as hash_to_db does not
 
   if($result == 1){
-  $message = "$message Your Alert has been set.";
+  $message = "$message Your Alert has been set. Verify the alert date and time then close this program if you like. Open it again when you want to push the IMOK button.";
   }
  else{
   $message = "$message Your Alert has not been set.";
@@ -468,11 +476,13 @@ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
  if($result == 0){
   $message = "$message Could not set timestamp on $path_to_users$user->{'user_id'}";
   }
- my @lt = localtime($timestamp);
- my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
- my $year = 1900 + $lt[5];
- my $month = $lt[4] + 1;
- $message = "$message Trigger time is $year-$month-$lt[3] $str_time on the server and $in{'start_date'} $in{'start_time'} local time on your pc";
+
+ #my @lt = localtime($timestamp);
+ #my $str_time = sprintf("%d:%.2d", $lt[2] , $lt[1]);
+ #my $year = 1900 + $lt[5];
+ #my $month = $lt[4] + 1;
+ #$message = "$message Trigger time is $year-$month-$lt[3] $str_time on the server and $in{'start_date'} $in{'start_time'} local time on your pc";
+
  return $result;
 }
 
@@ -484,7 +494,7 @@ sub register() {
     $message = "$message<br>Your registration failed."
   }
  else{
-      $message = "You have been registered, check your email to activate your account.";
+      $message = "You have registered for an IMOK account. Please check your email, and click on the link within, to activate your account.";
  }
  return $result;
 }
@@ -522,7 +532,7 @@ They have pets.
  &change_time_stamp($user->{'timestamp'} , $filename);#update time stamp
 
  if($result == 1){
-  $message = "$message Your account $user->{'email'} has been authorized. Please log in and go to setup.";
+  $message = "$message Your account for $user->{'email'} has been activated. Please log in and complete your setup.";
   }
  else{
   $message = "$message Error: Your account $user->{'email'} could not be authorized";
