@@ -8,7 +8,7 @@ You can try it at: https://www.emogic.com/cgi/imok/imok.cgi
 
 IMOK is web based app. Any device can be used. Smart phone, PC, etc.
 
-It was designed to be a fail safe alert system. Both you and your phone can be out of commision and the alert will still be sent. 
+It was designed to be a fail safe alert system. You or your phone can be out of commision and the alert will still be sent. 
 By having the customer report to a server that he is ok, the server can send out the alert if you do not report in. 
 
 ## Liabilty
