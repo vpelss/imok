@@ -9,7 +9,7 @@ You can try it at: https://www.emogic.com/cgi/imok/imok.cgi
 IMOK is web page based. Any device can be used. Smart phone, PC, etc.
 
 It was designed to be fail safe alert system. Both you and your phone can be out of commision and the alert will still be sent. 
-By having to report to a server, the server can send out the alert if you do not report in. 
+By having the customer report to a server that he is ok, the server can send out the alert if you do not report in. 
 
 ## Liabilty
 
@@ -30,7 +30,7 @@ The idea for this program came to me after a relative had passed away and was no
 
 ## Notes
 
-- issues with jquerymobile 1.4.5:
+- issues with jquerymobile 1.4.5 (it is no longer being maintained):
 - target='_top' is required on anchors due to jquerymobile's ajax paging. If we don't do this, we get js ID conflicts and pages do not update correctly or at all with my js dom updates.
 - ajax paging wreaked havoc with setInterval. even when the page with setInterval is no longer paged, setInterval still exists and is running
 - - any benefits gained from ajax paging are overshadowd by the issues caused by it IMO
