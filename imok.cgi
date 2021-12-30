@@ -132,8 +132,14 @@ else{#we are not logged in
     if ( $command eq 'set_password' ) { &set_password($in{'user_id'} , $in{'set_password_code'}); }#from link sent by &forgot_password
     }
 
+my $welcome = qq|
+<p>Welcome to IMOK, and your first login. Please set up your first alert with the settings below.</p>
+|;
+
 if(  ($logged_in == 1) && ($user->{'first_login'} == 1) ) {#force user to see settings page
-       $output = &get_settings($user)
+       #$output = &get_template_page("welcome.html");
+       $output = &get_settings($user);
+       $output =~ s/<%welcome%>/$welcome/g; #first welcome for settings page
       }
 
 if ( $command eq 'cron' ) { &cron() } #so we can trigger it web
@@ -493,10 +499,14 @@ sub activate(){
  $user->{'email_contact_1'} = '';
  $user->{'email_contct_2'} = '';
  $user->{'email_contact_3'} = '';
- $user->{'email_form'} = qq("Type your name here" has not reported in to the IMOK website by the chosen Alert time.
+ $user->{'email_form'} = qq("Type your name here" has not reported in to the IMOK website by the chosen time.
 You may want to check on them.
 Their phone number is xxx-xxx-xxxx.
-Their email address is type_your_email_here\@domain');
+Their email address is type_your_email_here\@domain
+Their address is 15 Gravel Ave, Old Town, Ontario, Canada, L0M 1N0
+
+They have pets.
+');
  $user->{'timeout'} = 1; # 1 day
  #$user->{'timeout_sec'} = 60 * 60 * 24;
  $user->{'pre_warn_time'} = 1; #1 hour
@@ -522,7 +532,11 @@ Their email address is type_your_email_here\@domain');
 
 sub login(){
  #email points to data file
- my $result =  $AuthorizeMeObj->login( lc $in{'email'} , $in{'password'} );#note email coveted to lower case!
+ #trim inputs. portable devices are easy to add and not notice them
+ $in{'email'} =~ s/^\s+|\s+$//g;
+ $in{'password'} =~ s/^\s+|\s+$//g;
+  my $result =  $AuthorizeMeObj->login( lc $in{'email'} , $in{'password'} );#note email coveted to lower case!
+
  my $user = $AuthorizeMeObj->{'user'};
  if($result == 1){
   $message = "$message $user->{'email'} has logged in";

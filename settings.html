@@ -1,4 +1,4 @@
-<html>
+<!DOCTYPE html>
 <head>
 	<title>IMOK</title>
 	<meta http-equiv="Cache-Control" content="no-store">
@@ -17,38 +17,56 @@
 	<div data-role="page">
 		<div data-role="header">
 			<a href='imok.cgi' target='_top' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
-<h6>imok</h6>
+<h6>imok - Settings</h6>
 		</div>
 
 		<div role="main" class="ui-content">
-<h3>Settings</h3>
+
+	<div><h2><%welcome%></h2></div>
+
 <form id='form_login' action='./imok.cgi'  method="post">
 	<input name="command" type="hidden" value="set_settings" id='command_login'>
 	<input name="tz_offset_hours" type="hidden" value="" id='tz_offset_hours'>
 	<input name="timestamp" type="hidden" value="" id='timestamp'>
-<div>Type at least one email below:</div>
+
+<div>What emails would you like notified if you are not responsive?</div>
 <div  class='ui-grid-a'>
 <div class='ui-block-a'>
-<input type='text' name="email_contact_1" placeholder="email contact 1" id='email1' value='<%email_contact_1%>' autofocus>
+
+<input type='text' name="email_contact_1" placeholder="email contact #1" id='email1' value='<%email_contact_1%>' autofocus class='ui-btn-inline'>
+
 </div>
+
 <div  class='ui-block-b'>
-	<a href='#' onclick='alert("Blah, blah, blah...");'>?</a>
+	<a href="#popupInfo" data-rel="popup" data-transition="pop" class="my-tooltip-btn ui-btn ui-alt-icon ui-nodisc-icon ui-btn-inline ui-icon-info ui-btn-icon-notext" title="Learn more" aria-haspopup="true" aria-owns="popupInfo" aria-expanded="false">Learn more</a>
+	<div data-role="popup" id="popupInfo">
+	      <p>Here is a <strong>tiny popup</strong> being used like a tooltip. The text will wrap to multiple lines as needed.</p>
+			</div>
 </div>
 </div>
 
-	<input type='text' name="email_contact_2" placeholder="email contact 2" id='email2' value='<%email_contact_2%>'>
+	<input type='text' name="email_contact_2" placeholder="email contact #2" id='email2' value='<%email_contact_2%>'>
 
-	<input type='text' name="email_contact_3" placeholder="email contact 3" id='email3' value='<%email_contact_3%>'>
+	<input type='text' name="email_contact_3" placeholder="email contact #3" id='email3' value='<%email_contact_3%>'>
 
-	<div>Alert Mail Message:</div>
+<!--
+<div>Your address:</div>
+<input type='text' name="address" placeholder="Your address" id='address' value='<%address%>'>
+
+<div>Your phone number:</div>
+<input type='text' name="phone_number" placeholder="Phone Number" id='phone_number' value='<%phone_number%>'>
+-->
+
+	<div>What email message would you like to send if you are not responsive? (Edit the suggested one to suit)</div>
 	<textarea id="email form" name="email_form" rows="4" cols="40"><%email_form%></textarea>
 
-		<label for="start_date">Alert Date:</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'>
+	<div>On what date & time should your first alert be sent if you are not responsive?</div>
+		<label for="start_date">Date:</label> <input type="date"  name='start_date' id='start_date' value='<%start_date%>'>
 
-	<label for="start_time">Alert Time:</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
+	<label for="start_time">Time:</label> <input type="time" id="start_time" name="start_time" value='<%start_time%>'>
 
 <input type='hidden' id='timeout_temp' value='<%timeout%>'>
-<label for="timeout">Alert Interval . Every _ days</label>
+<label for="timeout">Alert Interval</label>
 <select name="timeout" id="timeout" value="<%timeout%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>
@@ -61,7 +79,7 @@
 </select>
 
 <input type='hidden' id='pre_warn_time_temp' value='<%pre_warn_time%>'>
-<label for="timeout">Reminder email _ hours before the Alert Date/Time.</label>
+<label for="timeout">A reminder email will be sent to your email address before the alert is sent. How many hours before the alert should this email be sent?</label>
 <select name="pre_warn_time" id="pre_warn_time" value="<%pre_warn_time%>">
   <option value=".5">.5</option>
   <option value="1" selected>1</option>

@@ -369,8 +369,8 @@ sub login() {
 
 sub logout(){
  my $filename = "$settings->{'path_to_tokens'}$user_id";
- my $tokens = {};
- delete $tokens->{$token};
+ my $tokens = &db_to_hash($filename); #get all tokens for this file
+ delete $tokens->{$token}; #remove current one
  my $result = &hash_to_db($tokens , $filename);  # set existing tokens (ie: logon's on other devices)
 
  $set_cookie_string = "Set-Cookie: $settings->{'token_name'}= ; Max-Age=-1 ;\nSet-Cookie: $settings->{'user_id_name'}= ; Max-Age=-1 ;";
