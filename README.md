@@ -6,9 +6,10 @@ You can try it at: https://www.emogic.com/cgi/imok/imok.cgi
 
 ## Benefits
 
-It is web page based. Any device can be used. Smart phone, PC, etc.
+IMOK is web page based. Any device can be used. Smart phone, PC, etc.
 
-It was designed to be a fail safe. By having to report to a server, the server can send out the alert if you do not report in.
+It was designed to be fail safe alert system. Both you and your phone can be out of commision and the alert will still be sent. 
+By having to report to a server, the server can send out the alert if you do not report in. 
 
 ## Liabilty
 
