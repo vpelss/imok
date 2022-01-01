@@ -461,7 +461,7 @@ if(($email eq '') || ($AuthorizeMeObj->valid_email($email))){
  $AuthorizeMeObj->{'user'} = $user; #save it back to object as hash_to_db does not
 
   if($result == 1){
-  $message = "$message Your Alert has been set. Verify the alert date and time then close this program if you like. Open it again when you want to push the IMOK button.";
+  $message = "$message Your Alert has been set. Verify the alert date and time. You can then close this program or leave it open. Open it again when you want to push the IMOK button.";
   }
  else{
   $message = "$message Your Alert has not been set.";
