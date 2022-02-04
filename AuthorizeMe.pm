@@ -179,6 +179,8 @@ sub AmILoggedIn(){#also fills in $self->{'user}
 }
 
 sub create_user_id(){
+ my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
  my $email = shift;
  my $user_id = sha1_base64($email); #user id is hash of email
  $user_id =~ s/[^a-zA-Z0-9,]//g; # remove all non alphanumeric characters
@@ -316,7 +318,7 @@ sub login() {
     if(!defined($user)){return 0}
     if($user->{'locked'}){#see if account is loced
       if( $user->{'lock_out_until'} > time() ){#still locked out
-        $message = "$message Too many wrong password attempts. Account will unlock later.";
+        $message = "$message Too many wrong password attempts. Account will unlock after $settings->{'lock_time'} minutes.";
         return 0;
       }
       else{#no longer locked out. clear it
