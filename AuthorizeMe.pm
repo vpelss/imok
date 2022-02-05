@@ -24,7 +24,7 @@ my $cookies; #will be a ref to a anonymous hash
 our $email;
 my $user_id; #made from $email, stored in cookie, or passed in argument in a from calling function
 my $token;
-my $random_number_size = 1000000000;
+my $number_of_characters = 32; #how many random characters to return
 my $set_cookie_string = ""; #calling program can use get_set_cookie_string
 my $message = ''; #used for &get_message()
 
@@ -233,7 +233,7 @@ sub register_account(){ #get data
     &write_to_log("pw saved");
 
     #save account data in file $random_number. when we ru
-    my $random_number = int(rand($random_number_size));
+    my $random_number = &rand_alpha_num($number_of_characters);
     $user->{'Auth_Code'} = $random_number;
     #$filename = "$settings->{'path_to_authorizations'}$random_number";
     my $result = &hash_to_db($user , $filename);
@@ -300,6 +300,16 @@ sub activate_account(){
   return $user;
   }
 
+sub rand_alpha_num(){ #return a random alpa numeric strig
+ my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
+ my $len = shift; ## of characters to return
+ my @chars = ('0'..'9', 'A'..'F');
+ my $string;
+ while($len--){ $string .= $chars[rand @chars] };
+ return $string;
+}
+
 sub login() {
   #the only time we return is if we logged in and we do it silently as we use this every time script is run
   #return 1 on success and THEN check_login sends a text message on fail
@@ -331,7 +341,7 @@ sub login() {
     my $encrypted_password = &encrypt_password( $password);
     if($encrypted_password eq $encrypted_password_stored){
      #set token
-     $token = int(rand($random_number_size));
+     $token = &rand_alpha_num($number_of_characters);
      #save token file
      my $filename = "$settings->{'path_to_tokens'}$user_id";
      my $tokens = {};
@@ -433,7 +443,7 @@ sub forgot_password(){
   return 0;
  }
  #set auth_file named $user_id: will contain random forgot_password_set_id
-  my $random_number = int(rand($random_number_size)); #acts as both auth code and new password
+  my $random_number = &rand_alpha_num($number_of_characters); #acts as both auth code and new password
   $filename = "$settings->{'path_to_authorizations'}$user_id";
   $result = &hash_to_db({password_code => $random_number} , $filename);
   if($result != 1){
