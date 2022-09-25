@@ -32,7 +32,7 @@ The idea for this program came to me after a relative had passed away and was no
 
 - you will need to set up a crn job so you can test all the accounts and send out the alerts as required. I run the following every half hour. eg: cd /home/example/public_html/cgi/imok/; perl imok.cgi cron >my_log_file 2>&1
 - issues with jquerymobile 1.4.5 (it is no longer being maintained):
--- target='_top' is required on anchors due to jquerymobile's ajax paging. If we don't do this, we get js ID conflicts and pages do not update correctly or at all with my js dom updates.
+- target='_top' is required on anchors due to jquerymobile's ajax paging. If we don't do this, we get js ID conflicts and pages do not update correctly or at all with my js dom updates.
 - ajax paging wreaked havoc with setInterval. even when the page with setInterval is no longer paged, setInterval still exists and is running
 - - any benefits gained from ajax paging are overshadowd by the issues caused by it IMO
 
