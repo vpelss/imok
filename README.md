@@ -25,6 +25,7 @@ The idea for this program came to me after a relative had passed away and was no
 
 ## To Do
 
+- time zone bug. If start date is in another timezone, we need to alert member to go to settings and move start date to today, then click IMOK
 - alert to text
 - alert to social media
 
