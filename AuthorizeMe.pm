@@ -261,7 +261,8 @@ sub register_account(){ #get data
     unlink($filename);
     &write_to_log("delete old tokens");
 
-    $message = "$message $email_message";
+    #$message = "$message $email_message";
+   $message = "$message";
 
     return 1;
     }
@@ -442,10 +443,23 @@ sub forgot_password(){
   $message = "$message User does not exist for $email";
   return 0;
  }
+
  #set auth_file named $user_id: will contain random forgot_password_set_id
   my $random_number = &rand_alpha_num($number_of_characters); #acts as both auth code and new password
-  $filename = "$settings->{'path_to_authorizations'}$user_id";
-  $result = &hash_to_db({password_code => $random_number} , $filename);
+
+ my $user;
+ $user = &db_to_hash($filename);
+ if(!defined($user)){
+    $message = "$message Could not open $filename";
+    return 0;
+  }
+ my $encrypted_password = &encrypt_password($random_number);
+ $user->{'password'} = $encrypted_password;
+
+  #$filename = "$settings->{'path_to_autherizations'}$user_id";
+  $filename = "$settings->{'path_to_users'}$user_id";
+  #$result = &hash_to_db({password_code => $random_number} , $filename);
+  $result = &hash_to_db($user , $filename);
   if($result != 1){
     $message = "$message Could not save to $filename";
     return 0;
@@ -453,17 +467,19 @@ sub forgot_password(){
  #send email with link ?command=forgot_password_set&forgot_password_set_id=????????????
  my $email_message = $settings->{'forgot_password_email_template'};
  $email_message =~ s/<%set_password_code%>/$random_number/g;
- $email_message =~ s/<%user_id%>/$user_id/g;
+ #$email_message =~ s/<%user_id%>/$user_id/g;
  #send email message
  $settings->{'email_to'} = $email;
  $settings->{'email_subject'} = $settings->{'forgot_password_email_subject'};
  $settings->{'email_message'} = $email_message; #add users email at end of message in case they do not provide any identification in the email
  $result = &email();
 
- $message = "$message Your password recovery email has been sent to $email : $email_message";
+# $message = "$message Your password recovery email has been sent to $email $email_message";
+ $message = "$message Your password recovery email has been sent to $email";
  return 1;
  }
 
+=pod
 sub set_password(){
  shift;
  my $user_id = shift;
@@ -499,6 +515,7 @@ sub set_password(){
  $result = unlink $filename;
  return $result;
 }
+=cut
 
 sub parse_form
 {
@@ -608,9 +625,9 @@ if ($smtp_server ne ""){
 
 #try sendmail
 if ($sendmail ne ""){
-   open(MAIL, "|$sendmail");
+   open(pMAIL, "|$sendmail");
    foreach ( @server_message ) {
-     print MAIL $_;
+     print pMAIL $_;
      }
    #print MAIL "From: $from\n";
    #print MAIL "To: $to\n";
@@ -618,7 +635,7 @@ if ($sendmail ne ""){
    #print MAIL "Content-Type: text/html\n";
    #print MAIL "MIME-Version: 1.0\n";
    #print MAIL "\n$message";
-  if ( close(MAIL) ) {
+  if ( close(pMAIL) ) {
      return 1;
      }  else {
      return $!;
