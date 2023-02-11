@@ -17,7 +17,7 @@ $AuthorizeMeObj->{'settings'}->{'token_max-age'} = '3153600000'; #string time in
 $AuthorizeMeObj->{'settings'}->{'user_id_name'} = 'imok_user_id'; #will show up in cookie
 
 $AuthorizeMeObj->{'settings'}->{'email_sendmail'} = '/usr/lib/sendmail -t';
-$AuthorizeMeObj->{'settings'}->{'email_smtp_server'} = ''; #mail.emogic.com
+$AuthorizeMeObj->{'settings'}->{'email_smtp_server'} = 'mail.emogic.com'; #mail.emogic.com
 $AuthorizeMeObj->{'settings'}->{'email_smtp_port'} = '25'; #26
 $AuthorizeMeObj->{'settings'}->{'email_smtp_helo'} = 'emogic.com';
 $AuthorizeMeObj->{'settings'}->{'email_from'} = 'imok@emogic.com';
@@ -31,16 +31,20 @@ $AuthorizeMeObj->{'settings'}->{'email_message'} = '';#provide later
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_subject'} = 'Password Reset - IMOK';
 $AuthorizeMeObj->{'settings'}->{'Activation_Email_Subject'} = 'IMOK account activation email';
 $AuthorizeMeObj->{'settings'}->{'registration_email_template'} = qq(You have registered for an IMOK account.
-
-    Click this link to activate your account:
-    <a target='_blank' href="https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>">https://www.emogic.com/cgi/imok.cgi/imok?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%></a>
-
+    Check your email for a confirmation link.
     Then login, and enter the required settings for your account.
+    Click this link to activate your account:
+    <a target='_blank' href="https://emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>">https://www.emogic.com/cgi/imok.cgi/imok?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%></a>
+
     );
+    # <a target='_blank' href="https://www.emogic.com/cgi/imok/imok.cgi?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%>">https://www.emogic.com/cgi/imok.cgi/imok?command=activate&activate_code=<%activate_code%>&user_id=<%user_id%></a>
+
 $AuthorizeMeObj->{'settings'}->{'forgot_password_email_template'} = qq(You have requested a password recovery for an IMOK account.
-    Click the link to reset your password to <%set_password_code%>:
-    https://www.emogic.com/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
-    );
+    Your new password is <%set_password_code%>
+    https://www.emogic.com/cgi/imok/imok.cgi
+        );
+        #https://www.emogic.com/cgi/imok/imok.cgi?command=set_password&user_id=<%user_id%>&set_password_code=<%set_password_code%>
+
 my $path_to_users = $AuthorizeMeObj->{'settings'}->{'path_to_users'} = './users/';
 $AuthorizeMeObj->{'settings'}->{'path_to_tokens'} = './tokens/';
 $AuthorizeMeObj->{'settings'}->{'path_to_authorizations'} = './authorizations/';
