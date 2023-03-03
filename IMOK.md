@@ -8,7 +8,7 @@ Potential uses:
 - For those who have animals or pets that may suffer or die if they pass away or became incapacitated.
 - For those who live in a remote location.
 - For those taking a trip alone.
-- For those planning on getting kidnapped
+- For those living alone and going out on a date
 
 ## HELP
 
