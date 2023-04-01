@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 7ccc64db31fba8a972a3839037bd2036824eb4e9
 package AuthorizeMe;
 
 use strict;
@@ -1515,11 +1511,3 @@ If you want to know what to say when tipping your 10-gallon hat,
 =head2 $a
 
      The C<$a> variable contains 1.
-
-=pod
-
-   ghfgfgddghghdgh hfgfdbghgfghf
-
-=cut
->>>>>>> 9b726947da25a56446f99f9997416f8d207ee10f
->>>>>>> 7ccc64db31fba8a972a3839037bd2036824eb4e9
