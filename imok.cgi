@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -d
 
 use strict;
 use Socket;
@@ -658,7 +658,8 @@ sub reset_password(){
  my $new_password = shift;
 
    #get file timestamp
-  my $user_id = $AuthorizeMeObj->create_user_id( lc $in{'email'} ); #user id is hash of email
+  my $email = $AuthorizeMeObj->{'user'}->{'email'};
+  my $user_id = $AuthorizeMeObj->create_user_id( lc $email ); #user id is hash of email
   my $filename = "$AuthorizeMeObj->{'settings'}->{'path_to_users'}$user_id";
   my $time_stamp = &get_time_stamp($filename);
 
