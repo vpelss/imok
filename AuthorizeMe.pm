@@ -417,12 +417,16 @@ sub reset_password(){
  if( !defined( $user ) ){$message = "$message Are you logged in?"; return 0;}
  #validate current password
  my $current_password_encrypted = &encrypt_password($current_password);
- if($current_password_encrypted ne $user->{'password'}){ return 0; }#Is current password valid? you sir, are a liar!
+ if($current_password_encrypted ne $user->{'password'}){
+   write_to_log("Is current password valid? you sir, are a liar!");
+   return 0;
+   }#Is current password valid? you sir, are a liar!
  #change to new password
  my $filename = $user->{'user_id'};
  $filename = "$settings->{'path_to_users'}$filename";
  $user->{'password'} = &encrypt_password($new_password);
  my $result = &hash_to_db($user,$filename);
+  write_to_log("$result is result from hash_to_db");
  return $result;
 }
 

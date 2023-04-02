@@ -655,6 +655,7 @@ sub set_password(){
 
 sub reset_password(){
  my $current_password = shift;
+ $current_password =~ s/^\s+|\s+$//g; #trim pw
  my $new_password = shift;
 
    #get file timestamp
