@@ -342,8 +342,10 @@ sub cron(){
 
     #$message = "$message $AuthorizeMeObj->{'settings'}->{'email_message'}";
     &write_to_log("$filename Alert to $email_list at $t :  $AuthorizeMeObj->{'settings'}->{'email_message'}");
+    &write_to_log("----");
     }
 &write_to_log("end of cron");
+&write_to_log("----");
 }
 
 sub set_time_stamp(){
@@ -511,7 +513,7 @@ sub activate(){
  if(!defined($user)) {$message = "$message Your activation failed."; return 0};
 
  $user->{'email_contact_1'} = '';
- $user->{'email_contct_2'} = '';
+ $user->{'email_contact_2'} = '';
  $user->{'email_contact_3'} = '';
  $user->{'email_form'} = qq("Type your name here" has not reported in to the IMOK website by the chosen time.
 You may want to check on them.
