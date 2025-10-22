@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>IMOK</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./styles.css" type="text/css">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" type="text/css">
+	<script src="http://code.jquery.com/jquery-1.11.1.min.js" type="text/javascript">
+</script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js" type="text/javascript">
+</script>
+
+</head>
+
+<body onload="document.getElementById('wait_icon').classList.add('hide_me');">
+<div class='wait' id='wait_icon'><img src='./images/wait.gif'></div>
+
+	<div data-role="page">
+		<div data-role="header">
+			<a href='menu.html' target='_top' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars"></a>
+				<h6>imok</h6>
+		</div>
+
+		<div class='<%logged_in%>'>
+			<img src='./images/arrow-u-black.svg'></img>
+			</div>
+
+		<div class='<%logged_in%>'>
+				<b>Change settings here</b>
+			</div>
+
+		<div role="main" class="ui-content">
+			<input name="difference" type="hidden" value="<%difference%>" id="difference"> <input name="trigger_time" type="hidden" value="<%trigger_time%>" id="trigger_time">
+
+			<div class='<%logged_in%>'>
+				<a href="./imok.cgi?command=imok" target='_top' class="ui-btn ui-shadow ui-corner-all" title="You are ok for theis interval. his will reset the counter to the next alert interval. If you missed your alert interval, and alert emails were sent, this will also send an IM OK email (false alarm).">IM OK</a>
+			</div>
+
+			<div class='<%logged_in%> center'>
+			<img src='./images/arrow-u-black.svg'></img>
+			</div>
+
+			<div class='<%logged_in%> center'>
+				<b>Push this before:</b>
+			</div>
+
+			<div class='<%logged_in%> center'>
+				<b><font color='red'><%check_in_date%> <%check_in_time%></font></b>
+			</div>
+
+			<div class='<%logged_in%> center' id='countdown'>
+<b><font color='red'>00:00:00</font></b>
+			</div>
+
+			<div class='center'>
+				<h2><%last_message%></h2>
+			</div>
+
+			<div class='<%logged_out%>'>
+				<a href="./login.html" target='_top' class="ui-btn ui-shadow ui-corner-all">Login</a>
+			</div>
+
+			<div class='<%logged_out%>'>
+				<a href="./register.html" target='_top' class="ui-btn ui-shadow ui-corner-all">Register for account</a> <a href="./forgot_password.html" class="ui-btn ui-shadow ui-corner-all">Forgot Password</a>
+			</div>
+
+			<div class='<%logged_out%>'>
+				<a href="https://github.com/vpelss/imok#imok" target='_blank' class="ui-btn ui-shadow ui-corner-all" onclick='return alert("It will open in a new browser window.");'>About/Help</a>
+			</div>
+
+			<div class='<%logged_in%>'>
+				<a href="./imok.cgi?command=imnotok" target='_top' class="ui-btn ui-shadow ui-corner-all" title="You are NOT ok for this interval. This will immediately send an alert email to your alert list." onclick="return confirm('Send IMNOTOK. Are you sure?');">IM NOT OK</a>
+			</div>
+
+			<div class='<%logged_in%> center'>
+			<img src='./images/arrow-u-black.svg'></img>
+			</div>
+
+			<div class='<%logged_in%> center'>
+				<b>Push this to send an Alert now.</b>
+			</div>
+
+			<div class='<%logged_in%>'>
+				<a href="./imok.cgi?command=cron" target='_top' class="ui-btn ui-shadow ui-corner-all">cron : vince test only</a>
+			</div>
+
+			<script type="text/javascript">
+			window.history.replaceState(null, "", location.href.split("?")[0]);  //kill both post and get re-posts
+
+						var trigger_time = parseInt( document.getElementById("trigger_time").value ) * 1000;
+
+						function countdown() {
+								var now = Date.now();
+								var difference = trigger_time - now;
+								var difference_seconds = difference / 1000;
+								if(difference <= 0) {
+												document.getElementById('countdown').innerHTML = "Timeout exceeded. Alerts are being sent.";
+												}
+								else{
+												var days = Math.floor( difference_seconds / (60 * 60 * 24) );
+												var day_seconds =  days * (60 * 60 * 24);
+												difference_seconds = difference_seconds - day_seconds;
+												var hours = Math.floor( difference_seconds / (60 * 60) );
+												var hour_seconds = hours * (60 * 60);
+												difference_seconds = difference_seconds - hour_seconds;
+												var minutes = Math.floor( difference_seconds / (60) );
+												var minute_seconds = minutes * (60);
+												difference_seconds = Math.floor( difference_seconds - minute_seconds );
+
+												var countdown_string = '' + days + ' days ' + hours + ' hours ' + minutes + ' minutes ' + difference_seconds + ' seconds';
+												document.getElementById('countdown').innerHTML = countdown_string;
+												}
+
+						}
+
+						setInterval( countdown , 5000 * 1 ); //update every 15 seconds
+						countdown();
+
+			</script>
+		</div><!-- end main -->
+	</div><!-- end page -->
+</body>
+</html>
