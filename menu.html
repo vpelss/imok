@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 
 <html>
@@ -43,3 +44,50 @@
 
 </body>
 </html>
+=======
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Menu</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+			<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
+</head>
+
+<body onload="document.getElementById('wait_icon').classList.add('hide_me');">
+<div class='wait' id='wait_icon'><img src='./images/wait.gif'></div>
+
+<div data-role="page" data-dom-cache="true">
+    <div data-role="header">
+        <a href='./imok.cgi' target='_top' class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-delete"></a>
+       <h6>imok</h6>
+	</div>
+
+<div role="main" class="ui-content">
+
+						<a href="./imok.cgi?command=get_settings" target='_top' class="ui-btn ui-shadow ui-corner-all">Settings</a>
+
+						<a href="./imok.cgi?command=logout"  target='_top' onclick="return confirm('Logout. Are you sure?');" class="ui-btn ui-shadow ui-corner-all">Logout of this device</a>
+
+						<a href="./imok.cgi?command=logout_all_devices" target='_top' onclick="return confirm('Logout all devices. Are you sure?');" class="ui-btn ui-shadow ui-corner-all">Logout of all devices</a>
+
+						<a href="./reset_password.html" target='_top' class="ui-btn ui-shadow ui-corner-all">Reset Password</a>
+
+						<a href="./imok.cgi?command=delete_account" target='_top' onclick="return confirm('Delete account. Are you sure?');" class="ui-btn ui-shadow ui-corner-all">Delete Account</a>
+
+						<a href="./imok.cgi?command=testimok" target='_top' class="ui-btn ui-shadow ui-corner-all">Send a test email to your contacts</a>
+
+						<a href="https://github.com/vpelss/imok/blob/main/IMOK.md#about" target='_blank' class="ui-btn ui-shadow ui-corner-all" onclick='return alert("It will open in a new browser window..");'>About/Help</a>
+
+                   		<a href="https://github.com/vpelss/imok" target='_blank' class="ui-btn ui-shadow ui-corner-all" target='_blank' onclick='return alert("It will open in a new browser window.");'>Source Code for developers</a>
+
+</div> <!-- end main -->
+</div> <!-- end page -->
+
+</body>
+</html>
+>>>>>>> 755e9e81e6b8c05e8dd45517d5103e5c21641cd6
