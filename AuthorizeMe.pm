@@ -414,11 +414,14 @@ sub reset_password(){
  my $current_password = shift;
  my $new_password = shift;
  my $user = $self->{'user'}; #tie to module object
+ write_to_log("----------");
+ write_to_log("Request for pw reset for $user->{'user_id'}");
  if( !defined( $user ) ){$message = "$message Are you logged in?"; return 0;}
  #validate current password
  my $current_password_encrypted = &encrypt_password($current_password);
  if($current_password_encrypted ne $user->{'password'}){
-   write_to_log("Is current password valid? you sir, are a liar!");
+   write_to_log("Is current password valid? You sir, are a liar!");
+   #write_to_log("----------");
    return 0;
    }#Is current password valid? you sir, are a liar!
  #change to new password

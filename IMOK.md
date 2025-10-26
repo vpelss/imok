@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ## ABOUT
 
 IMOK is a web based, fail safe, alarm that will email your family and friends if you don't check in.
@@ -62,4 +61,3 @@ Example: If you choose an 'Alert Date' of 10 Sept 2021, and an 'Alert Time' of 9
 
 This program is subject to change and no assumption of reliability can be assumed.
 This is a proof of concept script. Don't risk your life on it.
->>>>>>> 755e9e81e6b8c05e8dd45517d5103e5c21641cd6
