@@ -2,8 +2,13 @@
 
 use strict;
 use Socket;
-use lib '.';    #nuts, PERL has changed. add local path to @INC
-use AuthorizeMe;
+use lib './';    #nuts, PERL has changed. add local path . to @INC
+use AuthorizeMe ;
+
+#testing only
+#use CGI::Carp 'fatalsToBrowser';
+#use CGI::Carp qw(cluck);
+#cluck "I wouldn't do that if I were you";
 
 my %in;
 
@@ -20,14 +25,22 @@ $AuthorizeMeObj->{'settings'}->{'token_max-age'} =
 $AuthorizeMeObj->{'settings'}->{'user_id_name'} =
   'imok_user_id';    #will show up in cookie
 
-$AuthorizeMeObj->{'settings'}->{'email_sendmail'} = '/usr/lib/sendmail -t';
-#$AuthorizeMeObj->{'settings'}->{'email_smtp_server'} =
-  'mail.emogic.com';    #mail.emogic.com
+#$AuthorizeMeObj->{'settings'}->{'email_sendmail'} = '/usr/lib/sendmail -t';
+$AuthorizeMeObj->{'settings'}->{'email_smtp_server'} = 'mail.emogic.com';    # 'sh-cp14.yyz2.servername.online'
 $AuthorizeMeObj->{'settings'}->{'email_smtp_port'} = '25';    #26
 
-#$AuthorizeMeObj->{'settings'}->{'email_smtp_helo'} = 'emogic.com';
+$AuthorizeMeObj->{'settings'}->{'email_smtp_helo'} = 'imokscript'; #'emogic.com'
+
 $AuthorizeMeObj->{'settings'}->{'email_from'}  = 'imok@emogic.com';
 $AuthorizeMeObj->{'settings'}->{'email_reply'} = 'imok@emogic.com';
+
+#$AuthorizeMeObj->{'settings'}->{'email_domain'} = 'emogic.com';    # for Message-ID so we can generate UUID@domain
+
+# https://ndchost.com/wiki/mail/test-smtp-auth-telnet
+# smtp_private.cgi contains only: { 'username' => 'myID', 'password' => 'myPassword' }
+my $smtp_auth = $AuthorizeMeObj->db_to_hash('smtp_private_login_data.cgi');
+$AuthorizeMeObj->{'settings'}->{'email_username'} = $smtp_auth->{'username'};
+$AuthorizeMeObj->{'settings'}->{'email_password'} = $smtp_auth->{'password'};
 
 #later
 $AuthorizeMeObj->{'settings'}->{'email_to'}      = '';        #provide later
@@ -581,7 +594,7 @@ sub activate() {
     $user->{'email_contact_2'} = '';
     $user->{'email_contact_3'} = '';
     $user->{'email_form'} =
-qq("Type your name here" has not reported in to the IMOK website by the chosen time.
+qq('Type your name here" has not reported in to the IMOK website by the chosen time.
 You may want to check on them.
 Their phone number is xxx-xxx-xxxx.
 Their email address is type_your_email_here\@domain
@@ -589,7 +602,8 @@ Their address is 15 Gravel Ave, Old Town, Ontario, Canada, L0M 1N0
 
 They have pets.
 ');
-    $user->{'timeout'}       = 1;    # 1 day
+
+    $user->{'timeout'} = 1;    # 1 day
     $user->{'pre_warn_time'} = 1;    #1 hour
     my $now = time();
     $user->{'first_login'}     = 1;

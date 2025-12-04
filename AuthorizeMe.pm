@@ -1,24 +1,23 @@
 package AuthorizeMe;
 
-use strict;
-use Socket;
-use Fcntl;   # For O_RDWR, O_CREAT, etc.
-use Data::Dumper;
-use Net::SMTP;
-use Digest::SHA qw(sha1_base64 sha1_hex sha512_base64);
-#use vars qw($NAME $ABSTRACT $VERSION);
-our ($NAME , $ABSTRACT , $VERSION);
+#use strict;
 
+our ($NAME , $ABSTRACT , $VERSION);
 $NAME     = 'AutorizeMe';
 $ABSTRACT = 'AutorizeMe Module for Simple CGI Registration & Authentication in Perl';
 $VERSION  = '0.2';
 
+use Exporter qw(import);
+our @EXPORT = qw(new db_to_hash email);
+
+use Socket;
+use Fcntl;   # For O_RDWR, O_CREAT, etc.
+use Data::Dumper;
+use Net::SMTP; #https://metacpan.org/pod/Net::SMTP
+use Digest::SHA qw(sha1_base64 sha1_hex sha512_base64);
+
 #manages token cookie, flat file db read and write, mailing, pw attempt lockout
 #does not manage forms, or login, logout, reset logic
-
-#require Exporter;
-#our @ISA = qw(Exporter);
-#our @EXPORT = qw( $email );
 
 my $cookies; #will be a ref to a anonymous hash
 our $email;
@@ -36,10 +35,12 @@ my $message = ''; #used for &get_message()
 #my $settings->{'user_id_name'} = "AuthorizeMeUserId";
 #my $settings->{'token_max-age'} = '3153600000'; #default 100 years, in case not supplied in new()
 
-my $self; #so our module methods can access module object data
+my $self; #so our module methods can access module object data easily
 our $settings;
 
-sub new() { #initialize settings
+sub new { #initialize settings
+ # my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
+
  my $class = shift;
 
  $self = {};
@@ -121,7 +122,7 @@ sub hash_to_db(){#arg: \%hash , $filename
 
 #can be used external to object
 #copy ANY file to a hash ref
-sub db_to_hash(){#arg  $filename : returns a %ref or undef
+sub db_to_hash {#arg  $filename : returns a %ref or undef
   my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
 
   my $filename = shift;
@@ -582,15 +583,21 @@ sub email(){
   my ($package) = caller; if($package ne __PACKAGE__){shift;}; #so we can call from inside module or outside
   &write_to_log("sendmail start");
 
+  #my $uuid = `cat /proc/sys/kernel/random/uuid`; #too simple? 
+  my $uuid = do { open my $fh, "/proc/sys/kernel/random/uuid" or die $!; scalar <$fh> };
+
   my $sendmail = $settings->{'email_sendmail'};
   my $smtp_server = $settings->{'email_smtp_server'};
   my $smtp_port = $settings->{'email_smtp_port'};
   my $helo =  $settings->{'email_smtp_helo'};
   my $from = $settings->{'email_from'};
   my $reply = $settings->{'email_reply'};
+  #my $domain = $settings->{'email_domain'};
   my $to = $settings->{'email_to'};
   my $subject = $settings->{'email_subject'};
   my $email_message = $settings->{'email_message'};
+  my $username = $settings->{'email_username'};
+  my $password = $settings->{'email_password'};
 
   my @server_message;
   push  @server_message , "From: $from\n";
@@ -598,6 +605,7 @@ sub email(){
   push  @server_message , "To: $to\n";
   push  @server_message , "Reply: $reply\n";
   push  @server_message , "Subject: $subject\n";
+  push  @server_message , "Message-Id: $uuid\n";
   push  @server_message , "Content-Type: text/html\n";
   push  @server_message , "MIME-Version: 1.0\n";
   push  @server_message , "\n";
@@ -605,33 +613,40 @@ sub email(){
   push  @server_message , "\n";
 
 if ($smtp_server ne ""){
+	&write_to_log("smtp start");
   my %options;
   $options{'Host'} = $smtp_server;
   $options{'Port'} = $smtp_port;
   $options{'Hello'} = $helo;
   $options{'Debug'} = 1;
+  
   my $smtp = Net::SMTP->new(%options) || return $!;
+  
+  #smtp authorization
+  my $auth_result;
+if ( defined $username && defined $password){
+	$auth_result = $smtp->auth($username , $password);
+	$auth_result = $auth_result . $smtp->message();
+	&write_to_log("mail auth results $auth_result");
+	
+}
 
   $smtp->mail($from) || return $!; #sender
   my @recipients = split(/,/, $to);
   my @goodrecips = $smtp->recipient( @recipients , { Notify => ['FAILURE'], SkipBad => 1 }) || return $!;  # Good
 
   $smtp->data(@server_message) || return $!;
-
-=pod
- $smtp->data() || return $!;
- foreach ( @server_message ) {
-    $smtp->datasend ($_);
-    }
-=cut
+  $auth_result = $auth_result . ' msg: ' .  $smtp->message();
 
   $smtp->dataend;
   $smtp->quit;
-  return 1;
+  &write_to_log("smtp sucessful?");
+  #return "uuid:$uuid smtp 1 : Auth restult : $auth_result"; # troubleshooting only
   }
 
 #try sendmail
 if ($sendmail ne ""){
+	&write_to_log("sendmail start");
    open(pMAIL, "|$sendmail");
    foreach ( @server_message ) {
      print pMAIL $_;
@@ -643,8 +658,10 @@ if ($sendmail ne ""){
    #print MAIL "MIME-Version: 1.0\n";
    #print MAIL "\n$message";
   if ( close(pMAIL) ) {
-     return 1;
+  	&write_to_log("sendmail end");
+     return "sendmail 1";
      }  else {
+     	&write_to_log("sendmail end");
      return $!;
      }
    }
