@@ -584,7 +584,7 @@ sub email(){
   &write_to_log("sendmail start");
 
   #my $uuid = `cat /proc/sys/kernel/random/uuid`; #too simple? 
-  my $uuid = do { open my $fh, "/proc/sys/kernel/random/uuid" or die $!; scalar <$fh> };
+  my $uuid = do { open my $fh, "/proc/sys/kernel/random/uuid" or die $!; scalar <$fh> }; 
 
   my $sendmail = $settings->{'email_sendmail'};
   my $smtp_server = $settings->{'email_smtp_server'};
@@ -605,6 +605,7 @@ sub email(){
   push  @server_message , "To: $to\n";
   push  @server_message , "Reply: $reply\n";
   push  @server_message , "Subject: $subject\n";
+  #required or mail relay services might mark this email as junk and dkim will likely fail
   push  @server_message , "Message-Id: $uuid\n";
   push  @server_message , "Content-Type: text/html\n";
   push  @server_message , "MIME-Version: 1.0\n";
